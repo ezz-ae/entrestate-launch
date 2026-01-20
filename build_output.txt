@@ -1,0 +1,186 @@
+
+> entrestate-os@2.0.0 build
+> next build --webpack
+
+▲ Next.js 16.1.1 (webpack)
+- Environments: .env.local
+- Experiments (use with caution):
+  · serverActions
+
+  Creating an optimized production build ...
+⚠ Compiled with warnings in 100s
+
+./node_modules/@sentry/node/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@sentry/node/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@sentry/node/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@sentry/node/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@sentry/node/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/postgresjs.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./src/app/global-error.tsx
+
+./node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./src/lib/logger.ts
+./src/app/api/leads/route.ts
+
+./node_modules/@sentry/node/node_modules/require-in-the-middle/index.js
+Critical dependency: require function is used in a way in which dependencies cannot be statically extracted
+
+Import trace for requested module:
+./node_modules/@sentry/node/node_modules/require-in-the-middle/index.js
+./node_modules/@sentry/node/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@sentry/node/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@sentry/node/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@sentry/node/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/postgresjs.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./src/lib/logger.ts
+./src/app/api/leads/route.ts
+
+  Running TypeScript ...
+  Collecting page data using 1 worker ...
+  Generating static pages using 1 worker (0/99) ...
+  Generating static pages using 1 worker (24/99) 
+  Generating static pages using 1 worker (49/99) 
+  Generating static pages using 1 worker (74/99) 
+✓ Generating static pages using 1 worker (99/99) in 12.6s
+[inventory] Loading mode: FIRESTORE (Env: 'false')
+[Firebase Admin] Loaded credentials from local file: gen-lang-client-0927332284-firebase-adminsdk-fbsvc-50c0d0f275.json
+[inventory] Successfully loaded 3837 projects from Firestore.
+  Finalizing page optimization ...
+  Collecting build traces ...
+
+Route (app)                          Revalidate  Expire
+┌ ƒ /
+├ ○ /_not-found
+├ ƒ /[service]
+├ ○ /admin/jobs
+├ ƒ /api/ads/google/campaigns
+├ ƒ /api/ads/google/plan
+├ ƒ /api/ads/google/sync
+├ ƒ /api/agent/[agentId]/knowledge
+├ ƒ /api/agent/train
+├ ƒ /api/agents
+├ ƒ /api/agents/marketing
+├ ƒ /api/agents/marketing/plans
+├ ƒ /api/ai/generate-image
+├ ƒ /api/ai/generate-site
+├ ƒ /api/ai/suggest-next-blocks
+├ ƒ /api/audience/build
+├ ƒ /api/audience/request
+├ ƒ /api/billing/cancel
+├ ƒ /api/billing/summary
+├ ƒ /api/bot/[botId]/chat
+├ ƒ /api/bot/main/chat
+├ ƒ /api/bot/preview/chat
+├ ƒ /api/chat
+├ ƒ /api/chats
+├ ƒ /api/contacts/import
+├ ƒ /api/contacts/summary
+├ ƒ /api/domains
+├ ƒ /api/domains/request
+├ ƒ /api/email/campaign
+├ ƒ /api/email/generate
+├ ƒ /api/email/send
+├ ƒ /api/generate/landing
+├ ƒ /api/google-ads/activity
+├ ƒ /api/google-ads/campaigns
+├ ƒ /api/google-ads/keywords
+├ ƒ /api/google-ads/stats
+├ ƒ /api/health
+├ ƒ /api/health/monetization
+├ ƒ /api/images
+├ ƒ /api/instagram/webhook
+├ ƒ /api/leads
+├ ƒ /api/leads/create
+├ ƒ /api/leads/list
+├ ƒ /api/leads/notes
+├ ƒ /api/leads/notes/list
+├ ƒ /api/leads/settings
+├ ƒ /api/leads/update
+├ ƒ /api/marketing/metrics
+├ ƒ /api/payments/paypal/capture
+├ ƒ /api/payments/paypal/create
+├ ƒ /api/payments/ziina/create
+├ ƒ /api/payments/ziina/success
+├ ƒ /api/profile
+├ ƒ /api/projects
+├ ƒ /api/projects/[projectId]
+├ ƒ /api/projects/export
+├ ○ /api/projects/meta                       1m      1y
+├ ƒ /api/projects/search
+├ ƒ /api/publish/page
+├ ƒ /api/publish/vercel
+├ ƒ /api/sites
+├ ƒ /api/sites/stats
+├ ƒ /api/sms/campaign
+├ ƒ /api/sms/generate
+├ ƒ /api/sms/import
+├ ƒ /api/sms/send
+├ ƒ /api/support
+├ ƒ /api/team/invites
+├ ƒ /api/upload/pdf
+├ ƒ /api/webhooks/paypal
+├ ƒ /api/webhooks/ziina
+├ ○ /audience-network
+├ ○ /blog
+├ ○ /builder
+├ ○ /dashboard
+├ ○ /dashboard/ai-tools
+├ ○ /dashboard/assets
+├ ○ /dashboard/billing
+├ ○ /dashboard/brand
+├ ○ /dashboard/chat-agent
+├ ○ /dashboard/domain
+├ ○ /dashboard/email-marketing
+├ ○ /dashboard/flex
+├ ○ /dashboard/google-ads
+├ ƒ /dashboard/jobs/[jobId]
+├ ○ /dashboard/leads
+├ ○ /dashboard/marketing
+├ ○ /dashboard/meta-audience
+├ ○ /dashboard/sites
+├ ○ /dashboard/sms-marketing
+├ ○ /dashboard/sms-marketing/import
+├ ○ /dashboard/team
+├ ○ /discover
+├ ƒ /discover/[projectId]
+├ ○ /docs
+├ ○ /google-ads
+├ ○ /init
+├ ○ /instagram-assistant
+├ ○ /instagram-assistant/demo
+├ ○ /login
+├ ƒ /p/[siteId]
+├ ○ /profile
+├ ○ /robots.txt
+├ ○ /sitemap.xml
+├ ○ /start
+├ ○ /start/email
+├ ○ /start/sms
+├ ○ /status
+├ ○ /support
+└ ○ /trending
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
