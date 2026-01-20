@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 
 import { PageBuilder } from '@/components/page-builder';
@@ -73,6 +73,8 @@ const extractRefinerArtifacts = (job?: Job | null): RefinerArtifacts => { return
 
 export default function BuilderPage() {
     return (
-        <BuilderContent />
+        <Suspense fallback={null}>
+            <BuilderContent />
+        </Suspense>
     );
 }

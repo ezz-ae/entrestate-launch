@@ -15,7 +15,7 @@ import VoiceAssistantScreen from './VoiceAssistantScreen';
 import DocumentScannerScreen from './DocumentScannerScreen';
 import MarketingDashboardScreen from './MarketingDashboardScreen';
 import GoogleAdsDashboard from './GoogleAdsDashboard';
-import ChatAgentDashboard, { Chat } from './ChatAgentDashboard';
+import ChatAgentDashboard from './ChatAgentDashboard';
 import ChatAgentSetup from './ChatAgentSetup';
 import TeamManagementScreen from './TeamManagementScreen';
 import MeetingSchedulerScreen from './MeetingSchedulerScreen';
@@ -35,12 +35,13 @@ import CreateCampaignWizard from './CreateCampaignWizard';
 import ConversationViewScreen from './ConversationViewScreen';
 
 const AppContent: React.FC = () => {
-  const { user, isAuthenticated, loading } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [currentScreen, setCurrentScreen] = useState('dashboard');
   const [theme, setTheme] = useState('light');
   const [selectedProject, setSelectedProject] = useState<any>(null);
-  const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
+  const [selectedChat, setSelectedChat] = useState<any | null>(null);
   const [serviceType, setServiceType] = useState('');
+  const [loading, setLoading] = useState(true);
 
   const navigateTo = (screen: string) => {
     window.scrollTo(0, 0);
@@ -61,6 +62,11 @@ const AppContent: React.FC = () => {
       return () => clearTimeout(timer);
     }
   }, [currentScreen]);
+
+  useEffect(() => {
+    // Simulate initial loading
+    setTimeout(() => setLoading(false), 1000);
+  }, []);
 
   if (loading) {
     return <LoadingScreen />;
@@ -215,7 +221,7 @@ const AppContent: React.FC = () => {
         return <SupportTicketScreen onBack={() => navigateTo('settings')} onSubmit={() => { alert('Ticket Submitted'); navigateTo('settings'); }} />;
 
       case 'knowledgeBase':
-        return <KnowledgeBaseScreen onBack={() => navigateTo('chatAgentDashboard')} onSave={() => navigateTo('chatAgentDashboard')} />;
+        return <KnowledgeBaseScreen agentId="temp-agent-id" onBack={() => navigateTo('chatAgentDashboard')} onSave={() => navigateTo('chatAgentDashboard')} />;
 
       case 'qrCode':
         return <QRCodeScreen onBack={() => navigateTo('chatAgentDashboard')} />;

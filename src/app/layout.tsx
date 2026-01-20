@@ -5,16 +5,11 @@ import '../../mobile-styles.css';
 import { Toaster } from '@/components/ui/toaster';
 import { ThemeProvider } from '@/components/theme-provider';
 import Script from 'next/script';
-import localFont from 'next/font/local';
+import { Inter } from 'next/font/google';
 import ClientLayout from './client-layout';
 
-const inter = localFont({
-  src: [
-    {
-      path: '../../public/fonts/inter/inter-latin-wght-normal.woff2',
-      style: 'normal',
-    },
-  ],
+const inter = Inter({
+  subsets: ['latin'],
   display: 'swap',
   variable: '--font-inter',
 });

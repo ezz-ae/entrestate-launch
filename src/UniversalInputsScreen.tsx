@@ -140,7 +140,7 @@ const UniversalInputsScreen: React.FC<UniversalInputsScreenProps> = ({ onNext, o
         <BudgetCalculator 
           value={formData.budget}
           onChange={(e) => handleChange('budget', e.target.value)}
-          platform="metaLeadGen"
+          platform="meta"
         />
       )}
 

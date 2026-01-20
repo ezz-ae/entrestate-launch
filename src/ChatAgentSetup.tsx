@@ -24,6 +24,7 @@ const ChatAgentSetup: React.FC<ChatAgentSetupProps> = ({ onComplete, onBack }) =
   };
 
   const handleActivate = async () => {
+    if (!isConnected || !selectedProject || !agentName || loading) return;
     setLoading(true);
     setError(null);
     try {
@@ -190,7 +191,6 @@ const ChatAgentSetup: React.FC<ChatAgentSetupProps> = ({ onComplete, onBack }) =
       <StickyFooter 
         label={loading ? 'Activating...' : 'Activate AI Agent'}
         onClick={handleActivate} 
-        disabled={!isConnected || !selectedProject || !agentName || loading} 
       />
     </div>
   );

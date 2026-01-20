@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
         const data = await pdf(buffer);
 
         return new NextResponse(JSON.stringify({ text: data.text }), { status: 200 });
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error parsing PDF:', error);
         if (error instanceof UnauthorizedError) {
             return new NextResponse(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
@@ -25,6 +25,6 @@ export async function POST(req: NextRequest) {
         if (error instanceof ForbiddenError) {
             return new NextResponse(JSON.stringify({ error: 'Forbidden' }), { status: 403 });
         }
-        return new NextResponse(JSON.stringify({ error: `Failed to parse PDF: ${error.message}` }), { status: 500 });
+        return new NextResponse(JSON.stringify({ error: `Failed to parse PDF: ${error.message || 'Unknown error'}` }), { status: 500 });
     }
 }

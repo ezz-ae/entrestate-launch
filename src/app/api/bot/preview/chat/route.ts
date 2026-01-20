@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateText, Message } from 'ai';
+import { generateText } from 'ai';
 import { z } from 'zod';
 import { getGoogleModel, FLASH_MODEL } from '@/lib/ai/google';
 import { formatProjectContext, getRelevantProjects } from '@/server/inventory';
 import { enforceRateLimit, getRequestIp } from '@/lib/server/rateLimit';
+
+type ChatMessage = { role: 'system' | 'user' | 'assistant'; content: string };
 
 const requestSchema = z.object({
   message: z.string().min(1),
@@ -60,7 +62,7 @@ Avoid repetition and try to keep the conversation flowing naturally, providing d
 ${projectContext}
 `;
 
-  const messages: Message[] = (payload.history || []).map(entry => ({
+  const messages: ChatMessage[] = (payload.history || []).map(entry => ({
     role: entry.role === 'user' ? 'user' : 'assistant',
     content: entry.text,
   }));
@@ -83,4 +85,3 @@ ${projectContext}
     return NextResponse.json({ reply: fallbackReply });
   }
 }
-

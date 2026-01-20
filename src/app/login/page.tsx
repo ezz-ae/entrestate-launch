@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@/hooks/useAuth'; // Assuming useAuth provides login/signup functionality
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { EntrestateLogo } from '@/components/icons';
 
 export default function LoginPage() {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isRegister, setIsRegister] = useState(false);
@@ -26,11 +27,16 @@ export default function LoginPage() {
     setError(null);
     try {
       if (isRegister) {
-        await signUp(email, password);
+        if (!name.trim()) {
+          setError('Please enter your name.');
+          setLoading(false);
+          return;
+        }
+        await signUp(email, password, name);
       } else {
         await logIn(email, password);
       }
-      router.push('/dashboard'); // Redirect to dashboard after successful login/register
+      router.push('/dashboard');
     } catch (err: any) {
       setError(err.message || 'An unexpected error occurred.');
     } finally {
@@ -54,6 +60,20 @@ export default function LoginPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
+            {isRegister && (
+              <div className="space-y-2">
+                <Label htmlFor="name" className="text-zinc-400">Name</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  placeholder="Your Name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required={isRegister}
+                  className="h-12 bg-zinc-900 border-white/5 text-white"
+                />
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="email" className="text-zinc-400">Email</Label>
               <Input

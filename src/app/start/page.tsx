@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { OnboardingFlow } from '@/components/onboarding/onboarding-flow';
 import type { Metadata } from 'next';
 
@@ -18,7 +19,9 @@ export default function StartPage() {
   return (
     <main className="min-h-screen bg-black text-white py-16 sm:py-20">
       <div className="container mx-auto px-5 sm:px-6 max-w-6xl">
-        <OnboardingFlow />
+        <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]">Loading onboarding flow...</div>}>
+          <OnboardingFlow />
+        </Suspense>
       </div>
     </main>
   );

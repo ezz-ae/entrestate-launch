@@ -133,6 +133,7 @@ const parseRefinerDate = (value: SitePage['lastRefinedAt']): Date | null => {
 
 export default function SitesDashboardPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [sites, setSites] = useState<SitePage[]>([]);
   const [loading, setLoading] = useState(true);
   const [user] = useAuthState(auth);
@@ -192,8 +193,7 @@ export default function SitesDashboardPage() {
 
   const handleCreateSite = async () => {
     if (!user) {
-        // This case should ideally be caught by UI, but as a safeguard
-        console.error("User not authenticated for site creation.");
+        setIsLoginModalOpen(true);
         return;
     }
     
@@ -236,7 +236,7 @@ export default function SitesDashboardPage() {
       formData.append("file", file);
 
       if (!user) {
-        console.error("User not authenticated for PDF upload.");
+        setIsLoginModalOpen(true);
         return;
       }
 

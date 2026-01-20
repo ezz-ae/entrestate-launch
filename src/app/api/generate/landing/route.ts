@@ -78,3 +78,5 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: `Failed to generate site structure: ${error.message}` }, { status: 500 });
         }
         return NextResponse.json({ error: 'An unexpected error occurred during site generation. Please try again or contact support.' }, { status: 500 });
+    }
+}

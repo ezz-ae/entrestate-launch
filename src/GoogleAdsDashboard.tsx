@@ -153,9 +153,3 @@ const styles: Record<string, React.CSSProperties> = {
 };
 
 export default GoogleAdsDashboard;
-```
-
-<!--
-[PROMPT_SUGGESTION]Can you create a "Create Campaign" wizard component for this dashboard?[/PROMPT_SUGGESTION]
-[PROMPT_SUGGESTION]How can I add a date range picker to filter the ads performance data?[/PROMPT_SUGGESTION]
--->

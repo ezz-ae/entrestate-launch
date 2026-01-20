@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateText, Message } from 'ai';
+import { generateText } from 'ai';
 import { z } from 'zod';
 import { mainSystemPrompt } from '@/config/prompts';
 import { getGoogleModel, FLASH_MODEL } from '@/lib/ai/google';
@@ -104,8 +104,8 @@ ${projectContext}
 ${agentKnowledge}
 `;
 
-  const messages: Message[] = (payload.history || []).map(entry => ({
-    role: entry.role === 'user' ? 'user' : 'assistant',
+  const messages: any[] = (payload.history || []).map(entry => ({
+    role: (entry.role === 'user' ? 'user' : 'assistant'),
     content: entry.text,
   }));
   messages.push({ role: 'user', content: payload.message });
