@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Bot, Instagram, MessageSquare, Zap, Globe, Sparkles, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
 interface Message {
@@ -94,7 +95,7 @@ export function ChatAgentShowcase() {
             </div>
 
             <Button asChild size="lg" className="h-12 sm:h-14 md:h-16 px-8 md:px-10 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-base sm:text-lg mt-6 sm:mt-8 shadow-xl shadow-blue-900/20 w-full sm:w-auto">
-              <a href="/dashboard/chat-agent">Start Chat Assistant</a>
+              <Link href="/dashboard/chat-agent">Start Chat Assistant</Link>
             </Button>
           </div>
 

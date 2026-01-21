@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
     // Order by most recently updated conversations
     const snapshot = await chatsRef.orderBy('updatedAt', 'desc').limit(20).get();
 
-    const conversations = snapshot.docs.map(doc => ({
+    const conversations = snapshot.docs.map((doc: any) => ({
       id: doc.id,
       ...doc.data(),
     }));

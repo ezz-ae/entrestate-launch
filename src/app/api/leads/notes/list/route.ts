@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
       .orderBy('createdAt', 'desc')
       .get();
 
-    const notes = notesSnapshot.docs.map((doc) => {
+    const notes = notesSnapshot.docs.map((doc: any) => {
       const data = doc.data();
       const createdAt = data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : data.createdAt;
       return { id: doc.id, ...data, createdAt };

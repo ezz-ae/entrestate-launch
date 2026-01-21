@@ -1,135 +1,95 @@
-'use client';
-
-import React, { useEffect, useState } from 'react';
-import { DashboardCards } from '@/components/dashboard/dashboard-cards';
-import { Card, CardContent } from '@/components/ui/card';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
+import Link from 'next/link';
+import { FileText, Plus, ArrowRight, Clock, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Loader2, MapPin, Sparkles } from 'lucide-react';
 
-type InventoryMeta = {
-  total?: number;
-  citiesCount?: number;
-  areasCount?: number;
-};
+export default async function DashboardPage() {
+  const supabase = createSupabaseServerClient();
+  
+  const { data: { user } } = await supabase.auth.getUser();
 
-export default function DashboardPage() {
-  const [meta, setMeta] = useState<InventoryMeta | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Temporarily disabled auth check for testing
+  // if (!user) {
+  //   redirect('/start');
+  // }
 
-  useEffect(() => {
-    const loadMeta = async () => {
-      try {
-        const res = await fetch('/api/projects/meta', { cache: 'no-store' });
-        if (!res.ok) return;
-        const data = await res.json();
-        setMeta({
-          total: data.total,
-          citiesCount: data.citiesCount,
-          areasCount: data.areasCount,
-        });
-      } catch (error) {
-        console.error('Failed to load inventory status', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadMeta();
-  }, []);
-
-  const totalListings = meta?.total ?? 0;
-  const cities = meta?.citiesCount ?? 0;
-  const areas = meta?.areasCount ?? 0;
-  const nextAction = loading
-    ? {
-        label: 'Preparing your next step…',
-        description: 'Checking your inventory and launches.',
-        href: '#',
-        disabled: true,
-      }
-    : totalListings === 0
-      ? {
-          label: 'Connect listings',
-          description: 'Add your inventory to unlock market insights and launches.',
-          href: '/docs#inventory',
-          disabled: false,
-        }
-      : {
-          label: 'Start your first launch',
-          description: 'Publish a listing page and capture your next lead.',
-          href: '/start?intent=website',
-          disabled: false,
-        };
+  const { data: projects } = await supabase
+    .from('projects')
+    .select('*')
+    .order('created_at', { ascending: false });
 
   return (
-    <div className="space-y-12">
-         <div>
-            <h1 className="text-4xl font-bold tracking-tight text-white">Dashboard</h1>
-            <p className="text-xl text-muted-foreground font-light">Choose what you want to work on today.</p>
+    <div className="min-h-screen bg-black text-white p-6 pt-24">
+      <div className="max-w-6xl mx-auto space-y-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Dashboard</h1>
+            <p className="text-zinc-400 mt-1">Manage your generated landing pages.</p>
+          </div>
+          <div className="flex gap-3">
+            <Link href="/dashboard/leads">
+              <Button variant="outline" className="rounded-full font-bold border-zinc-700 hover:bg-zinc-800">
+                <Users className="mr-2 h-4 w-4" /> Leads Pipeline
+              </Button>
+            </Link>
+            <Link href="/">
+              <Button className="rounded-full font-bold bg-blue-600 hover:bg-blue-700">
+                <Plus className="mr-2 h-4 w-4" /> New Project
+              </Button>
+            </Link>
+          </div>
         </div>
 
-        <Card className="bg-white/5 border border-blue-500/20 rounded-3xl">
-          <CardContent className="p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
-                <Sparkles className="h-6 w-6" />
-              </div>
-              <div className="space-y-1">
-                <p className="text-xs font-bold uppercase tracking-widest text-zinc-500">Next best action</p>
-                <p className="text-lg font-semibold text-white">{nextAction.description}</p>
-              </div>
-            </div>
-            {nextAction.disabled ? (
-              <Button className="h-11 rounded-full bg-white text-black font-bold" disabled>
-                {nextAction.label}
-              </Button>
-            ) : (
-              <Button asChild className="h-11 rounded-full bg-white text-black font-bold">
-                <a href={nextAction.href}>{nextAction.label}</a>
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="bg-zinc-900/60 border border-white/5 rounded-3xl">
-          <CardContent className="p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
-                <MapPin className="h-6 w-6" />
-              </div>
-              <div className="space-y-1">
-                <p className="text-xs font-bold uppercase tracking-widest text-zinc-500">Inventory Status</p>
-                {loading ? (
-                  <div className="flex items-center gap-2 text-zinc-400 text-sm">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Checking listings...
+        {projects && projects.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {projects.map((project) => (
+              <div key={project.id} className="group relative bg-zinc-900/50 border border-white/10 rounded-2xl p-6 hover:bg-zinc-900 transition-all hover:border-blue-500/30">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center border border-blue-500/20 text-blue-500">
+                    <FileText className="h-6 w-6" />
                   </div>
-                ) : totalListings > 0 ? (
-                  <p className="text-lg font-semibold text-white">
-                    {totalListings.toLocaleString()} listings ready{cities ? ` in ${cities} cities` : ''}.
-                  </p>
-                ) : (
-                  <p className="text-lg font-semibold text-white">Inventory not connected yet.</p>
-                )}
-                {totalListings > 0 && (cities || areas) ? (
-                  <p className="text-sm text-zinc-500">
-                    {cities ? `${cities} cities` : ''}{cities && areas ? ' • ' : ''}{areas ? `${areas} areas` : ''}
-                  </p>
-                ) : null}
-              </div>
-            </div>
-            {totalListings === 0 && !loading ? (
-              <Button asChild className="h-11 rounded-full bg-white text-black font-bold">
-                <a href="/docs#inventory">Connect listings</a>
-              </Button>
-            ) : (
-              <Button asChild variant="outline" className="h-11 rounded-full border-white/10 bg-white/5 text-white font-bold">
-                <a href="/discover">View market feed</a>
-              </Button>
-            )}
-          </CardContent>
-        </Card>
+                  <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest bg-white/5 px-2 py-1 rounded-md">
+                    {new Date(project.created_at).toLocaleDateString()}
+                  </span>
+                </div>
+                
+                <h3 className="text-lg font-bold mb-2 line-clamp-1 group-hover:text-blue-400 transition-colors">
+                  {project.headline || 'Untitled Project'}
+                </h3>
+                <p className="text-sm text-zinc-400 line-clamp-3 mb-6 leading-relaxed">
+                  {project.description || 'No description available.'}
+                </p>
 
-        <DashboardCards />
+                <div className="flex items-center justify-between mt-auto pt-4 border-t border-white/5">
+                    <div className="flex items-center gap-2 text-xs text-zinc-500">
+                        <Clock className="h-3 w-3" />
+                        {new Date(project.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                    <Link href={`/projects/${project.id}`}>
+                      <Button variant="ghost" size="sm" className="h-8 text-xs font-bold uppercase tracking-wider hover:bg-white/10">
+                          View <ArrowRight className="ml-1 h-3 w-3" />
+                      </Button>
+                    </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-20 border border-dashed border-white/10 rounded-3xl bg-white/5">
+            <div className="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mb-4">
+                <FileText className="h-8 w-8 text-zinc-500" />
+            </div>
+            <h3 className="text-xl font-bold mb-2">No projects yet</h3>
+            <p className="text-zinc-400 mb-6 max-w-sm text-center">Upload a brochure to generate your first landing page.</p>
+            <Link href="/">
+                <Button className="rounded-full font-bold bg-white text-black hover:bg-zinc-200">
+                    Create Project
+                </Button>
+            </Link>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

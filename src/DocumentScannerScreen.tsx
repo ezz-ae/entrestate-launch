@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './mobile-styles.css';
+import Image from 'next/image';
 
 interface ExtractedData {
   name: string;
@@ -48,8 +49,10 @@ const DocumentScannerScreen: React.FC<DocumentScannerScreenProps> = ({ onBack, o
 
       {capturedImage ? (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', backgroundColor: 'var(--bg-primary)' }}>
-          <img src={capturedImage} alt="Scanned Card" style={{ width: '100%', borderRadius: '16px', marginBottom: '24px', border: '1px solid var(--border-color)' }} />
-          
+          <div style={{ position: 'relative', width: '100%', maxWidth: '400px', aspectRatio: '1.6', borderRadius: '16px', overflow: 'hidden', marginBottom: '24px', border: '1px solid var(--border-color)' }}>
+            <Image src={capturedImage} alt="Scanned Card" layout="fill" objectFit="cover" />
+          </div>
+
           <div style={{ width: '100%', backgroundColor: 'var(--bg-secondary)', padding: '16px', borderRadius: '16px', marginBottom: '24px' }}>
             <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', color: 'var(--text-primary)' }}>Extracted Details</h3>
             <div style={{ marginBottom: '8px', fontSize: '14px', color: 'var(--text-primary)' }}><strong>Name:</strong> John Smith</div>

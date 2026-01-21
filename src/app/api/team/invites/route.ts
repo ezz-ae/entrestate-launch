@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
       .limit(50)
       .get();
 
-    const invites = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    const invites = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
     return NextResponse.json({ invites });
   } catch (error) {
     console.error('[team/invites] error', error);

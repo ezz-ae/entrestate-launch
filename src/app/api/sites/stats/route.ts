@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
           leadsRef.where('siteId', '==', siteId).get(),
           eventsRef.where('siteId', '==', siteId).get(),
         ]);
-        const views = eventsSnapshot.docs.reduce((count, doc) => {
+        const views = eventsSnapshot.docs.reduce((count: number, doc: any) => {
           const data = doc.data();
           if (!data.type || data.type === 'cta_click') {
             return count + 1;

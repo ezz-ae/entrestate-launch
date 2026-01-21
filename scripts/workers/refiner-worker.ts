@@ -112,7 +112,13 @@ async function processJob(jobId: string, jobData: JobDoc) {
   });
 
   const start = Date.now();
-  const steps = [];
+  const steps: {
+    name: string;
+    status: 'pending' | 'running' | 'done' | 'error';
+    result?: string;
+    timestamp: number;
+  }[] = [];
+
   for (const step of REFINER_STEPS) {
     await new Promise((resolve) => setTimeout(resolve, 500));
     steps.push({

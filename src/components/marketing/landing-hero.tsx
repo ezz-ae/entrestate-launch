@@ -15,12 +15,13 @@ import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { captureLead } from '@/lib/leads';
 import { useCampaignAttribution } from '@/hooks/useCampaignAttribution';
+import { useBrochure } from '@/context/BrochureContext';
 
 export function LandingHero() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const router = useRouter();
+  const { setBrochureFile } = useBrochure();
   const attribution = useCampaignAttribution();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -32,7 +33,6 @@ export function LandingHero() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    setUploadedFile(file);
     setIsUploading(true);
 
     try {
@@ -54,10 +54,11 @@ export function LandingHero() {
       setUploadProgress(progress);
       if (progress >= 100) {
         clearInterval(interval);
-        // Here you would typically handle the file upload to the server
-        // For now, we'll just redirect to the builder
+        // Set the file in the global context and redirect to the builder.
+        // This skips any intermediate "processing" pages.
         setTimeout(() => {
-          router.push('/builder?mode=brochure-demo');
+          setBrochureFile(file);
+          router.push('/builder');
         }, 500);
       }
     }, 200);
@@ -81,16 +82,16 @@ export function LandingHero() {
             className="space-y-6"
         >
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.3em] text-blue-500 mb-4">
-                <Sparkles className="h-3 w-3" /> Brochure to Listing Page
+                <Sparkles className="h-3 w-3" /> Brochure to Landing Page
             </div>
             
             <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter leading-[0.95]">
                 Brochure to <br />
-                <span className="text-blue-600">Listing Page.</span>
+                <span className="text-blue-600">Landing Page</span>
             </h1>
             
             <p className="text-base sm:text-lg md:text-2xl text-zinc-400 max-w-2xl mx-auto font-light leading-relaxed">
-                Upload your brochure and get a clean listing page ready to share with buyers.
+                Upload any project brochure, convert it into a professional landing page that generate leads
             </p>
         </motion.div>
 

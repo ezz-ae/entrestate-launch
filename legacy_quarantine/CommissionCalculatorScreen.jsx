@@ -1,3 +1,4 @@
+export default CommissionCalculatorScreen;
 import React, { useState, useEffect } from 'react';
 import StickyFooter from './StickyFooter';
 import ForgivingInput from '@/components/ForgivingInput';

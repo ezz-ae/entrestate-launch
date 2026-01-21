@@ -384,7 +384,7 @@ export async function loadInventoryProjects(max = DEFAULT_MAX, forceRefresh = fa
       .limit(max)
       .get();
     if (!snapshot.empty) {
-      projects = snapshot.docs.map((doc) => normalizeProjectData(doc.data(), doc.id));
+      projects = snapshot.docs.map((doc: any) => normalizeProjectData(doc.data(), doc.id));
       console.log(`[inventory] Successfully loaded ${projects.length} projects from Firestore.`);
     }
   } catch (error) {

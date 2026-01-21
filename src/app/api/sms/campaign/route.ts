@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
         .get();
 
       recipients = snapshot.docs
-        .map((doc) => String(doc.data().phone || '').trim())
+        .map((doc: any) => String(doc.data().phone || '').trim())
         .filter(Boolean);
     }
 

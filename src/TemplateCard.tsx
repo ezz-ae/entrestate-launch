@@ -1,46 +1,30 @@
-import React, { useRef } from 'react';
+import React from 'react';
+import Image from 'next/image';
 
-interface TemplateCardProps {
+type TemplateCardProps = {
   title: string;
-  category: string;
-  image: string | null;
-  onSelect: () => void;
-  onLongPress: () => void;
-}
+  category?: string;
+  image?: string | null;
+  onSelect?: () => void;
+  onLongPress?: () => void;
+};
 
-const TemplateCard: React.FC<TemplateCardProps> = ({ title, category, image, onSelect, onLongPress }) => {
-  const longPressTimer = useRef<NodeJS.Timeout>();
-
-  const handleTouchStart = () => {
-    longPressTimer.current = setTimeout(onLongPress, 500); // 500ms for long press
-  };
-
-  const handleTouchEnd = () => {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-    }
-  };
-
+export const TemplateCard: React.FC<TemplateCardProps> = ({ title, category, image, onSelect }) => {
   return (
-    <div 
+    <div
       onClick={onSelect}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-      onContextMenu={(e) => { e.preventDefault(); onLongPress(); }} // For desktop
-      style={{
-        border: '1px solid var(--border-color)',
-        borderRadius: '16px',
-        marginBottom: '16px',
-        overflow: 'hidden',
-        cursor: 'pointer'
-      }}
+      className="rounded-xl overflow-hidden cursor-pointer border border-transparent hover:border-white/10"
     >
-      <div style={{ height: '180px', backgroundColor: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
-        {image ? <img src={image} alt={title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : 'Preview'}
+      <div className="relative h-44 bg-zinc-900 flex items-center justify-center text-zinc-400">
+        {image ? (
+          <Image src={image} alt={title} fill style={{ objectFit: 'cover' }} />
+        ) : (
+          <span className="text-sm">📷 Template Preview</span>
+        )}
       </div>
-      <div style={{ padding: '16px' }}>
-        <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: 600 }}>{title}</h3>
-        <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-secondary)' }}>{category}</p>
+      <div className="p-3">
+        <h3 className="text-sm font-semibold text-white truncate">{title}</h3>
+        {category && <p className="text-xs text-zinc-400">{category}</p>}
       </div>
     </div>
   );

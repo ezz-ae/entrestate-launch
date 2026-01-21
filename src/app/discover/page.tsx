@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -221,7 +222,7 @@ export default function DiscoverPage() {
                     <p className="text-sm text-zinc-500">Add your listings source or preview with sample listings.</p>
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                         <Button asChild className="h-12 px-6 rounded-full bg-white text-black font-bold">
-                            <a href="/docs#inventory">Add listings source</a>
+                            <Link href="/docs#inventory">Add listings source</Link>
                         </Button>
                         <Button onClick={handleLoadSample} variant="outline" className="h-12 px-6 rounded-full border-white/10 bg-white/5 text-white font-bold">
                             Add sample listings
@@ -295,12 +296,12 @@ export default function DiscoverPage() {
 
       <div className="pointer-events-none fixed bottom-4 left-1/2 z-40 w-[min(92vw,420px)] -translate-x-1/2 sm:hidden">
         <Button asChild className="pointer-events-auto h-12 w-full rounded-full bg-white text-black font-bold shadow-xl">
-          <a href={launchPackHref}>Launch Pack for a listing</a>
+          <Link href={launchPackHref}>Launch Pack for a listing</Link>
         </Button>
       </div>
       <div className="pointer-events-none fixed bottom-6 right-6 z-40 hidden sm:flex">
         <Button asChild className="pointer-events-auto h-12 rounded-full bg-white text-black font-bold shadow-xl">
-          <a href={launchPackHref}>Launch Pack</a>
+          <Link href={launchPackHref}>Launch Pack</Link>
         </Button>
       </div>
 

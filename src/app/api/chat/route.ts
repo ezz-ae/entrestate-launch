@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
       const agentId = agentSnapshot.docs[0].id;
       const knowledgeSnapshot = await db.collection('tenants').doc(tenantId).collection('agents').doc(agentId).collection('knowledge').get();
       if (!knowledgeSnapshot.empty) {
-        knowledgeSnapshot.docs.forEach(doc => {
+        knowledgeSnapshot.docs.forEach((doc: any) => {
           const data = doc.data();
           agentKnowledge += `\n- Chat Name: ${data.chatName || 'N/A'}`;
           agentKnowledge += `\n- Company Details: ${data.companyDetails || 'N/A'}`;

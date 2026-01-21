@@ -16,26 +16,7 @@ export function KnowledgeUploader({ onUploadSuccess }: KnowledgeUploaderProps) {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    if (acceptedFiles.length > 0) {
-        const acceptedFile = acceptedFiles[0];
-        if (acceptedFile.type !== 'application/pdf') {
-            setError('Invalid file type. Please upload a PDF file.');
-            return;
-        }
-        setError(null);
-        setFile(acceptedFile);
-        handleUpload(acceptedFile);
-    }
-  }, []);
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: { 'application/pdf': ['.pdf'] },
-    multiple: false
-  });
-
-  const handleUpload = async (fileToUpload: File) => {
+  const handleUpload = useCallback(async (fileToUpload: File) => {
     if (!fileToUpload) return;
 
     setUploading(true);
@@ -67,7 +48,26 @@ export function KnowledgeUploader({ onUploadSuccess }: KnowledgeUploaderProps) {
     } finally {
       setUploading(false);
     }
-  };
+  }, [onUploadSuccess, toast]);
+
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    if (acceptedFiles.length > 0) {
+        const acceptedFile = acceptedFiles[0];
+        if (acceptedFile.type !== 'application/pdf') {
+            setError('Invalid file type. Please upload a PDF file.');
+            return;
+        }
+        setError(null);
+        setFile(acceptedFile);
+        handleUpload(acceptedFile);
+    }
+  }, [handleUpload]);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: { 'application/pdf': ['.pdf'] },
+    multiple: false
+  });
 
   if (uploading) {
     return (

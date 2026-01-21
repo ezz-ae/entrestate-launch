@@ -24,10 +24,10 @@ export async function GET(req: NextRequest) {
     ]);
 
     const siteMap = new Map<string, FirebaseFirestore.QueryDocumentSnapshot>();
-    tenantSnapshot.docs.forEach((doc) => siteMap.set(doc.id, doc));
-    ownerSnapshot.docs.forEach((doc) => siteMap.set(doc.id, doc));
+    tenantSnapshot.docs.forEach((doc: any) => siteMap.set(doc.id, doc));
+    ownerSnapshot.docs.forEach((doc: any) => siteMap.set(doc.id, doc));
 
-    const sites = Array.from(siteMap.values()).map((doc) => {
+    const sites = Array.from(siteMap.values()).map((doc: any) => {
       const data = doc.data();
       const published = Boolean(data.published);
       const customDomain = data.customDomain || null;

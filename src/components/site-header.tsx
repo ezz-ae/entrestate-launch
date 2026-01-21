@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { cn } from "@/lib/utils";
 import { 
   Sparkles, 
@@ -21,12 +21,14 @@ import {
   Library,
   LifeBuoy,
   Search,
-  Users
+  Users,
+  UploadCloud
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EntrestateLogo } from './icons';
 import { Button } from './ui/button';
 import { useAuth } from '@/hooks/useAuth';
+import { useBrochure } from '@/context/BrochureContext';
 
 const NAV_LINKS = [
     { href: "/instagram-assistant", label: "Instagram Assistant", icon: Bot, description: "Reply faster to buyer inquiries" },
@@ -38,9 +40,12 @@ const NAV_LINKS = [
 
 export function SiteHeader() {
   const pathname = usePathname();
+  const router = useRouter();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user, logOut } = useAuth();
+  const { setBrochureFile } = useBrochure();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleLogOut = async () => {
     try {
@@ -67,6 +72,15 @@ export function SiteHeader() {
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [pathname]);
+
+  const handleHeaderUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setBrochureFile(file);
+      // Directly open the builder
+      router.push('/builder');
+    }
+  };
 
   return (
     <header 
@@ -101,7 +115,25 @@ export function SiteHeader() {
         </div>
         
         <div className="flex items-center gap-3">
-          {user ? (
+          {/* Header Upload Button */}
+          <input 
+            type="file" 
+            ref={fileInputRef}
+            className="hidden"
+            accept=".pdf"
+            onChange={handleHeaderUpload}
+          />
+          <Button 
+            variant="ghost" 
+            className="hidden sm:flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:text-white hover:bg-white/5"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <UploadCloud className="h-4 w-4" />
+            Upload
+          </Button>
+
+          {/* Auth bypassed for testing */}
+          {true || user ? (
             <>
               <Link href="/dashboard" className="hidden sm:block">
                   <Button className="h-10 px-6 rounded-full bg-white text-black font-bold text-[10px] uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-white/10 group border-0">
@@ -180,18 +212,18 @@ export function SiteHeader() {
                         <div>
                             <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mb-6 px-1">Quick Access</p>
                             <div className="space-y-3">
-                                <Link href={user ? "/dashboard" : "/start"} className="block">
+                                <Link href={true || user ? "/dashboard" : "/start"} className="block">
                                     <div className="p-6 rounded-[1.5rem] bg-blue-600 text-white shadow-xl shadow-blue-600/20 group">
                                         <div className="flex items-center justify-between mb-3">
                                             <Target className="h-5 w-5" />
                                             <ArrowRight className="h-4 w-4 opacity-50" />
                                         </div>
-                                        <h4 className="text-lg font-bold tracking-tight">{user ? "Dashboard" : "Get Started"}</h4>
+                                        <h4 className="text-lg font-bold tracking-tight">{true || user ? "Dashboard" : "Get Started"}</h4>
                                         <p className="text-blue-100/60 text-[10px] font-bold uppercase tracking-widest">Your Workspace</p>
                                     </div>
                                 </Link>
                                 <div className="grid grid-cols-2 gap-3">
-                                    {user && (
+                                    {(true || user) && (
                                       <Link href="/profile" className="p-4 rounded-xl bg-white/5 border border-white/5 flex flex-col gap-2">
                                           <User className="h-5 w-5 text-zinc-500" />
                                           <span className="text-xs font-bold text-zinc-300">Profile</span>
@@ -208,14 +240,14 @@ export function SiteHeader() {
                 </div>
 
                 <div className="p-6 border-t border-white/5 bg-zinc-950/80 backdrop-blur-xl">
-                    {user ? (
+                    {true || user ? (
                         <div className="flex items-center gap-3 bg-white/5 p-3 rounded-2xl border border-white/5">
                              <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold text-white text-xs">
-                                {user.email?.substring(0, 2).toUpperCase()}
+                                {(user?.email || 'DE').substring(0, 2).toUpperCase()}
                              </div>
                              <div className="flex-1 min-w-0">
-                                <p className="text-white font-bold text-xs truncate">{user.displayName || user.email?.split('@')[0]}</p>
-                                <p className="text-zinc-600 text-[10px] truncate">{user.email}</p>
+                                <p className="text-white font-bold text-xs truncate">{user?.displayName || user?.email?.split('@')[0] || 'Demo User'}</p>
+                                <p className="text-zinc-600 text-[10px] truncate">{user?.email || 'demo@entrestate.com'}</p>
                              </div>
                              <Button variant="ghost" size="icon" className="h-8 w-8 text-zinc-600" onClick={handleLogOut}>
                                 <X className="h-4 w-4" />

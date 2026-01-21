@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ message: 'Rate limit exceeded' }, { status: 429 });
     }
     
-    let source = [];
+  let source: any[] = [];
     let dataSource = 'database';
 
     if (SERVER_ENV.USE_STATIC_INVENTORY !== 'false') {

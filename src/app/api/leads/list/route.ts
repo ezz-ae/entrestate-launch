@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
       .limit(parsed.limit)
       .get();
 
-    const leads = snapshot.docs.map((doc) => {
+    const leads = snapshot.docs.map((doc: any) => {
       const data = doc.data();
       const createdAt = data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : data.createdAt;
       const updatedAt = data.updatedAt?.toDate ? data.updatedAt.toDate().toISOString() : data.updatedAt;

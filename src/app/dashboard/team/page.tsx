@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,7 +34,7 @@ export default function TeamDashboardPage() {
     return letters || displayName.slice(0, 2).toUpperCase();
   }, [displayName]);
 
-  const loadInvites = async () => {
+  const loadInvites = useCallback(async () => {
     if (!user) return;
     setLoadingInvites(true);
     try {
@@ -47,7 +47,7 @@ export default function TeamDashboardPage() {
     } finally {
       setLoadingInvites(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     if (!user) {
@@ -55,7 +55,7 @@ export default function TeamDashboardPage() {
       return;
     }
     loadInvites();
-  }, [user]);
+  }, [user, loadInvites]);
 
   const handleInvite = async () => {
     if (!inviteEmail.trim()) {

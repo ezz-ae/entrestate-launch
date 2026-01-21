@@ -117,17 +117,17 @@ export const useFirebase = (): FirebaseServicesAndUser => {
 };
 
 // Custom hooks with specific dependencies to optimize re-renders
-export const useFirebaseAuth = (deps: DependencyList = []) => {
+export const useFirebaseAuth = () => {
   const { auth, user, isUserLoading, userError } = useFirebase();
-  return useMemo(() => ({ auth, user, isUserLoading, userError }), [auth, user, isUserLoading, userError, ...deps]);
+  return useMemo(() => ({ auth, user, isUserLoading, userError }), [auth, user, isUserLoading, userError]);
 };
 
-export const useFirebaseUser = (deps: DependencyList = []) => {
+export const useFirebaseUser = () => {
     const { user, isUserLoading, userError } = useFirebase();
-    return useMemo(() => ({ user, isUserLoading, userError }), [user, isUserLoading, userError, ...deps]);
+    return useMemo(() => ({ user, isUserLoading, userError }), [user, isUserLoading, userError]);
 };
 
-export const useFirestore = (deps: DependencyList = []) => {
+export const useFirestore = () => {
   const { firestore } = useFirebase();
-  return useMemo(() => firestore, [firestore, ...deps]);
+  return useMemo(() => firestore, [firestore]);
 };

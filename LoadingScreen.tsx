@@ -19,7 +19,7 @@ const LoadingScreen: React.FC = () => {
     }, 1500); // Change text every 1.5 seconds
 
     return () => clearInterval(interval);
-  }, []);
+  }, [steps.length]);
 
   return (
     <div style={{

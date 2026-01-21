@@ -7,6 +7,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import Script from 'next/script';
 import { Inter } from 'next/font/google';
 import ClientLayout from './client-layout';
+import { BrochureProvider } from '@/context/BrochureContext';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -45,9 +46,11 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning className="dark">
       <body className={`${inter.className} antialiased bg-black text-white selection:bg-white/20`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+          <BrochureProvider>
             <ClientLayout>
                 {children}
             </ClientLayout>
+          </BrochureProvider>
           <Toaster />
         </ThemeProvider>
         {facebookAppId && (

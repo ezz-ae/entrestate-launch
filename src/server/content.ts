@@ -31,7 +31,7 @@ export async function fetchBlogPosts(limit = 6): Promise<BlogPost[]> {
       .limit(limit)
       .get();
 
-    return snapshot.docs.map((doc) => {
+    return snapshot.docs.map((doc: any) => {
       const data = doc.data() as any;
       return {
         id: doc.id,

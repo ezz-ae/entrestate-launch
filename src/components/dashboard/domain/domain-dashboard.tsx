@@ -54,7 +54,7 @@ export function DomainDashboard() {
       }
     };
     fetchSites();
-  }, []);
+  }, [selectedSiteId]);
 
   const handleVerify = async () => {
     setIsVerifying(true);

@@ -1,3 +1,17 @@
+// import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+
+// ... component body
+
+  const calculate = useCallback(() => {
+    // ... existing calculate logic ...
+  }, [salePrice, commissionRate, agentSplit]);
+
+  useEffect(() => {
+    calculate();
+  }, [calculate]); // Use the stable 'calculate' function as the dependency
+
+// ... rest of component
 
 > entrestate-os@2.0.0 lint
 > eslint . --ext .js,.jsx,.ts,.tsx --ignore-pattern gemini-app/

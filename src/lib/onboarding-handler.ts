@@ -14,8 +14,8 @@ export async function handleOnboarding(data: any, setBrandColor: (color: string)
         const prompt = (data['user-prompt'] || "").toLowerCase();
         console.log("Analyzing prompt for Deep Build:", prompt);
 
-        let targetProject: any = null;
-        let targetDeveloper = null;
+    let targetProject: any = null;
+    let targetDeveloper: string | null = null;
 
         const projectResults = await searchProjects(prompt);
         if (projectResults.length > 0) {
