@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { ADMIN_ROLES } from '@/lib/server/roles';
 import { BILLING_SKUS, resolveBillingSku } from '@/lib/server/billing';
+import { IS_PAYMENTS_ENABLED } from '@/lib/server/env';
 
 const API_KEY = process.env.ZIINA_API_KEY;
 const BASE_URL = process.env.ZIINA_BASE_URL || 'https://api.sandbox.ziina.com';
@@ -15,6 +16,9 @@ const requestSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+    if (!IS_PAYMENTS_ENABLED) {
+        return NextResponse.json({ error: 'Payments are not enabled.' }, { status: 501 });
+    }
   try {
     const { tenantId } = await requireRole(req, ADMIN_ROLES);
     if (!API_KEY) {

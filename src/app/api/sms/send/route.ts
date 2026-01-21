@@ -12,6 +12,7 @@ import {
   planLimitErrorResponse,
 } from '@/lib/server/billing';
 import { getAdminDb } from '@/server/firebase-admin';
+import { IS_SMS_ENABLED } from '@/lib/server/env';
 
 const ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
 const AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
@@ -26,6 +27,9 @@ const payloadSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  if (!IS_SMS_ENABLED) {
+    return NextResponse.json({ error: 'SMS is not enabled.' }, { status: 501 });
+  }
   const logger = createApiLogger(req, { route: 'POST /api/sms/send' });
   try {
     const { tenantId, uid } = await requireRole(req, ADMIN_ROLES);

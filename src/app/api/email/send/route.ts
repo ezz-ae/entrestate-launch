@@ -15,6 +15,7 @@ import {
   planLimitErrorResponse,
 } from '@/lib/server/billing';
 import { getAdminDb } from '@/server/firebase-admin';
+import { IS_EMAIL_ENABLED } from '@/lib/server/env';
 
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX = 30;
@@ -26,6 +27,9 @@ const payloadSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+    if (!IS_EMAIL_ENABLED) {
+        return NextResponse.json({ error: 'Email is not enabled.' }, { status: 501 });
+    }
   const logger = createApiLogger(req, { route: 'POST /api/email/send' });
   try {
     const { tenantId, uid } = await requireRole(req, ADMIN_ROLES);

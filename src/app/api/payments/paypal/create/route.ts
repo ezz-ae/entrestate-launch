@@ -4,6 +4,7 @@ import { paypalRequest } from '@/server/paypal';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { ADMIN_ROLES } from '@/lib/server/roles';
 import { BILLING_SKUS, resolveBillingSku } from '@/lib/server/billing';
+import { IS_PAYMENTS_ENABLED } from '@/lib/server/env';
 
 const requestSchema = z.object({
   planId: z.string().optional(),
@@ -23,6 +24,9 @@ function getCheckoutUrl() {
 }
 
 export async function POST(req: NextRequest) {
+  if (!IS_PAYMENTS_ENABLED) {
+    return NextResponse.json({ error: 'Payments are not enabled.' }, { status: 501 });
+  }
   try {
     const { tenantId } = await requireRole(req, ADMIN_ROLES);
     const payload = requestSchema.parse(await req.json());

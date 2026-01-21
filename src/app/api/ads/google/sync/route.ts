@@ -15,6 +15,7 @@ import {
   planLimitErrorResponse,
   requirePlanFeature,
 } from '@/lib/server/billing';
+import { IS_GOOGLE_ADS_ENABLED } from '@/lib/server/env';
 
 const requestSchema = z.object({
   name: z.string().min(1),
@@ -44,6 +45,9 @@ const ADS_NOTIFICATION_EMAIL = process.env.ADS_NOTIFICATION_EMAIL || 'google@ent
  */
 
 export async function POST(req: NextRequest) {
+    if (!IS_GOOGLE_ADS_ENABLED) {
+        return NextResponse.json({ error: 'Google Ads is not enabled.' }, { status: 501 });
+    }
     try {
         const { tenantId, email, uid } = await requireRole(req, ADMIN_ROLES);
         const ip = getRequestIp(req);

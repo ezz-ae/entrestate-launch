@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 
 interface TemplateCardProps {
   title: string;
@@ -9,14 +9,16 @@ interface TemplateCardProps {
 }
 
 const TemplateCard: React.FC<TemplateCardProps> = ({ title, category, image, onSelect, onLongPress }) => {
-  let longPressTimer: NodeJS.Timeout;
+  const longPressTimer = useRef<NodeJS.Timeout>();
 
   const handleTouchStart = () => {
-    longPressTimer = setTimeout(onLongPress, 500); // 500ms for long press
+    longPressTimer.current = setTimeout(onLongPress, 500); // 500ms for long press
   };
 
   const handleTouchEnd = () => {
-    clearTimeout(longPressTimer);
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+    }
   };
 
   return (

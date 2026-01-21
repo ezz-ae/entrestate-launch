@@ -4,35 +4,7 @@
 
 
 /home/user/entrestate-launch/CommissionCalculatorScreen.jsx
-  13:5  error    Error: Cannot access variable before it is declared
-
-`calculate` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
-
-  11 |
-  12 |   useEffect(() => {
-> 13 |     calculate();
-     |     ^^^^^^^^^ `calculate` accessed before it is declared
-  14 |   }, [salePrice, commissionRate, agentSplit]);
-  15 |
-  16 |   const calculate = () => {
-
-  14 |   }, [salePrice, commissionRate, agentSplit]);
-  15 |
-> 16 |   const calculate = () => {
-     |   ^^^^^^^^^^^^^^^^^^^^^^^^^
-> 17 |     const price = parseFloat(salePrice.replace(/,/g, '')) || 0;
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> 18 |     const rate = parseFloat(commissionRate) || 0;
-     …
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> 29 |     });
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> 30 |   };
-     | ^^^^^ `calculate` is declared here
-  31 |
-  32 |   return (
-  33 |     <div className="screen-container" style={{ padding: '24px', paddingBottom: '100px' }}>  react-hooks/immutability
-  14:6  warning  React Hook useEffect has a missing dependency: 'calculate'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       react-hooks/exhaustive-deps
+  30:6  warning  React Hook useEffect has a missing dependency: 'calculate'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
 
 /home/user/entrestate-launch/LoadingScreen.tsx
   22:6  warning  React Hook useEffect has a missing dependency: 'steps.length'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
@@ -201,5 +173,5 @@ Reassigning `longPressTimer` after render has completed can cause inconsistent b
   127:97   warning  React Hook useMemo has a spread element in its dependency array. This means we can't statically verify whether you've passed the correct dependencies  react-hooks/exhaustive-deps
   132:47   warning  React Hook useMemo has a spread element in its dependency array. This means we can't statically verify whether you've passed the correct dependencies  react-hooks/exhaustive-deps
 
-✖ 31 problems (5 errors, 26 warnings)
+✖ 30 problems (4 errors, 26 warnings)
 
