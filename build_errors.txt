@@ -3,12 +3,12 @@
 > next build --webpack
 
 ▲ Next.js 16.1.1 (webpack)
-- Environments: .env.local, .env
+- Environments: .env.local
 - Experiments (use with caution):
   · serverActions
 
   Creating an optimized production build ...
-⚠ Compiled with warnings in 50s
+⚠ Compiled with warnings in 47s
 
 ./node_modules/@sentry/node/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
 Critical dependency: the request of a dependency is an expression
@@ -59,7 +59,7 @@ Import trace for requested module:
   Generating static pages using 1 worker (24/99) 
   Generating static pages using 1 worker (49/99) 
   Generating static pages using 1 worker (74/99) 
-✓ Generating static pages using 1 worker (99/99) in 11.3s
+✓ Generating static pages using 1 worker (99/99) in 13.7s
 [inventory] Loading mode: FIRESTORE (Env: 'false')
 [Firebase Admin] Loaded credentials from local file: gen-lang-client-0927332284-firebase-adminsdk-fbsvc-50c0d0f275.json
 [inventory] Successfully loaded 3837 projects from Firestore.

@@ -26,6 +26,10 @@ const serverEnvSchema = z.object({
   CRON_SECRET: z.string().optional(),
   RATE_LIMIT_DISABLED: z.string().optional(),
   USE_STATIC_INVENTORY: z.string().optional(),
+  ENABLE_PAYMENTS: z.string().optional().default('false'),
+  ENABLE_GOOGLE_ADS: z.string().optional().default('false'),
+  ENABLE_SMS: z.string().optional().default('false'),
+  ENABLE_EMAIL: z.string().optional().default('false'),
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;
@@ -55,3 +59,8 @@ function validateServerEnv(rawEnv: NodeJS.ProcessEnv) {
 }
 
 export const SERVER_ENV = validateServerEnv(process.env);
+
+export const IS_PAYMENTS_ENABLED = SERVER_ENV.ENABLE_PAYMENTS === 'true' || Boolean(process.env.PAYPAL_CLIENT_ID && process.env.PAYPAL_CLIENT_SECRET);
+export const IS_GOOGLE_ADS_ENABLED = SERVER_ENV.ENABLE_GOOGLE_ADS === 'true' || Boolean(process.env.META_TOKEN_NUMBER);
+export const IS_SMS_ENABLED = SERVER_ENV.ENABLE_SMS === 'true' || Boolean(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN);
+export const IS_EMAIL_ENABLED = SERVER_ENV.ENABLE_EMAIL === 'true' || Boolean(process.env.RESEND_API_KEY || process.env.SENDGRID_API_KEY);

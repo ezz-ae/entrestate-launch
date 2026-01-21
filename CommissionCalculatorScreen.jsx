@@ -9,10 +9,6 @@ const CommissionCalculatorScreen = ({ onBack }) => {
   const [agentSplit, setAgentSplit] = useState('50'); // Default 50/50 split
   const [result, setResult] = useState(null);
 
-  useEffect(() => {
-    calculate();
-  }, [salePrice, commissionRate, agentSplit]);
-
   const calculate = () => {
     const price = parseFloat(salePrice.replace(/,/g, '')) || 0;
     const rate = parseFloat(commissionRate) || 0;
@@ -28,6 +24,10 @@ const CommissionCalculatorScreen = ({ onBack }) => {
       broker: brokerEarnings
     });
   };
+
+  useEffect(() => {
+    calculate();
+  }, [salePrice, commissionRate, agentSplit]);
 
   return (
     <div className="screen-container" style={{ padding: '24px', paddingBottom: '100px' }}>
