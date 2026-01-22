@@ -7,8 +7,9 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx --ignore-pattern gemini-app/",
-  "test:dev": "tsx scripts/test/dev-sends-smoke.ts",
-  "test:dev-jobs": "tsx scripts/test/dev-jobs-retry-smoke.ts",
+    "test:dev": "tsx scripts/test/dev-sends-smoke.ts",
+    "test:dev-jobs": "tsx scripts/test/dev-jobs-retry-smoke.ts",
+    "test:e2e": "playwright test",
     "smoke": "tsx scripts/smoke/projects-filter-smoke.ts",
     "ingest": "ts-node --esm scripts/ingest-entrestate.ts"
   },
@@ -95,6 +96,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@playwright/test": "^1.57.0",
     "@types/canvas-confetti": "^1.9.0",
     "@types/lodash": "^4.17.7",
     "@types/node": "^20",
@@ -103,6 +105,7 @@
     "autoprefixer": "^10.4.23",
     "eslint": "^9.39.2",
     "eslint-config-next": "^16.1.1",
+    "playwright": "^1.57.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.19",
     "ts-node": "^1.7.1",

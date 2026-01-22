@@ -55,6 +55,12 @@ jobs:
       - name: Run dev jobs retry smoke test
         run: npm run test:dev-jobs
 
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Run E2E tests (Playwright)
+        run: npm run test:e2e
+
       - name: Stop Next.js server
         if: always()
         run: |
