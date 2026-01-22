@@ -112,8 +112,50 @@ function getClaimsRoles(claims: DecodedIdToken) {
 }
 
 export async function verifyFirebaseIdToken(req: NextRequest | Request) {
-  const tokenString = getAuthHeader(req);
+  // Dev shortcut: allow a fake/dev user when DEV_FIREBASE_AUTH=true or when
+  // running in non-production and the x-dev-user header is present.
   try {
+    const enableDev = process.env.DEV_FIREBASE_AUTH === 'true' || process.env.NODE_ENV !== 'production';
+    const devUserHeader = req.headers.get('x-dev-user') || req.headers.get('x-dev-uid');
+    // also allow a dev cookie named `dev_user` or `dev_uid`
+    let devUserFromCookie: string | null = null;
+    const cookieHeader = req.headers.get('cookie');
+    if (cookieHeader) {
+      const cookies = cookieHeader.split(';').map((c) => c.trim());
+      for (const c of cookies) {
+        if (c.startsWith('dev_user=')) {
+          devUserFromCookie = decodeURIComponent(c.slice('dev_user='.length));
+          break;
+        }
+        if (c.startsWith('dev_uid=')) {
+          devUserFromCookie = decodeURIComponent(c.slice('dev_uid='.length));
+          break;
+        }
+      }
+    }
+    const effectiveDevUser = devUserHeader || devUserFromCookie;
+    if (enableDev && effectiveDevUser) {
+      const raw = effectiveDevUser.trim();
+      const email = raw.includes('@') ? raw : `${raw}@dev.local`;
+      const uid = raw.includes('@') ? raw.split('@')[0] : raw;
+      const rolesHeader = req.headers.get('x-dev-roles') || '';
+      const roles = rolesHeader
+        ? rolesHeader.split(',').map((r) => r.trim()).filter(Boolean)
+        : ['agency_admin'];
+
+      const claims = {
+        uid,
+        email,
+        // provide tenantId and roles so downstream logic doesn't hit Firestore
+        tenantId: uid,
+        roles,
+        dev: true,
+      } as unknown as DecodedIdToken;
+
+      return { uid, email, claims };
+    }
+
+    const tokenString = getAuthHeader(req);
     const auth = getAdminAuth();
     const claims = await auth.verifyIdToken(tokenString);
     return { uid: claims.uid, email: claims.email ?? null, claims };

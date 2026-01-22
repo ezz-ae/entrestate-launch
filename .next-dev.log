@@ -1,0 +1,881 @@
+▲ Next.js 16.1.1 (Turbopack)
+- Local:         http://localhost:3002
+- Network:       http://10.1.2.199:3002
+- Environments: .env.local, .env
+- Experiments (use with caution):
+  · serverActions
+
+✓ Starting...
+✓ Ready in 1181ms
+ GET /api/dev/jobs 200 in 681ms (compile: 654ms, render: 27ms)
+ POST /api/dev/jobs 200 in 11ms (compile: 4ms, render: 7ms)
+ GET /api/dev/jobs 200 in 19ms (compile: 13ms, render: 6ms)
+ POST /api/dev/jobs 200 in 24ms (compile: 14ms, render: 10ms)
+ GET /api/dev/jobs 200 in 14ms (compile: 8ms, render: 7ms)
+ GET /api/dev/fixtures 200 in 79ms (compile: 72ms, render: 7ms)
+[auth] token verification failed Error [UnauthorizedError]: Missing Authorization header
+    at getAuthHeader (src/lib/server/auth.ts:78:11)
+    at verifyFirebaseIdToken (src/lib/server/auth.ts:158:25)
+    at requireAuth (src/lib/server/auth.ts:203:40)
+    at requireRole (src/lib/server/auth.ts:224:27)
+    at POST (src/app/api/email/send/route.ts:37:48)
+  76 |   const header = req.headers.get('authorization') || '';
+  77 |   if (!header.startsWith('Bearer ')) {
+> 78 |     throw new UnauthorizedError('Missing Authorization header');
+     |           ^
+  79 |   }
+  80 |   const token = header.slice(7).trim();
+  81 |   if (!token) {
+{"level":"error","route":"POST /api/email/send","requestId":"b2048ee5-a645-417e-a5f0-8d0a249f55c9","timestamp":"2026-01-21T23:17:11.358Z","method":"POST","message":"api.error","outcome":"failure","status":401,"durationMs":74,"error":"Invalid token"}
+ POST /api/email/send 401 in 1416ms (compile: 1334ms, render: 82ms)
+⚠ ./src/app/api/dev/sends/route.ts:18:25
+Module not found: Can't resolve './data'
+[0m [90m 16 |[39m     [36mconst[39m body [33m=[39m [36mawait[39m req[33m.[39mjson()[33m;[39m
+ [90m 17 |[39m     [36mtry[39m {
+[31m[1m>[22m[39m[90m 18 |[39m       [36mconst[39m mod [33m=[39m [36mawait[39m [36mimport[39m([32m'./data'[39m)[33m;[39m
+ [90m    |[39m                         [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 19 |[39m       [36mconst[39m entry [33m=[39m mod[33m.[39maddSend(body)[33m;[39m
+ [90m 20 |[39m       [36mreturn[39m [33mNextResponse[39m[33m.[39mjson({ success[33m:[39m [36mtrue[39m[33m,[39m entry })[33m;[39m
+ [90m 21 |[39m     } [36mcatch[39m (e) {[0m
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+ POST /api/dev/sends 500 in 82ms (compile: 78ms, render: 4ms)
+⚠ ./src/app/api/dev/sends/route.ts:18:25
+Module not found: Can't resolve './data'
+[0m [90m 16 |[39m     [36mconst[39m body [33m=[39m [36mawait[39m req[33m.[39mjson()[33m;[39m
+ [90m 17 |[39m     [36mtry[39m {
+[31m[1m>[22m[39m[90m 18 |[39m       [36mconst[39m mod [33m=[39m [36mawait[39m [36mimport[39m([32m'./data'[39m)[33m;[39m
+ [90m    |[39m                         [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 19 |[39m       [36mconst[39m entry [33m=[39m mod[33m.[39maddSend(body)[33m;[39m
+ [90m 20 |[39m       [36mreturn[39m [33mNextResponse[39m[33m.[39mjson({ success[33m:[39m [36mtrue[39m[33m,[39m entry })[33m;[39m
+ [90m 21 |[39m     } [36mcatch[39m (e) {[0m
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+ GET /api/dev/sends 200 in 6ms (compile: 3ms, render: 3ms)
+[auth] token verification failed Error [UnauthorizedError]: Missing Authorization header
+    at getAuthHeader (src/lib/server/auth.ts:78:11)
+    at verifyFirebaseIdToken (src/lib/server/auth.ts:158:25)
+    at requireAuth (src/lib/server/auth.ts:203:40)
+    at requireRole (src/lib/server/auth.ts:224:27)
+    at POST (src/app/api/sms/send/route.ts:36:48)
+  76 |   const header = req.headers.get('authorization') || '';
+  77 |   if (!header.startsWith('Bearer ')) {
+> 78 |     throw new UnauthorizedError('Missing Authorization header');
+     |           ^
+  79 |   }
+  80 |   const token = header.slice(7).trim();
+  81 |   if (!token) {
+SMS Engine Error: Error [UnauthorizedError]: Invalid token
+    at verifyFirebaseIdToken (src/lib/server/auth.ts:164:11)
+    at requireAuth (src/lib/server/auth.ts:203:40)
+    at requireRole (src/lib/server/auth.ts:224:27)
+    at POST (src/app/api/sms/send/route.ts:36:48)
+  162 |   } catch (error) {
+  163 |     console.error('[auth] token verification failed', error);
+> 164 |     throw new UnauthorizedError('Invalid token');
+      |           ^
+  165 |   }
+  166 | }
+  167 |
+{"level":"error","route":"POST /api/sms/send","requestId":"66cb2457-f446-4acb-95e1-8d0f581ad8e5","timestamp":"2026-01-21T23:17:11.618Z","method":"POST","message":"api.error","outcome":"failure","status":500,"durationMs":68,"error":"Invalid token"}
+ POST /api/sms/send 401 in 155ms (compile: 83ms, render: 72ms)
+⚠ ./src/app/api/dev/sends/route.ts:18:25
+Module not found: Can't resolve './data'
+[0m [90m 16 |[39m     [36mconst[39m body [33m=[39m [36mawait[39m req[33m.[39mjson()[33m;[39m
+ [90m 17 |[39m     [36mtry[39m {
+[31m[1m>[22m[39m[90m 18 |[39m       [36mconst[39m mod [33m=[39m [36mawait[39m [36mimport[39m([32m'./data'[39m)[33m;[39m
+ [90m    |[39m                         [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 19 |[39m       [36mconst[39m entry [33m=[39m mod[33m.[39maddSend(body)[33m;[39m
+ [90m 20 |[39m       [36mreturn[39m [33mNextResponse[39m[33m.[39mjson({ success[33m:[39m [36mtrue[39m[33m,[39m entry })[33m;[39m
+ [90m 21 |[39m     } [36mcatch[39m (e) {[0m
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+ POST /api/dev-login 307 in 66ms (compile: 56ms, render: 9ms)
+[supabase] NEXT_PUBLIC_SUPABASE_URL or ANON_KEY missing or invalid — using mock supabase client in dev
+ POST /dashboard 200 in 2.2s (compile: 1820ms, proxy.ts: 55ms, render: 366ms)
+⚠ ./src/app/api/dev/sends/route.ts:18:25
+Module not found: Can't resolve './data'
+[0m [90m 16 |[39m     [36mconst[39m body [33m=[39m [36mawait[39m req[33m.[39mjson()[33m;[39m
+ [90m 17 |[39m     [36mtry[39m {
+[31m[1m>[22m[39m[90m 18 |[39m       [36mconst[39m mod [33m=[39m [36mawait[39m [36mimport[39m([32m'./data'[39m)[33m;[39m
+ [90m    |[39m                         [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 19 |[39m       [36mconst[39m entry [33m=[39m mod[33m.[39maddSend(body)[33m;[39m
+ [90m 20 |[39m       [36mreturn[39m [33mNextResponse[39m[33m.[39mjson({ success[33m:[39m [36mtrue[39m[33m,[39m entry })[33m;[39m
+ [90m 21 |[39m     } [36mcatch[39m (e) {[0m
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+ GET /api/dev/fixtures 200 in 26ms (compile: 14ms, render: 13ms)
+[auth] token verification failed Error [UnauthorizedError]: Missing Authorization header
+    at getAuthHeader (src/lib/server/auth.ts:78:11)
+    at verifyFirebaseIdToken (src/lib/server/auth.ts:158:25)
+    at requireAuth (src/lib/server/auth.ts:203:40)
+    at requireRole (src/lib/server/auth.ts:224:27)
+    at POST (src/app/api/email/send/route.ts:37:48)
+  76 |   const header = req.headers.get('authorization') || '';
+  77 |   if (!header.startsWith('Bearer ')) {
+> 78 |     throw new UnauthorizedError('Missing Authorization header');
+     |           ^
+  79 |   }
+  80 |   const token = header.slice(7).trim();
+  81 |   if (!token) {
+{"level":"error","route":"POST /api/email/send","requestId":"37e075ae-ba58-435f-96b5-ff69a139b4db","timestamp":"2026-01-21T23:18:10.029Z","method":"POST","message":"api.error","outcome":"failure","status":401,"durationMs":73,"error":"Invalid token"}
+ POST /api/email/send 401 in 93ms (compile: 16ms, render: 77ms)
+⚠ ./src/app/api/dev/sends/route.ts:18:25
+Module not found: Can't resolve './data'
+[0m [90m 16 |[39m     [36mconst[39m body [33m=[39m [36mawait[39m req[33m.[39mjson()[33m;[39m
+ [90m 17 |[39m     [36mtry[39m {
+[31m[1m>[22m[39m[90m 18 |[39m       [36mconst[39m mod [33m=[39m [36mawait[39m [36mimport[39m([32m'./data'[39m)[33m;[39m
+ [90m    |[39m                         [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 19 |[39m       [36mconst[39m entry [33m=[39m mod[33m.[39maddSend(body)[33m;[39m
+ [90m 20 |[39m       [36mreturn[39m [33mNextResponse[39m[33m.[39mjson({ success[33m:[39m [36mtrue[39m[33m,[39m entry })[33m;[39m
+ [90m 21 |[39m     } [36mcatch[39m (e) {[0m
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+ POST /api/dev/sends 500 in 7ms (compile: 3ms, render: 4ms)
+⚠ ./src/app/api/dev/sends/route.ts:18:25
+Module not found: Can't resolve './data'
+[0m [90m 16 |[39m     [36mconst[39m body [33m=[39m [36mawait[39m req[33m.[39mjson()[33m;[39m
+ [90m 17 |[39m     [36mtry[39m {
+[31m[1m>[22m[39m[90m 18 |[39m       [36mconst[39m mod [33m=[39m [36mawait[39m [36mimport[39m([32m'./data'[39m)[33m;[39m
+ [90m    |[39m                         [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 19 |[39m       [36mconst[39m entry [33m=[39m mod[33m.[39maddSend(body)[33m;[39m
+ [90m 20 |[39m       [36mreturn[39m [33mNextResponse[39m[33m.[39mjson({ success[33m:[39m [36mtrue[39m[33m,[39m entry })[33m;[39m
+ [90m 21 |[39m     } [36mcatch[39m (e) {[0m
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+ GET /api/dev/sends 200 in 4ms (compile: 3ms, render: 1656µs)
+[auth] token verification failed Error [UnauthorizedError]: Missing Authorization header
+    at getAuthHeader (src/lib/server/auth.ts:78:11)
+    at verifyFirebaseIdToken (src/lib/server/auth.ts:158:25)
+    at requireAuth (src/lib/server/auth.ts:203:40)
+    at requireRole (src/lib/server/auth.ts:224:27)
+    at POST (src/app/api/sms/send/route.ts:36:48)
+  76 |   const header = req.headers.get('authorization') || '';
+  77 |   if (!header.startsWith('Bearer ')) {
+> 78 |     throw new UnauthorizedError('Missing Authorization header');
+     |           ^
+  79 |   }
+  80 |   const token = header.slice(7).trim();
+  81 |   if (!token) {
+SMS Engine Error: Error [UnauthorizedError]: Invalid token
+    at verifyFirebaseIdToken (src/lib/server/auth.ts:164:11)
+    at requireAuth (src/lib/server/auth.ts:203:40)
+    at requireRole (src/lib/server/auth.ts:224:27)
+    at POST (src/app/api/sms/send/route.ts:36:48)
+  162 |   } catch (error) {
+  163 |     console.error('[auth] token verification failed', error);
+> 164 |     throw new UnauthorizedError('Invalid token');
+      |           ^
+  165 |   }
+  166 | }
+  167 |
+{"level":"error","route":"POST /api/sms/send","requestId":"f48ed0de-cc52-4271-ae93-2538413a6530","timestamp":"2026-01-21T23:18:10.124Z","method":"POST","message":"api.error","outcome":"failure","status":500,"durationMs":71,"error":"Invalid token"}
+ POST /api/sms/send 401 in 78ms (compile: 3ms, render: 75ms)
+⚠ ./src/app/api/dev/sends/route.ts:18:25
+Module not found: Can't resolve './data'
+[0m [90m 16 |[39m     [36mconst[39m body [33m=[39m [36mawait[39m req[33m.[39mjson()[33m;[39m
+ [90m 17 |[39m     [36mtry[39m {
+[31m[1m>[22m[39m[90m 18 |[39m       [36mconst[39m mod [33m=[39m [36mawait[39m [36mimport[39m([32m'./data'[39m)[33m;[39m
+ [90m    |[39m                         [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 19 |[39m       [36mconst[39m entry [33m=[39m mod[33m.[39maddSend(body)[33m;[39m
+ [90m 20 |[39m       [36mreturn[39m [33mNextResponse[39m[33m.[39mjson({ success[33m:[39m [36mtrue[39m[33m,[39m entry })[33m;[39m
+ [90m 21 |[39m     } [36mcatch[39m (e) {[0m
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+ GET /api/dev/fixtures 200 in 26ms (compile: 16ms, render: 10ms)
+{"level":"info","route":"POST /api/email/send","requestId":"cc26968f-7715-46c1-8e0b-1e8e2f535e07","timestamp":"2026-01-21T23:19:07.512Z","method":"POST","tenantId":"dev.user","userId":"dev.user","message":"api.success","outcome":"success","status":200,"durationMs":1,"metadata":{"simulated":true,"note":"resend missing"}}
+ POST /api/email/send 200 in 16ms (compile: 10ms, render: 6ms)
+⚠ ./src/app/api/dev/sends/route.ts:18:25
+Module not found: Can't resolve './data'
+[0m [90m 16 |[39m     [36mconst[39m body [33m=[39m [36mawait[39m req[33m.[39mjson()[33m;[39m
+ [90m 17 |[39m     [36mtry[39m {
+[31m[1m>[22m[39m[90m 18 |[39m       [36mconst[39m mod [33m=[39m [36mawait[39m [36mimport[39m([32m'./data'[39m)[33m;[39m
+ [90m    |[39m                         [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 19 |[39m       [36mconst[39m entry [33m=[39m mod[33m.[39maddSend(body)[33m;[39m
+ [90m 20 |[39m       [36mreturn[39m [33mNextResponse[39m[33m.[39mjson({ success[33m:[39m [36mtrue[39m[33m,[39m entry })[33m;[39m
+ [90m 21 |[39m     } [36mcatch[39m (e) {[0m
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+ POST /api/dev/sends 500 in 8ms (compile: 2ms, render: 6ms)
+⚠ ./src/app/api/dev/sends/route.ts:18:25
+Module not found: Can't resolve './data'
+[0m [90m 16 |[39m     [36mconst[39m body [33m=[39m [36mawait[39m req[33m.[39mjson()[33m;[39m
+ [90m 17 |[39m     [36mtry[39m {
+[31m[1m>[22m[39m[90m 18 |[39m       [36mconst[39m mod [33m=[39m [36mawait[39m [36mimport[39m([32m'./data'[39m)[33m;[39m
+ [90m    |[39m                         [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 19 |[39m       [36mconst[39m entry [33m=[39m mod[33m.[39maddSend(body)[33m;[39m
+ [90m 20 |[39m       [36mreturn[39m [33mNextResponse[39m[33m.[39mjson({ success[33m:[39m [36mtrue[39m[33m,[39m entry })[33m;[39m
+ [90m 21 |[39m     } [36mcatch[39m (e) {[0m
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+ GET /api/dev/sends 200 in 8ms (compile: 6ms, render: 2ms)
+{"level":"info","route":"POST /api/sms/send","requestId":"ee0370be-98bb-4faa-90ed-1e82970ea84e","timestamp":"2026-01-21T23:19:07.541Z","method":"POST","tenantId":"dev.user","userId":"dev.user","message":"api.success","outcome":"success","status":200,"durationMs":0,"metadata":{"simulated":true}}
+ POST /api/sms/send 200 in 5ms (compile: 3ms, render: 2ms)
+ POST /api/dev/sends 200 in 178ms (compile: 160ms, render: 19ms)
+ GET /api/dev/sends 200 in 22ms (compile: 12ms, render: 10ms)
+ GET /api/dev/fixtures 200 in 22ms (compile: 9ms, render: 14ms)
+{"level":"info","route":"POST /api/email/send","requestId":"2c5b9563-81e1-4ce6-9b26-c292d1a05d9b","timestamp":"2026-01-21T23:24:44.085Z","method":"POST","tenantId":"dev.user","userId":"dev.user","message":"api.success","outcome":"success","status":200,"durationMs":0,"metadata":{"simulated":true,"note":"resend missing"}}
+ POST /api/email/send 200 in 27ms (compile: 22ms, render: 5ms)
+ POST /api/dev/sends 200 in 86ms (compile: 74ms, render: 12ms)
+ GET /api/dev/sends 200 in 4ms (compile: 1572µs, render: 2ms)
+{"level":"info","route":"POST /api/sms/send","requestId":"b8065bc5-2495-4c55-9832-4402349f48fb","timestamp":"2026-01-21T23:24:44.188Z","method":"POST","tenantId":"dev.user","userId":"dev.user","message":"api.success","outcome":"success","status":200,"durationMs":0,"metadata":{"simulated":true}}
+ POST /api/sms/send 200 in 7ms (compile: 2ms, render: 5ms)
+ GET /api/dev/jobs 200 in 104ms (compile: 77ms, render: 28ms)
+⚠ ./src/app/api/dev/jobs/[id]/route.ts:5:23
+Module not found: Can't resolve '../data'
+[0m [90m 3 |[39m [36mexport[39m [36masync[39m [36mfunction[39m [33mGET[39m(req[33m:[39m [33mRequest[39m[33m,[39m { params }[33m:[39m { params[33m:[39m { id[33m:[39m string } }) {
+ [90m 4 |[39m   [36mtry[39m {
+[31m[1m>[22m[39m[90m 5 |[39m     [36mconst[39m mod [33m=[39m [36mawait[39m [36mimport[39m([32m'../data'[39m)[33m;[39m
+ [90m   |[39m                       [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 6 |[39m     [36mconst[39m id [33m=[39m params[33m.[39mid[33m;[39m
+ [90m 7 |[39m     [36mconst[39m job [33m=[39m (mod[33m.[39mrecentJobs [33m||[39m [])[33m.[39mfind((j[33m:[39m any) [33m=>[39m j[33m.[39mid [33m===[39m id)[33m;[39m
+ [90m 8 |[39m     [36mif[39m ([33m![39mjob) [36mreturn[39m [33mNextResponse[39m[33m.[39mjson({ error[33m:[39m [32m'Not found'[39m }[33m,[39m { status[33m:[39m [35m404[39m })[33m;[39m[0m
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+ GET /api/dev/jobs/retrain-1769037361799 500 in 846ms (compile: 839ms, render: 7ms)
+Error: Route "/api/dev/jobs/[id]" used `params.id`. `params` is a Promise and must be unwrapped with `await` or `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+    at GET (src/app/api/dev/jobs/[id]/route.ts:6:23)
+  4 |   try {
+  5 |     const mod = await import('../../data');
+> 6 |     const id = params.id;
+    |                       ^
+  7 |     const job = (mod.recentJobs || []).find((j: any) => j.id === id);
+  8 |     if (!job) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  9 |     return NextResponse.json({ job });
+ GET /api/dev/jobs/retrain-1769037361799 404 in 352ms (compile: 203ms, render: 149ms)
+ GET /api/dev/fixtures 200 in 75ms (compile: 64ms, render: 10ms)
+{"level":"info","route":"POST /api/email/send","requestId":"bfc64bc6-2092-4111-abb5-7068de4d0277","timestamp":"2026-01-21T23:28:22.524Z","method":"POST","tenantId":"dev.user","userId":"dev.user","message":"api.success","outcome":"success","status":200,"durationMs":0,"metadata":{"simulated":true,"note":"resend missing"}}
+ POST /api/email/send 200 in 419ms (compile: 413ms, render: 5ms)
+ POST /api/dev/sends 200 in 41ms (compile: 37ms, render: 4ms)
+ GET /api/dev/sends 200 in 5ms (compile: 3ms, render: 1725µs)
+{"level":"info","route":"POST /api/sms/send","requestId":"78404ec4-1574-4575-9486-4481b82b6aaf","timestamp":"2026-01-21T23:28:22.666Z","method":"POST","tenantId":"dev.user","userId":"dev.user","message":"api.success","outcome":"success","status":200,"durationMs":0,"metadata":{"simulated":true}}
+ POST /api/sms/send 200 in 87ms (compile: 83ms, render: 5ms)
+ GET /api/dev/jobs/stream 200 in 1963ms (compile: 421ms, render: 1542ms)
+ GET /api/dev/fixtures 200 in 88ms (compile: 75ms, render: 12ms)
+{"level":"info","route":"POST /api/email/send","requestId":"3d8994c6-9f34-467d-be49-0f1d2ff71a20","timestamp":"2026-01-22T11:37:06.924Z","method":"POST","tenantId":"dev.user","userId":"dev.user","message":"api.success","outcome":"success","status":200,"durationMs":0,"metadata":{"simulated":true,"note":"resend missing"}}
+ POST /api/email/send 200 in 496ms (compile: 489ms, render: 6ms)
+ POST /api/dev/sends 200 in 56ms (compile: 48ms, render: 8ms)
+ GET /api/dev/sends 200 in 4ms (compile: 1639µs, render: 2ms)
+{"level":"info","route":"POST /api/sms/send","requestId":"4300ffd1-4841-466a-bd9f-d10fa7d83375","timestamp":"2026-01-22T11:37:07.111Z","method":"POST","tenantId":"dev.user","userId":"dev.user","message":"api.success","outcome":"success","status":200,"durationMs":0,"metadata":{"simulated":true}}
+ POST /api/sms/send 200 in 114ms (compile: 108ms, render: 6ms)
+[inventory] Loading mode: FIRESTORE (Env: 'false')
+[inventory] Successfully loaded 12 projects from Firestore.
+ GET / 200 in 5.1s (compile: 388ms, render: 4.8s)
+ GET /api/auth/me 200 in 88ms (compile: 77ms, render: 11ms)
+[inventory] Loading mode: FIRESTORE (Env: 'false')
+[projects/search] Incoming Request: {
+  query: '',
+  city: 'all',
+  status: 'all',
+  developer: '',
+  minPrice: undefined,
+  maxPrice: undefined,
+  page: 1,
+  limit: 12
+}
+[inventory] Loading mode: FIRESTORE (Env: 'false')
+ GET /favicon.ico 404 in 1093ms (compile: 1005ms, render: 89ms)
+[inventory] Successfully loaded 3837 projects from Firestore.
+ GET /api/projects/meta 200 in 5.4s (compile: 590ms, render: 4.9s)
+[inventory] Successfully loaded 3837 projects from Firestore.
+[projects/search] Database Match: 3837 projects found.
+ GET /api/projects/search?city=all&status=all&page=1&limit=12 200 in 6.3s (compile: 634ms, render: 5.7s)
+[supabase] NEXT_PUBLIC_SUPABASE_URL or ANON_KEY missing or invalid — using mock supabase client in dev
+ GET /dashboard 200 in 330ms (compile: 151ms, proxy.ts: 66ms, render: 113ms)
+ GET /api/auth/me 200 in 13ms (compile: 7ms, render: 6ms)
+ GET /api/auth/me 200 in 4ms (compile: 2ms, render: 2ms)
+ GET /projects/dev-project-1 404 in 147ms (compile: 116ms, render: 31ms)
+ GET /projects/dev-project-1 404 in 78ms (compile: 6ms, render: 72ms)
+ GET /api/auth/me 200 in 8ms (compile: 3ms, render: 4ms)
+ GET /favicon.ico 404 in 78ms (compile: 14ms, render: 65ms)
+[supabase] NEXT_PUBLIC_SUPABASE_URL or ANON_KEY missing or invalid — using mock supabase client in dev
+ GET /dashboard 200 in 149ms (compile: 13ms, proxy.ts: 19ms, render: 116ms)
+ GET /api/auth/me 200 in 6ms (compile: 3ms, render: 3ms)
+ GET /api/auth/me 200 in 5ms (compile: 2ms, render: 3ms)
+ GET /favicon.ico 404 in 83ms (compile: 7ms, render: 76ms)
+ GET /dashboard/sites 200 in 2.8s (compile: 2.7s, proxy.ts: 15ms, render: 51ms)
+ GET /dashboard/domain 200 in 850ms (compile: 797ms, proxy.ts: 17ms, render: 35ms)
+ GET /dashboard/marketing 200 in 966ms (compile: 857ms, proxy.ts: 48ms, render: 61ms)
+ GET /dashboard/google-ads 200 in 924ms (compile: 858ms, proxy.ts: 15ms, render: 51ms)
+ GET /dashboard/marketing 200 in 78ms (compile: 10ms, proxy.ts: 21ms, render: 47ms)
+ GET /dashboard/email-marketing 200 in 1076ms (compile: 997ms, proxy.ts: 23ms, render: 56ms)
+ GET /dashboard/marketing 200 in 83ms (compile: 10ms, proxy.ts: 23ms, render: 49ms)
+ GET /dashboard/brand 200 in 901ms (compile: 821ms, proxy.ts: 17ms, render: 63ms)
+ GET /dashboard/team 200 in 945ms (compile: 836ms, proxy.ts: 15ms, render: 94ms)
+ GET /api/auth/me 200 in 29ms (compile: 20ms, render: 8ms)
+ GET /dashboard/assets 200 in 846ms (compile: 759ms, proxy.ts: 4ms, render: 84ms)
+ GET /dashboard/chat-agent 200 in 1026ms (compile: 984ms, proxy.ts: 5ms, render: 36ms)
+ GET /api/auth/me 200 in 57ms (compile: 53ms, render: 4ms)
+ GET /dashboard/team 200 in 56ms (compile: 11ms, proxy.ts: 17ms, render: 28ms)
+ GET /api/auth/me 200 in 9ms (compile: 4ms, render: 5ms)
+ GET /dashboard/chat-agent 200 in 71ms (compile: 19ms, proxy.ts: 15ms, render: 37ms)
+ GET /api/auth/me 200 in 22ms (compile: 7ms, render: 15ms)
+[supabase] NEXT_PUBLIC_SUPABASE_URL or ANON_KEY missing or invalid — using mock supabase client in dev
+Error: Route "/dashboard/leads" used `searchParams.q`. `searchParams` is a Promise and must be unwrapped with `await` or `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+    at LeadsPipelinePage (src/app/dashboard/leads/page.tsx:14:17)
+  12 | export default async function LeadsPipelinePage({ searchParams }: any) {
+  13 |   const supabase = createSupabaseServerClient();
+> 14 |   const query = searchParams?.q || '';
+     |                 ^
+  15 |   const currentPage = Number(searchParams?.page) || 1;
+  16 |   const sortColumn = searchParams?.sort || 'created_at';
+  17 |   const sortOrder = searchParams?.order || 'desc';
+⨯ TypeError: supabase.from(...).select(...).range is not a function
+    at LeadsPipelinePage (src/app/dashboard/leads/page.tsx:31:6)
+  29 |     .from('leads')
+  30 |     .select('*, projects(headline)', { count: 'exact' })
+> 31 |     .range(from, to)
+     |      ^
+  32 |     .order(sortColumn, { ascending: sortOrder === 'asc' });
+  33 |
+  34 |   if (query) { {
+  digest: '2701233457'
+}
+ GET /dashboard/leads 200 in 1615ms (compile: 1455ms, proxy.ts: 15ms, render: 144ms)
+ GET /dashboard/team 200 in 113ms (compile: 15ms, proxy.ts: 13ms, render: 85ms)
+ GET /api/auth/me 200 in 10ms (compile: 4ms, render: 6ms)
+ GET /api/auth/me 200 in 9ms (compile: 6ms, render: 3ms)
+ GET /favicon.ico 404 in 147ms (compile: 26ms, render: 121ms)
+ GET /api/auth/me 200 in 4ms (compile: 2ms, render: 1688µs)
+ GET /dashboard/marketing 200 in 73ms (compile: 12ms, proxy.ts: 21ms, render: 40ms)
+ GET /dashboard/sms-marketing 200 in 863ms (compile: 790ms, proxy.ts: 24ms, render: 49ms)
+ GET /dashboard/sites 200 in 82ms (compile: 19ms, proxy.ts: 15ms, render: 48ms)
+[supabase] NEXT_PUBLIC_SUPABASE_URL or ANON_KEY missing or invalid — using mock supabase client in dev
+ GET /dashboard 200 in 92ms (compile: 24ms, proxy.ts: 17ms, render: 51ms)
+ GET /projects/dev-project-1 404 in 71ms (compile: 23ms, render: 47ms)
+ GET /projects/dev-project-1 404 in 73ms (compile: 8ms, render: 65ms)
+ GET /api/auth/me 200 in 9ms (compile: 3ms, render: 6ms)
+ GET /favicon.ico 404 in 84ms (compile: 14ms, render: 71ms)
+[supabase] NEXT_PUBLIC_SUPABASE_URL or ANON_KEY missing or invalid — using mock supabase client in dev
+ GET /dashboard 200 in 137ms (compile: 13ms, proxy.ts: 17ms, render: 107ms)
+ GET /api/auth/me 200 in 7ms (compile: 3ms, render: 4ms)
+ GET /api/auth/me 200 in 5ms (compile: 3ms, render: 2ms)
+ GET /favicon.ico 404 in 95ms (compile: 17ms, render: 78ms)
+ GET /dashboard/billing 200 in 1215ms (compile: 1131ms, proxy.ts: 22ms, render: 62ms)
+[supabase] NEXT_PUBLIC_SUPABASE_URL or ANON_KEY missing or invalid — using mock supabase client in dev
+ GET /dashboard 200 in 88ms (compile: 23ms, proxy.ts: 16ms, render: 49ms)
+[supabase] NEXT_PUBLIC_SUPABASE_URL or ANON_KEY missing or invalid — using mock supabase client in dev
+Error: Route "/dashboard/leads" used `searchParams.q`. `searchParams` is a Promise and must be unwrapped with `await` or `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+    at LeadsPipelinePage (src/app/dashboard/leads/page.tsx:14:17)
+  12 | export default async function LeadsPipelinePage({ searchParams }: any) {
+  13 |   const supabase = createSupabaseServerClient();
+> 14 |   const query = searchParams?.q || '';
+     |                 ^
+  15 |   const currentPage = Number(searchParams?.page) || 1;
+  16 |   const sortColumn = searchParams?.sort || 'created_at';
+  17 |   const sortOrder = searchParams?.order || 'desc';
+⨯ TypeError: supabase.from(...).select(...).range is not a function
+    at LeadsPipelinePage (src/app/dashboard/leads/page.tsx:31:6)
+  29 |     .from('leads')
+  30 |     .select('*, projects(headline)', { count: 'exact' })
+> 31 |     .range(from, to)
+     |      ^
+  32 |     .order(sortColumn, { ascending: sortOrder === 'asc' });
+  33 |
+  34 |   if (query) { {
+  digest: '2701233457'
+}
+ GET /dashboard/leads 200 in 100ms (compile: 11ms, proxy.ts: 19ms, render: 70ms)
+[supabase] NEXT_PUBLIC_SUPABASE_URL or ANON_KEY missing or invalid — using mock supabase client in dev
+ GET /dashboard 200 in 139ms (compile: 13ms, proxy.ts: 14ms, render: 112ms)
+ GET /api/auth/me 200 in 9ms (compile: 5ms, render: 5ms)
+ GET /favicon.ico 404 in 78ms (compile: 11ms, render: 67ms)
+ GET /api/auth/me 200 in 8ms (compile: 1644µs, render: 6ms)
+ GET /api/dev/fixtures 200 in 44ms (compile: 18ms, render: 26ms)
+{"level":"info","route":"POST /api/email/send","requestId":"8e039475-630e-47ba-ad04-36eb65b247b9","timestamp":"2026-01-22T11:45:33.438Z","method":"POST","tenantId":"dev.user","userId":"dev.user","message":"api.success","outcome":"success","status":200,"durationMs":1,"metadata":{"simulated":true,"note":"resend missing"}}
+ POST /api/email/send 200 in 36ms (compile: 29ms, render: 7ms)
+ POST /api/dev/sends 200 in 100ms (compile: 92ms, render: 8ms)
+ GET /api/dev/sends 200 in 5ms (compile: 3ms, render: 3ms)
+{"level":"info","route":"POST /api/sms/send","requestId":"93cd4552-6add-4a46-ae50-4bd359473bd3","timestamp":"2026-01-22T11:45:33.564Z","method":"POST","tenantId":"dev.user","userId":"dev.user","message":"api.success","outcome":"success","status":200,"durationMs":0,"metadata":{"simulated":true}}
+ POST /api/sms/send 200 in 13ms (compile: 6ms, render: 7ms)
+[supabase] NEXT_PUBLIC_SUPABASE_URL or ANON_KEY missing or invalid — using mock supabase client in dev
+ GET /dashboard 200 in 84ms (compile: 19ms, proxy.ts: 14ms, render: 50ms)
+[inventory] Loading mode: FIRESTORE (Env: 'false')
+ GET / 200 in 68ms (compile: 17ms, render: 51ms)
+[projects/search] Incoming Request: {
+  query: '',
+  city: 'all',
+  status: 'all',
+  developer: '',
+  minPrice: undefined,
+  maxPrice: undefined,
+  page: 1,
+  limit: 12
+}
+[inventory] Loading mode: FIRESTORE (Env: 'false')
+[projects/search] Database Match: 3837 projects found.
+ GET /api/projects/search?city=all&status=all&page=1&limit=12 200 in 20ms (compile: 5ms, render: 15ms)
+[inventory] Loading mode: FIRESTORE (Env: 'false')
+ GET /api/projects/meta 200 in 41ms (compile: 21ms, render: 20ms)
+[inventory] Loading mode: FIRESTORE (Env: 'false')
+ GET /api/projects/meta 200 in 7ms (compile: 1428µs, render: 6ms)
+[projects/search] Incoming Request: {
+  query: '',
+  city: 'all',
+  status: 'all',
+  developer: '',
+  minPrice: undefined,
+  maxPrice: undefined,
+  page: 1,
+  limit: 12
+}
+[inventory] Loading mode: FIRESTORE (Env: 'false')
+[projects/search] Database Match: 3837 projects found.
+ GET /api/projects/search?city=all&status=all&page=1&limit=12 200 in 15ms (compile: 10ms, render: 5ms)
+ GET /api/auth/me 200 in 10ms (compile: 3ms, render: 6ms)
+[supabase] NEXT_PUBLIC_SUPABASE_URL or ANON_KEY missing or invalid — using mock supabase client in dev
+ GET /dashboard 200 in 87ms (compile: 9ms, proxy.ts: 15ms, render: 63ms)
+ GET /api/auth/me 200 in 8ms (compile: 5ms, render: 4ms)
+ GET /api/auth/me 200 in 6ms (compile: 4ms, render: 2ms)
+[inventory] Loading mode: FIRESTORE (Env: 'false')
+ GET / 200 in 69ms (compile: 28ms, render: 42ms)
+[projects/search] Incoming Request: {
+  query: '',
+  city: 'all',
+  status: 'all',
+  developer: '',
+  minPrice: undefined,
+  maxPrice: undefined,
+  page: 1,
+  limit: 12
+}
+[inventory] Loading mode: FIRESTORE (Env: 'false')
+[projects/search] Database Match: 3837 projects found.
+ GET /api/projects/search?city=all&status=all&page=1&limit=12 200 in 25ms (compile: 10ms, render: 15ms)
+[inventory] Loading mode: FIRESTORE (Env: 'false')
+ GET /api/projects/meta 200 in 11ms (compile: 3ms, render: 9ms)
+[inventory] Loading mode: FIRESTORE (Env: 'false')
+ GET /api/projects/meta 200 in 66ms (compile: 37ms, render: 29ms)
+[projects/search] Incoming Request: {
+  query: '',
+  city: 'all',
+  status: 'all',
+  developer: '',
+  minPrice: undefined,
+  maxPrice: undefined,
+  page: 1,
+  limit: 12
+}
+[inventory] Loading mode: FIRESTORE (Env: 'false')
+[projects/search] Database Match: 3837 projects found.
+ GET /api/projects/search?city=all&status=all&page=1&limit=12 200 in 10ms (compile: 4ms, render: 6ms)
+ GET /api/auth/me 200 in 14ms (compile: 9ms, render: 5ms)
+ GET /instagram-assistant 200 in 124ms (compile: 77ms, render: 46ms)
+ GET /dashboard/chat-agent 200 in 93ms (compile: 22ms, proxy.ts: 23ms, render: 48ms)
+ GET /api/auth/me 200 in 13ms (compile: 6ms, render: 7ms)
+ GET /api/auth/me 200 in 8ms (compile: 3ms, render: 6ms)
+ GET /api/auth/me 200 in 9ms (compile: 3ms, render: 6ms)
+[supabase] NEXT_PUBLIC_SUPABASE_URL or ANON_KEY missing or invalid — using mock supabase client in dev
+ GET /dashboard 200 in 69ms (compile: 19ms, proxy.ts: 12ms, render: 38ms)
+ GET /dashboard/assets 200 in 71ms (compile: 13ms, proxy.ts: 28ms, render: 30ms)
+ GET /dashboard/chat-agent 200 in 29ms (compile: 5ms, proxy.ts: 4ms, render: 19ms)
+ GET /api/auth/me 200 in 15ms (compile: 8ms, render: 6ms)
+[supabase] NEXT_PUBLIC_SUPABASE_URL or ANON_KEY missing or invalid — using mock supabase client in dev
+Error: Route "/dashboard/leads" used `searchParams.q`. `searchParams` is a Promise and must be unwrapped with `await` or `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+    at LeadsPipelinePage (src/app/dashboard/leads/page.tsx:14:17)
+  12 | export default async function LeadsPipelinePage({ searchParams }: any) {
+  13 |   const supabase = createSupabaseServerClient();
+> 14 |   const query = searchParams?.q || '';
+     |                 ^
+  15 |   const currentPage = Number(searchParams?.page) || 1;
+  16 |   const sortColumn = searchParams?.sort || 'created_at';
+  17 |   const sortOrder = searchParams?.order || 'desc';
+⨯ TypeError: supabase.from(...).select(...).range is not a function
+    at LeadsPipelinePage (src/app/dashboard/leads/page.tsx:31:6)
+  29 |     .from('leads')
+  30 |     .select('*, projects(headline)', { count: 'exact' })
+> 31 |     .range(from, to)
+     |      ^
+  32 |     .order(sortColumn, { ascending: sortOrder === 'asc' });
+  33 |
+  34 |   if (query) { {
+  digest: '2701233457'
+}
+ GET /dashboard/leads 200 in 45ms (compile: 7ms, proxy.ts: 4ms, render: 34ms)
+ GET /dashboard/chat-agent 200 in 139ms (compile: 16ms, proxy.ts: 13ms, render: 110ms)
+ GET /api/auth/me 200 in 10ms (compile: 5ms, render: 5ms)
+ GET /favicon.ico 404 in 90ms (compile: 12ms, render: 78ms)
+ GET /api/auth/me 200 in 7ms (compile: 4ms, render: 3ms)
+ GET /api/auth/me 200 in 7ms (compile: 3ms, render: 4ms)
+ GET /dashboard/chat-agent 200 in 191ms (compile: 74ms, proxy.ts: 27ms, render: 90ms)
+ GET /dashboard/chat-agent 200 in 89ms (compile: 6ms, proxy.ts: 6ms, render: 78ms)
+ GET /dashboard/chat-agent 200 in 153ms (compile: 8ms, proxy.ts: 9ms, render: 136ms)
+ GET /dashboard/chat-agent 200 in 207ms (compile: 7ms, proxy.ts: 7ms, render: 194ms)
+ GET /dashboard/chat-agent 404 in 398ms (compile: 133ms, proxy.ts: 62ms, render: 204ms)
+ GET /dashboard/chat-agent 200 in 173ms (compile: 10ms, proxy.ts: 17ms, render: 146ms)
+ GET /dashboard/chat-agent 200 in 400ms (compile: 48ms, proxy.ts: 16ms, render: 336ms)
+ GET /api/auth/me 200 in 7ms (compile: 5ms, render: 2ms)
+ GET /favicon.ico 404 in 66ms (compile: 9ms, render: 57ms)
+ GET /api/auth/me 200 in 9ms (compile: 3ms, render: 6ms)
+ GET /api/auth/me 200 in 10ms (compile: 3ms, render: 6ms)
+ GET /dashboard/chat-agent 200 in 198ms (compile: 75ms, proxy.ts: 25ms, render: 99ms)
+ GET /dashboard/chat-agent 200 in 89ms (compile: 47ms, proxy.ts: 3ms, render: 38ms)
+ GET /dashboard/chat-agent 200 in 48ms (compile: 5ms, proxy.ts: 4ms, render: 38ms)
+ GET /dashboard/chat-agent 200 in 45ms (compile: 3ms, proxy.ts: 3ms, render: 39ms)
+ GET /dashboard/chat-agent 200 in 53ms (compile: 5ms, proxy.ts: 3ms, render: 45ms)
+ GET /dashboard/chat-agent 200 in 50ms (compile: 12ms, proxy.ts: 3ms, render: 34ms)
+ GET /dashboard/chat-agent 200 in 46ms (compile: 4ms, proxy.ts: 4ms, render: 37ms)
+ GET /dashboard/chat-agent 200 in 87ms (compile: 8ms, proxy.ts: 4ms, render: 75ms)
+ GET /dashboard/chat-agent 200 in 70ms (compile: 4ms, proxy.ts: 6ms, render: 60ms)
+ GET /dashboard/chat-agent 200 in 42ms (compile: 5ms, proxy.ts: 9ms, render: 28ms)
+ GET /dashboard/chat-agent 200 in 104ms (compile: 69ms, proxy.ts: 8ms, render: 28ms)
+ GET /dashboard/chat-agent 200 in 52ms (compile: 3ms, proxy.ts: 4ms, render: 46ms)
+ GET /dashboard/chat-agent 200 in 31ms (compile: 4ms, proxy.ts: 6ms, render: 21ms)
+ GET /dashboard/chat-agent 200 in 51ms (compile: 6ms, proxy.ts: 7ms, render: 38ms)
+ GET /dashboard/chat-agent 200 in 45ms (compile: 5ms, proxy.ts: 5ms, render: 36ms)
+ GET /dashboard/chat-agent 200 in 43ms (compile: 4ms, proxy.ts: 3ms, render: 37ms)
+ GET /dashboard/chat-agent 200 in 52ms (compile: 3ms, proxy.ts: 3ms, render: 47ms)
+ GET /dashboard/chat-agent 200 in 34ms (compile: 3ms, proxy.ts: 4ms, render: 28ms)
+ GET /dashboard/chat-agent 200 in 22ms (compile: 3ms, proxy.ts: 3ms, render: 15ms)
+ GET /dashboard/chat-agent 200 in 37ms (compile: 4ms, proxy.ts: 2ms, render: 30ms)
+ GET /dashboard/chat-agent 200 in 40ms (compile: 4ms, proxy.ts: 3ms, render: 34ms)
+ GET /dashboard/chat-agent 200 in 37ms (compile: 4ms, proxy.ts: 3ms, render: 31ms)
+ GET /dashboard/chat-agent 200 in 18ms (compile: 3ms, proxy.ts: 3ms, render: 12ms)
+ GET /dashboard/chat-agent 200 in 17ms (compile: 3ms, proxy.ts: 3ms, render: 11ms)
+ GET /dashboard/chat-agent 200 in 43ms (compile: 11ms, proxy.ts: 3ms, render: 30ms)
+ GET /dashboard/chat-agent 200 in 36ms (compile: 3ms, proxy.ts: 3ms, render: 30ms)
+ GET /dashboard/chat-agent 200 in 36ms (compile: 1993µs, proxy.ts: 3ms, render: 31ms)
+ GET /dashboard/chat-agent 200 in 33ms (compile: 3ms, proxy.ts: 3ms, render: 28ms)
+ GET /dashboard/chat-agent 200 in 38ms (compile: 3ms, proxy.ts: 3ms, render: 32ms)
+ GET /dashboard/chat-agent 200 in 46ms (compile: 3ms, proxy.ts: 5ms, render: 39ms)
+ GET /dashboard/chat-agent 200 in 50ms (compile: 2ms, proxy.ts: 3ms, render: 45ms)
+ GET /dashboard/chat-agent 200 in 39ms (compile: 2ms, proxy.ts: 3ms, render: 34ms)
+ GET /dashboard/chat-agent 200 in 24ms (compile: 4ms, proxy.ts: 2ms, render: 18ms)
+ GET /dashboard/chat-agent 200 in 21ms (compile: 4ms, proxy.ts: 3ms, render: 14ms)
+ GET /dashboard/chat-agent 200 in 34ms (compile: 3ms, proxy.ts: 3ms, render: 28ms)
+ GET /dashboard/chat-agent 200 in 35ms (compile: 3ms, proxy.ts: 1713µs, render: 30ms)
+ GET /dashboard/chat-agent 200 in 41ms (compile: 3ms, proxy.ts: 4ms, render: 33ms)
+ GET /dashboard/chat-agent 200 in 39ms (compile: 2ms, proxy.ts: 4ms, render: 34ms)
+ GET /dashboard/chat-agent 200 in 40ms (compile: 3ms, proxy.ts: 4ms, render: 33ms)
+ GET /dashboard/chat-agent 200 in 44ms (compile: 3ms, proxy.ts: 4ms, render: 37ms)
+ GET /dashboard/chat-agent 200 in 44ms (compile: 3ms, proxy.ts: 6ms, render: 34ms)
+ GET /dashboard/chat-agent 200 in 41ms (compile: 3ms, proxy.ts: 4ms, render: 35ms)
+ GET /dashboard/chat-agent 200 in 43ms (compile: 3ms, proxy.ts: 3ms, render: 38ms)
+ GET /dashboard/chat-agent 200 in 43ms (compile: 7ms, proxy.ts: 3ms, render: 32ms)
+ GET /dashboard/chat-agent 200 in 44ms (compile: 4ms, proxy.ts: 3ms, render: 38ms)
+ GET /dashboard/chat-agent 200 in 25ms (compile: 11ms, proxy.ts: 2ms, render: 11ms)
+ GET /dashboard/chat-agent 200 in 36ms (compile: 1793µs, proxy.ts: 2ms, render: 32ms)
+ GET /dashboard/chat-agent 200 in 36ms (compile: 3ms, proxy.ts: 3ms, render: 30ms)
+ GET /dashboard/chat-agent 200 in 24ms (compile: 3ms, proxy.ts: 4ms, render: 17ms)
+ GET /dashboard/chat-agent 200 in 36ms (compile: 2ms, proxy.ts: 3ms, render: 30ms)
+ GET /dashboard/chat-agent 200 in 37ms (compile: 2ms, proxy.ts: 3ms, render: 32ms)
+ GET /dashboard/chat-agent 200 in 35ms (compile: 2ms, proxy.ts: 4ms, render: 29ms)
+ GET /dashboard/chat-agent 200 in 21ms (compile: 2ms, proxy.ts: 3ms, render: 15ms)
+ GET /dashboard/chat-agent 200 in 35ms (compile: 3ms, proxy.ts: 2ms, render: 30ms)
+ GET /dashboard/chat-agent 200 in 23ms (compile: 2ms, proxy.ts: 2ms, render: 18ms)
+ GET /dashboard/chat-agent 200 in 36ms (compile: 3ms, proxy.ts: 4ms, render: 30ms)
+ GET /dashboard/chat-agent 200 in 47ms (compile: 2ms, proxy.ts: 3ms, render: 42ms)
+ GET /dashboard/chat-agent 200 in 48ms (compile: 4ms, proxy.ts: 3ms, render: 42ms)
+ GET /dashboard/chat-agent 200 in 42ms (compile: 3ms, proxy.ts: 3ms, render: 36ms)
+ GET /dashboard/chat-agent 200 in 38ms (compile: 2ms, proxy.ts: 3ms, render: 33ms)
+ GET /dashboard/chat-agent 200 in 18ms (compile: 3ms, proxy.ts: 3ms, render: 12ms)
+ GET /dashboard/chat-agent 200 in 37ms (compile: 2ms, proxy.ts: 2ms, render: 32ms)
+ GET /dashboard/chat-agent 200 in 42ms (compile: 1918µs, proxy.ts: 3ms, render: 38ms)
+ GET /dashboard/chat-agent 200 in 45ms (compile: 3ms, proxy.ts: 4ms, render: 38ms)
+ GET /dashboard/chat-agent 200 in 24ms (compile: 5ms, proxy.ts: 6ms, render: 13ms)
+ GET /dashboard/chat-agent 200 in 26ms (compile: 4ms, proxy.ts: 3ms, render: 19ms)
+ GET /dashboard/chat-agent 200 in 43ms (compile: 2ms, proxy.ts: 3ms, render: 38ms)
+ GET /dashboard/chat-agent 200 in 27ms (compile: 3ms, proxy.ts: 2ms, render: 22ms)
+ GET /dashboard/chat-agent 200 in 22ms (compile: 5ms, proxy.ts: 3ms, render: 14ms)
+ GET /dashboard/chat-agent 200 in 74ms (compile: 2ms, proxy.ts: 3ms, render: 69ms)
+ GET /dashboard/chat-agent 200 in 73ms (compile: 3ms, proxy.ts: 4ms, render: 66ms)
+ GET /dashboard/chat-agent 200 in 45ms (compile: 4ms, proxy.ts: 3ms, render: 38ms)
+ GET /dashboard/chat-agent 200 in 44ms (compile: 5ms, proxy.ts: 4ms, render: 35ms)
+ GET /dashboard/chat-agent 200 in 51ms (compile: 5ms, proxy.ts: 3ms, render: 42ms)
+ GET /dashboard/chat-agent 200 in 46ms (compile: 5ms, proxy.ts: 4ms, render: 37ms)
+ GET /dashboard/chat-agent 200 in 23ms (compile: 4ms, proxy.ts: 3ms, render: 15ms)
+ GET /dashboard/chat-agent 200 in 37ms (compile: 2ms, proxy.ts: 3ms, render: 31ms)
+ GET /dashboard/chat-agent 200 in 38ms (compile: 4ms, proxy.ts: 3ms, render: 31ms)
+ GET /dashboard/chat-agent 200 in 23ms (compile: 3ms, proxy.ts: 3ms, render: 17ms)
+ GET /dashboard/chat-agent 200 in 50ms (compile: 3ms, proxy.ts: 3ms, render: 44ms)
+ GET /dashboard/chat-agent 200 in 50ms (compile: 3ms, proxy.ts: 12ms, render: 35ms)
+ GET /dashboard/chat-agent 200 in 25ms (compile: 4ms, proxy.ts: 2ms, render: 19ms)
+ GET /dashboard/chat-agent 200 in 20ms (compile: 3ms, proxy.ts: 3ms, render: 14ms)
+ GET /dashboard/chat-agent 200 in 68ms (compile: 3ms, proxy.ts: 5ms, render: 61ms)
+ GET /dashboard/chat-agent 200 in 46ms (compile: 4ms, proxy.ts: 3ms, render: 39ms)
+ GET /dashboard/chat-agent 200 in 44ms (compile: 3ms, proxy.ts: 4ms, render: 37ms)
+ GET /dashboard/chat-agent 200 in 42ms (compile: 3ms, proxy.ts: 4ms, render: 36ms)
+ GET /dashboard/chat-agent 200 in 44ms (compile: 4ms, proxy.ts: 2ms, render: 38ms)
+ GET /dashboard/chat-agent 200 in 45ms (compile: 3ms, proxy.ts: 4ms, render: 38ms)
+ GET /dashboard/chat-agent 200 in 43ms (compile: 4ms, proxy.ts: 5ms, render: 35ms)
+ GET /dashboard/chat-agent 200 in 38ms (compile: 4ms, proxy.ts: 2ms, render: 32ms)
+ GET /dashboard/chat-agent 200 in 42ms (compile: 3ms, proxy.ts: 4ms, render: 35ms)
+ GET /dashboard/chat-agent 200 in 41ms (compile: 4ms, proxy.ts: 3ms, render: 34ms)
+ GET /dashboard/chat-agent 200 in 41ms (compile: 4ms, proxy.ts: 3ms, render: 34ms)
+ GET /dashboard/chat-agent 200 in 30ms (compile: 5ms, proxy.ts: 3ms, render: 22ms)
+ GET /dashboard/chat-agent 200 in 53ms (compile: 5ms, proxy.ts: 6ms, render: 42ms)
+ GET /dashboard/chat-agent 200 in 48ms (compile: 2ms, proxy.ts: 3ms, render: 44ms)
+ GET /dashboard/chat-agent 200 in 39ms (compile: 3ms, proxy.ts: 4ms, render: 32ms)
+ GET /dashboard/chat-agent 200 in 36ms (compile: 3ms, proxy.ts: 4ms, render: 29ms)
+ GET /dashboard/chat-agent 200 in 37ms (compile: 1976µs, proxy.ts: 2ms, render: 32ms)
+ GET /dashboard/chat-agent 200 in 44ms (compile: 2ms, proxy.ts: 4ms, render: 38ms)
+ GET /dashboard/chat-agent 200 in 45ms (compile: 6ms, proxy.ts: 2ms, render: 37ms)
+ GET /dashboard/chat-agent 200 in 46ms (compile: 3ms, proxy.ts: 3ms, render: 40ms)
+ GET /dashboard/chat-agent 200 in 42ms (compile: 2ms, proxy.ts: 9ms, render: 31ms)
+ GET /dashboard/chat-agent 200 in 35ms (compile: 1840µs, proxy.ts: 4ms, render: 29ms)
+ GET /dashboard/chat-agent 200 in 34ms (compile: 2ms, proxy.ts: 3ms, render: 29ms)
+ GET /dashboard/chat-agent 200 in 36ms (compile: 3ms, proxy.ts: 2ms, render: 30ms)
+ GET /dashboard/chat-agent 200 in 37ms (compile: 3ms, proxy.ts: 3ms, render: 32ms)
+ GET /dashboard/chat-agent 200 in 46ms (compile: 3ms, proxy.ts: 4ms, render: 39ms)
+ GET /dashboard/chat-agent 200 in 47ms (compile: 3ms, proxy.ts: 4ms, render: 40ms)
+ GET /dashboard/chat-agent 200 in 36ms (compile: 2ms, proxy.ts: 4ms, render: 30ms)
+ GET /dashboard/chat-agent 200 in 35ms (compile: 4ms, proxy.ts: 2ms, render: 29ms)
+ GET /dashboard/chat-agent 200 in 36ms (compile: 3ms, proxy.ts: 3ms, render: 31ms)
+ GET /dashboard/chat-agent 200 in 38ms (compile: 3ms, proxy.ts: 2ms, render: 33ms)
+ GET /dashboard/chat-agent 200 in 22ms (compile: 2ms, proxy.ts: 3ms, render: 17ms)
+ GET /dashboard/chat-agent 200 in 44ms (compile: 6ms, proxy.ts: 4ms, render: 34ms)
+ GET /dashboard/chat-agent 200 in 41ms (compile: 3ms, proxy.ts: 2ms, render: 36ms)
+ GET /dashboard/chat-agent 200 in 41ms (compile: 1760µs, proxy.ts: 3ms, render: 36ms)
+ GET /dashboard/chat-agent 200 in 39ms (compile: 3ms, proxy.ts: 2ms, render: 34ms)
+ GET /dashboard/chat-agent 200 in 37ms (compile: 2ms, proxy.ts: 1903µs, render: 32ms)
+ GET /dashboard/chat-agent 200 in 34ms (compile: 4ms, proxy.ts: 3ms, render: 27ms)
+ GET /dashboard/chat-agent 200 in 45ms (compile: 2ms, proxy.ts: 2ms, render: 40ms)
+ GET /dashboard/chat-agent 200 in 35ms (compile: 3ms, proxy.ts: 3ms, render: 29ms)
+ GET /dashboard/chat-agent 200 in 26ms (compile: 4ms, proxy.ts: 2ms, render: 19ms)
+ GET /dashboard/chat-agent 200 in 35ms (compile: 4ms, proxy.ts: 4ms, render: 27ms)
+ GET /dashboard/chat-agent 200 in 33ms (compile: 1968µs, proxy.ts: 3ms, render: 28ms)
+ GET /dashboard/chat-agent 200 in 32ms (compile: 1940µs, proxy.ts: 2ms, render: 28ms)
+ GET /dashboard/chat-agent 200 in 35ms (compile: 2ms, proxy.ts: 3ms, render: 30ms)
+ GET /dashboard/chat-agent 200 in 34ms (compile: 4ms, proxy.ts: 2ms, render: 28ms)
+ GET /dashboard/chat-agent 200 in 34ms (compile: 1952µs, proxy.ts: 3ms, render: 29ms)
+ GET /dashboard/chat-agent 200 in 35ms (compile: 1844µs, proxy.ts: 3ms, render: 30ms)
+ GET /dashboard/chat-agent 200 in 32ms (compile: 3ms, proxy.ts: 1872µs, render: 27ms)
+ GET /dashboard/chat-agent 200 in 21ms (compile: 1854µs, proxy.ts: 3ms, render: 16ms)
+ GET /dashboard/chat-agent 200 in 44ms (compile: 4ms, proxy.ts: 3ms, render: 38ms)
+ GET /dashboard/chat-agent 200 in 52ms (compile: 3ms, proxy.ts: 4ms, render: 46ms)
+ GET /dashboard/chat-agent 200 in 45ms (compile: 3ms, proxy.ts: 3ms, render: 38ms)
+ GET /dashboard/chat-agent 200 in 19ms (compile: 3ms, proxy.ts: 2ms, render: 14ms)
+ GET /dashboard/chat-agent 200 in 18ms (compile: 2ms, proxy.ts: 2ms, render: 13ms)
+ GET /dashboard/chat-agent 200 in 46ms (compile: 5ms, proxy.ts: 2ms, render: 39ms)
+ GET /dashboard/chat-agent 200 in 47ms (compile: 3ms, proxy.ts: 3ms, render: 41ms)
+ GET /dashboard/chat-agent 200 in 41ms (compile: 4ms, proxy.ts: 3ms, render: 35ms)
+ GET /dashboard/chat-agent 200 in 39ms (compile: 2ms, proxy.ts: 2ms, render: 34ms)
+ GET /dashboard/chat-agent 200 in 22ms (compile: 3ms, proxy.ts: 3ms, render: 15ms)
+ GET /dashboard/chat-agent 200 in 41ms (compile: 6ms, proxy.ts: 3ms, render: 33ms)
+ GET /dashboard/chat-agent 200 in 22ms (compile: 2ms, proxy.ts: 4ms, render: 16ms)
+ GET /dashboard/chat-agent 200 in 21ms (compile: 4ms, proxy.ts: 2ms, render: 14ms)
+ GET /dashboard/chat-agent 200 in 33ms (compile: 4ms, proxy.ts: 2ms, render: 27ms)
+ GET /dashboard/chat-agent 200 in 48ms (compile: 5ms, proxy.ts: 3ms, render: 41ms)
+ GET /dashboard/chat-agent 200 in 31ms (compile: 2ms, proxy.ts: 2ms, render: 27ms)
+ GET /dashboard/chat-agent 200 in 36ms (compile: 3ms, proxy.ts: 3ms, render: 30ms)
+ GET /dashboard/chat-agent 200 in 38ms (compile: 3ms, proxy.ts: 4ms, render: 31ms)
+ GET /dashboard/chat-agent 200 in 37ms (compile: 3ms, proxy.ts: 3ms, render: 31ms)
+ GET /dashboard/chat-agent 200 in 23ms (compile: 4ms, proxy.ts: 3ms, render: 15ms)
+ GET /dashboard/chat-agent 200 in 27ms (compile: 4ms, proxy.ts: 3ms, render: 20ms)
+ GET /dashboard/chat-agent 200 in 39ms (compile: 4ms, proxy.ts: 4ms, render: 31ms)
+ GET /dashboard/chat-agent 200 in 38ms (compile: 2ms, proxy.ts: 4ms, render: 32ms)
+ GET /dashboard/chat-agent 200 in 40ms (compile: 3ms, proxy.ts: 4ms, render: 34ms)
+ GET /dashboard/chat-agent 200 in 48ms (compile: 4ms, proxy.ts: 3ms, render: 41ms)
+ GET /dashboard/chat-agent 200 in 62ms (compile: 3ms, proxy.ts: 9ms, render: 50ms)
+ GET /dashboard/chat-agent 200 in 49ms (compile: 4ms, proxy.ts: 6ms, render: 40ms)
+ GET /dashboard/chat-agent 200 in 66ms (compile: 3ms, proxy.ts: 5ms, render: 57ms)
+ GET /dashboard/chat-agent 200 in 71ms (compile: 3ms, proxy.ts: 5ms, render: 63ms)
+ GET /dashboard/chat-agent 200 in 45ms (compile: 3ms, proxy.ts: 3ms, render: 40ms)
+ GET /dashboard/chat-agent 200 in 38ms (compile: 3ms, proxy.ts: 5ms, render: 30ms)
+ GET /dashboard/chat-agent 200 in 40ms (compile: 1958µs, proxy.ts: 4ms, render: 33ms)
+ GET /dashboard/chat-agent 200 in 37ms (compile: 4ms, proxy.ts: 3ms, render: 30ms)
+ GET /dashboard/chat-agent 200 in 54ms (compile: 4ms, proxy.ts: 2ms, render: 48ms)
+ GET /dashboard/chat-agent 200 in 63ms (compile: 1719µs, proxy.ts: 2ms, render: 60ms)
+ GET /dashboard/chat-agent 200 in 52ms (compile: 4ms, proxy.ts: 5ms, render: 44ms)
+ GET /dashboard/chat-agent 200 in 46ms (compile: 5ms, proxy.ts: 3ms, render: 37ms)
+ GET /dashboard/chat-agent 200 in 49ms (compile: 3ms, proxy.ts: 5ms, render: 42ms)
+ GET /dashboard/chat-agent 200 in 48ms (compile: 1965µs, proxy.ts: 3ms, render: 42ms)
+ GET /dashboard/chat-agent 200 in 47ms (compile: 2ms, proxy.ts: 4ms, render: 41ms)
+ GET /dashboard/chat-agent 200 in 61ms (compile: 3ms, proxy.ts: 5ms, render: 53ms)
+ GET /dashboard/chat-agent 200 in 52ms (compile: 4ms, proxy.ts: 3ms, render: 46ms)
+ GET /dashboard/chat-agent 200 in 61ms (compile: 3ms, proxy.ts: 4ms, render: 55ms)
+ GET /dashboard/chat-agent 200 in 62ms (compile: 3ms, proxy.ts: 3ms, render: 55ms)
+ GET /dashboard/chat-agent 200 in 25ms (compile: 2ms, proxy.ts: 5ms, render: 18ms)
+ GET /dashboard/chat-agent 200 in 40ms (compile: 4ms, proxy.ts: 4ms, render: 32ms)
+ GET /dashboard/chat-agent 200 in 40ms (compile: 2ms, proxy.ts: 4ms, render: 34ms)
+ GET /dashboard/chat-agent 200 in 46ms (compile: 4ms, proxy.ts: 1997µs, render: 40ms)
+ GET /dashboard/chat-agent 200 in 47ms (compile: 4ms, proxy.ts: 5ms, render: 37ms)
+ GET /dashboard/chat-agent 200 in 43ms (compile: 3ms, proxy.ts: 2ms, render: 37ms)
+ GET /dashboard/chat-agent 200 in 44ms (compile: 3ms, proxy.ts: 4ms, render: 38ms)
+ GET /dashboard/chat-agent 200 in 40ms (compile: 4ms, proxy.ts: 3ms, render: 34ms)
+ GET /dashboard/chat-agent 200 in 36ms (compile: 3ms, proxy.ts: 4ms, render: 29ms)
+ GET /dashboard/chat-agent 200 in 43ms (compile: 2ms, proxy.ts: 2ms, render: 39ms)
+ GET /dashboard/chat-agent 200 in 31ms (compile: 2ms, proxy.ts: 4ms, render: 26ms)
+ GET /dashboard/chat-agent 200 in 19ms (compile: 2ms, proxy.ts: 2ms, render: 14ms)
+ GET /dashboard/chat-agent 200 in 33ms (compile: 3ms, proxy.ts: 1997µs, render: 27ms)
+ GET /dashboard/chat-agent 200 in 34ms (compile: 2ms, proxy.ts: 3ms, render: 29ms)
+ GET /dashboard/chat-agent 200 in 34ms (compile: 2ms, proxy.ts: 3ms, render: 29ms)
+ GET /dashboard/chat-agent 200 in 37ms (compile: 3ms, proxy.ts: 3ms, render: 31ms)
+ GET /dashboard/chat-agent 200 in 35ms (compile: 2ms, proxy.ts: 3ms, render: 30ms)
+ GET /dashboard/chat-agent 200 in 22ms (compile: 1923µs, proxy.ts: 3ms, render: 17ms)
+ GET /dashboard/chat-agent 200 in 33ms (compile: 3ms, proxy.ts: 4ms, render: 26ms)
+ GET /dashboard/chat-agent 200 in 33ms (compile: 3ms, proxy.ts: 1777µs, render: 28ms)
+ GET /dashboard/chat-agent 200 in 32ms (compile: 2ms, proxy.ts: 3ms, render: 27ms)
+ GET /dashboard/chat-agent 200 in 20ms (compile: 2ms, proxy.ts: 3ms, render: 15ms)
+ GET /dashboard/chat-agent 200 in 19ms (compile: 3ms, proxy.ts: 3ms, render: 14ms)
+ GET /dashboard/chat-agent 200 in 43ms (compile: 3ms, proxy.ts: 2ms, render: 38ms)
+ GET /dashboard/chat-agent 200 in 34ms (compile: 3ms, proxy.ts: 2ms, render: 28ms)
+ GET /dashboard/chat-agent 200 in 20ms (compile: 1950µs, proxy.ts: 2ms, render: 15ms)
+ GET /dashboard/chat-agent 200 in 21ms (compile: 3ms, proxy.ts: 2ms, render: 16ms)
+ GET /dashboard/chat-agent 200 in 17ms (compile: 4ms, proxy.ts: 4ms, render: 10ms)
+ GET /dashboard/chat-agent 200 in 19ms (compile: 2ms, proxy.ts: 2ms, render: 14ms)
+ GET /dashboard/chat-agent 200 in 33ms (compile: 4ms, proxy.ts: 2ms, render: 27ms)
+ GET /dashboard/chat-agent 200 in 37ms (compile: 2ms, proxy.ts: 2ms, render: 33ms)
+ GET /dashboard/chat-agent 200 in 38ms (compile: 4ms, proxy.ts: 4ms, render: 30ms)
+ GET /dashboard/chat-agent 200 in 35ms (compile: 4ms, proxy.ts: 2ms, render: 29ms)
+ GET /dashboard/chat-agent 200 in 34ms (compile: 4ms, proxy.ts: 3ms, render: 27ms)
+ GET /dashboard/chat-agent 200 in 31ms (compile: 2ms, proxy.ts: 1994µs, render: 27ms)
+ GET /dashboard/chat-agent 200 in 17ms (compile: 3ms, proxy.ts: 4ms, render: 11ms)
+ GET /dashboard/chat-agent 200 in 31ms (compile: 2ms, proxy.ts: 2ms, render: 27ms)
+ GET /dashboard/chat-agent 200 in 32ms (compile: 3ms, proxy.ts: 2ms, render: 27ms)
+ GET /dashboard/chat-agent 200 in 33ms (compile: 1977µs, proxy.ts: 2ms, render: 29ms)
+ GET /dashboard/chat-agent 200 in 21ms (compile: 2ms, proxy.ts: 3ms, render: 16ms)
+ GET /dashboard/chat-agent 200 in 52ms (compile: 4ms, proxy.ts: 2ms, render: 46ms)
+ GET /dashboard/chat-agent 200 in 57ms (compile: 3ms, proxy.ts: 16ms, render: 38ms)
+ GET /dashboard/chat-agent 200 in 38ms (compile: 3ms, proxy.ts: 3ms, render: 32ms)
+ GET /dashboard/chat-agent 200 in 20ms (compile: 3ms, proxy.ts: 2ms, render: 14ms)
+ GET /dashboard/chat-agent 200 in 40ms (compile: 4ms, proxy.ts: 2ms, render: 33ms)
+ GET /dashboard/chat-agent 200 in 38ms (compile: 1755µs, proxy.ts: 2ms, render: 34ms)
+ GET /dashboard/chat-agent 200 in 32ms (compile: 1950µs, proxy.ts: 3ms, render: 27ms)
+ GET /dashboard/chat-agent 200 in 19ms (compile: 2ms, proxy.ts: 2ms, render: 15ms)
+ GET /dashboard/chat-agent 200 in 43ms (compile: 2ms, proxy.ts: 3ms, render: 38ms)
+ GET /dashboard/chat-agent 200 in 30ms (compile: 4ms, proxy.ts: 1930µs, render: 24ms)
+ GET /dashboard/chat-agent 200 in 32ms (compile: 3ms, proxy.ts: 2ms, render: 27ms)
+ GET /dashboard/chat-agent 200 in 19ms (compile: 3ms, proxy.ts: 3ms, render: 14ms)
+ GET /dashboard/chat-agent 200 in 18ms (compile: 2ms, proxy.ts: 2ms, render: 13ms)
+ GET /dashboard/chat-agent 200 in 21ms (compile: 3ms, proxy.ts: 2ms, render: 15ms)
+ GET /dashboard/chat-agent 200 in 30ms (compile: 4ms, proxy.ts: 2ms, render: 24ms)
+ GET /dashboard/chat-agent 200 in 30ms (compile: 1574µs, proxy.ts: 1931µs, render: 27ms)
+ GET /dashboard/chat-agent 200 in 34ms (compile: 3ms, proxy.ts: 3ms, render: 28ms)
+ GET /dashboard/chat-agent 200 in 31ms (compile: 2ms, proxy.ts: 1736µs, render: 28ms)
+ GET /dashboard/chat-agent 200 in 31ms (compile: 1989µs, proxy.ts: 4ms, render: 25ms)
+ GET /dashboard/chat-agent 200 in 30ms (compile: 1898µs, proxy.ts: 1980µs, render: 26ms)
+ GET /dashboard/chat-agent 200 in 29ms (compile: 1872µs, proxy.ts: 2ms, render: 25ms)
+ GET /dashboard/chat-agent 200 in 20ms (compile: 2ms, proxy.ts: 3ms, render: 15ms)
+ GET /dashboard/chat-agent 200 in 30ms (compile: 2ms, proxy.ts: 3ms, render: 25ms)
+ GET /dashboard/chat-agent 200 in 30ms (compile: 2ms, proxy.ts: 13ms, render: 15ms)
+ GET /dashboard/chat-agent 200 in 32ms (compile: 2ms, proxy.ts: 1865µs, render: 28ms)
+ GET /dashboard/chat-agent 200 in 32ms (compile: 3ms, proxy.ts: 3ms, render: 26ms)
+ GET /dashboard/chat-agent 200 in 16ms (compile: 3ms, proxy.ts: 1910µs, render: 11ms)
+ GET /dashboard/chat-agent 200 in 20ms (compile: 2ms, proxy.ts: 2ms, render: 16ms)
+ GET /dashboard/chat-agent 200 in 40ms (compile: 3ms, proxy.ts: 3ms, render: 34ms)
+ GET /dashboard/chat-agent 200 in 40ms (compile: 2ms, proxy.ts: 3ms, render: 35ms)
+ GET /dashboard/chat-agent 200 in 34ms (compile: 2ms, proxy.ts: 3ms, render: 30ms)
+ GET /dashboard/chat-agent 200 in 33ms (compile: 3ms, proxy.ts: 3ms, render: 27ms)
+ GET /dashboard/chat-agent 200 in 36ms (compile: 3ms, proxy.ts: 3ms, render: 30ms)
+ GET /dashboard/chat-agent 200 in 20ms (compile: 2ms, proxy.ts: 1968µs, render: 16ms)
+ GET /api/dev/fixtures 200 in 62ms (compile: 42ms, render: 20ms)
+{"level":"info","route":"POST /api/email/send","requestId":"d0c6aba7-4fb0-4ff0-b819-8b9cd16ba0ab","timestamp":"2026-01-22T11:49:46.435Z","method":"POST","tenantId":"dev.user","userId":"dev.user","message":"api.success","outcome":"success","status":200,"durationMs":1,"metadata":{"simulated":true,"note":"resend missing"}}
+ POST /api/email/send 200 in 29ms (compile: 21ms, render: 7ms)
+ POST /api/dev/sends 200 in 9ms (compile: 2ms, render: 7ms)
+ GET /api/dev/sends 200 in 5ms (compile: 1615µs, render: 3ms)
+{"level":"info","route":"POST /api/sms/send","requestId":"b11945f7-c5c9-4e35-986e-d1f11d94ff31","timestamp":"2026-01-22T11:49:46.468Z","method":"POST","tenantId":"dev.user","userId":"dev.user","message":"api.success","outcome":"success","status":200,"durationMs":0,"metadata":{"simulated":true}}
+ POST /api/sms/send 200 in 11ms (compile: 5ms, render: 6ms)
+ GET /api/dev/jobs 200 in 117ms (compile: 105ms, render: 13ms)
+ POST /api/dev/jobs 500 in 8ms (compile: 1407µs, render: 7ms)
+ GET /api/dev/jobs 200 in 6ms (compile: 1799µs, render: 4ms)
+ POST /api/dev/jobs 200 in 33ms (compile: 14ms, render: 20ms)
+ GET /api/dev/jobs 200 in 36ms (compile: 15ms, render: 21ms)
+ POST /api/dev/jobs/manual-1769082628245/retry 200 in 988ms (compile: 976ms, render: 13ms)
+ GET /api/dev/jobs/manual-1769082628245/logs 200 in 845ms (compile: 837ms, render: 9ms)
+✓ Compiled in 1068ms
+ GET /dashboard/chat-agent 200 in 1090ms (compile: 331ms, proxy.ts: 29ms, render: 729ms)
+ GET /api/auth/me 200 in 25ms (compile: 18ms, render: 7ms)
+ GET /api/auth/me 200 in 11ms (compile: 5ms, render: 6ms)
+ GET /api/auth/me 200 in 12ms (compile: 2ms, render: 10ms)
+ GET /favicon.ico 404 in 627ms (compile: 227ms, render: 400ms)
+✓ Compiled in 183ms
+ GET /dashboard/chat-agent 200 in 562ms (compile: 101ms, proxy.ts: 17ms, render: 445ms)
+ GET /api/auth/me 200 in 18ms (compile: 10ms, render: 8ms)
+ GET /api/auth/me 200 in 6ms (compile: 4ms, render: 2ms)
+ GET /favicon.ico 404 in 803ms (compile: 184ms, render: 619ms)
+ GET /api/auth/me 200 in 5ms (compile: 1343µs, render: 3ms)
+ POST /api/dev/jobs 200 in 39ms (compile: 18ms, render: 21ms)
+ GET /api/dev/jobs/cli-test-1769083273172 200 in 104ms (compile: 93ms, render: 11ms)
+ GET /api/dev/jobs/cli-test-1769083273172 200 in 11ms (compile: 5ms, render: 6ms)
+ GET /api/dev/jobs/cli-test-1769083273172 200 in 27ms (compile: 17ms, render: 10ms)
+ GET /api/dev/jobs/cli-test-1769083273172 200 in 10ms (compile: 7ms, render: 4ms)
+ GET /api/dev/jobs/cli-test-1769083273172 200 in 26ms (compile: 20ms, render: 6ms)
+ GET /api/dev/jobs/cli-test-1769083273172 200 in 11ms (compile: 6ms, render: 4ms)
+ GET /api/dev/jobs/cli-test-1769083273172 200 in 31ms (compile: 14ms, render: 17ms)
+ GET /api/dev/jobs/cli-test-1769083273172 200 in 9ms (compile: 3ms, render: 6ms)
+ GET /api/dev/jobs/cli-test-1769083273172 200 in 17ms (compile: 10ms, render: 6ms)
+ GET /api/dev/jobs/cli-test-1769083273172 200 in 25ms (compile: 20ms, render: 5ms)
+ GET /api/dev/jobs/cli-test-1769083273172 200 in 12ms (compile: 7ms, render: 4ms)
+ GET /api/dev/jobs/cli-test-1769083273172 200 in 25ms (compile: 15ms, render: 10ms)
+ GET /api/dev/jobs/cli-test-1769083273172 200 in 17ms (compile: 12ms, render: 5ms)
+ GET /api/dev/jobs/cli-test-1769083273172 200 in 20ms (compile: 11ms, render: 8ms)
+ GET /api/dev/jobs/cli-test-1769083273172 200 in 12ms (compile: 5ms, render: 6ms)
+ GET /api/dev/jobs/cli-test-1769083273172 200 in 12ms (compile: 7ms, render: 5ms)
+ GET /api/dev/jobs/cli-test-1769083273172 200 in 18ms (compile: 11ms, render: 7ms)
+ GET /api/dev/jobs/cli-test-1769083273172 200 in 12ms (compile: 6ms, render: 6ms)
+ GET /api/dev/jobs/cli-test-1769083273172 200 in 11ms (compile: 5ms, render: 6ms)
+ GET /api/dev/jobs/cli-test-1769083273172 200 in 12ms (compile: 7ms, render: 5ms)
+ GET /api/dev/jobs/cli-test-1769083273172 200 in 12ms (compile: 9ms, render: 2ms)
+ GET /api/dev/jobs/cli-test-1769083273172 200 in 21ms (compile: 14ms, render: 7ms)
+ GET /api/dev/jobs/cli-test-1769083273172 200 in 12ms (compile: 9ms, render: 3ms)
+ GET /api/dev/jobs/cli-test-1769083273172 200 in 12ms (compile: 6ms, render: 6ms)
+ GET /api/dev/jobs/cli-test-1769083273172 200 in 24ms (compile: 15ms, render: 9ms)
+ GET /api/dev/jobs/cli-test-1769083273172 200 in 21ms (compile: 6ms, render: 15ms)
+ GET /api/dev/jobs/cli-test-1769083273172 200 in 12ms (compile: 6ms, render: 6ms)
+ GET /api/dev/jobs/cli-test-1769083273172 200 in 9ms (compile: 5ms, render: 5ms)
+ GET /api/dev/jobs/cli-test-1769083273172 200 in 18ms (compile: 12ms, render: 6ms)
+ GET /api/dev/jobs/cli-test-1769083273172 200 in 9ms (compile: 5ms, render: 4ms)
+ GET /api/dev/jobs/cli-test-1769083273172 200 in 12ms (compile: 7ms, render: 5ms)
+ GET /api/dev/jobs/cli-test-1769083273172 200 in 7ms (compile: 5ms, render: 1959µs)
+ GET /api/dev/jobs/cli-test-1769083273172 200 in 15ms (compile: 8ms, render: 7ms)
+ GET /api/dev/jobs/cli-test-1769083273172 200 in 8ms (compile: 4ms, render: 3ms)
+ GET /api/dev/jobs/cli-test-1769083273172 200 in 13ms (compile: 8ms, render: 6ms)
+ GET /api/dev/jobs 200 in 33ms (compile: 18ms, render: 15ms)
+ POST /api/dev/jobs 200 in 33ms (compile: 16ms, render: 17ms)
+ GET /api/dev/jobs 200 in 11ms (compile: 5ms, render: 6ms)
+ GET /api/dev/jobs 200 in 6ms (compile: 1373µs, render: 4ms)
+ GET /api/dev/jobs 200 in 11ms (compile: 5ms, render: 6ms)
+ GET /api/dev/jobs 200 in 6ms (compile: 4ms, render: 1614µs)
+ GET /api/dev/jobs 200 in 7ms (compile: 3ms, render: 5ms)
+ GET /api/dev/jobs 200 in 24ms (compile: 11ms, render: 13ms)
+ GET /api/dev/jobs 200 in 7ms (compile: 3ms, render: 4ms)
+ POST /api/dev/jobs/cli-test-1769083409090/retry 200 in 22ms (compile: 12ms, render: 10ms)
+ GET /api/dev/jobs/cli-test-1769083409090/logs 200 in 11ms (compile: 6ms, render: 5ms)
+ GET /api/dev/jobs 200 in 5ms (compile: 3ms, render: 1900µs)
+ GET /api/dev/jobs 200 in 15ms (compile: 10ms, render: 5ms)
+ GET /api/dev/jobs 200 in 10ms (compile: 3ms, render: 7ms)
+ GET /api/dev/jobs 200 in 10ms (compile: 5ms, render: 6ms)
+ GET /api/dev/jobs 200 in 3ms (compile: 1651µs, render: 1766µs)
+ GET /api/dev/jobs 200 in 11ms (compile: 5ms, render: 6ms)
+ GET /api/dev/jobs 200 in 7ms (compile: 3ms, render: 4ms)

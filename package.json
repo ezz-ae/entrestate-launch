@@ -7,6 +7,8 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx --ignore-pattern gemini-app/",
+  "test:dev": "tsx scripts/test/dev-sends-smoke.ts",
+  "test:dev-jobs": "tsx scripts/test/dev-jobs-retry-smoke.ts",
     "smoke": "tsx scripts/smoke/projects-filter-smoke.ts",
     "ingest": "ts-node --esm scripts/ingest-entrestate.ts"
   },

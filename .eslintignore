@@ -1,0 +1,8 @@
+# Ignore legacy screens and quarantine folders
+legacy_quarantine/
+
+# Ignore generated next files
+.next/
+
+# Ignore node_modules
+node_modules/

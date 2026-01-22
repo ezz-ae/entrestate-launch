@@ -27,13 +27,27 @@ const payloadSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  if (!IS_SMS_ENABLED) {
+  const enableDev = process.env.DEV_FIREBASE_AUTH === 'true' || process.env.NODE_ENV !== 'production';
+  if (!IS_SMS_ENABLED && !enableDev) {
     return NextResponse.json({ error: 'SMS is not enabled.' }, { status: 501 });
   }
   const logger = createApiLogger(req, { route: 'POST /api/sms/send' });
   try {
     const { tenantId, uid } = await requireRole(req, ADMIN_ROLES);
+    if (!IS_SMS_ENABLED) {
+      // Dev-mode simulation for SMS
+      logger.setTenant(tenantId);
+      logger.setActor(uid);
+      logger.logSuccess(200, { simulated: true });
+      return NextResponse.json({ success: true, simulated: true, sid: `dev-sms-${Date.now()}` });
+    }
     if (!CAP.twilio || !ACCOUNT_SID || !AUTH_TOKEN || !FROM_NUMBER) {
+      if (enableDev) {
+        logger.setTenant(tenantId);
+        logger.setActor(uid);
+        logger.logSuccess(200, { simulated: true, note: 'twilio missing' });
+        return NextResponse.json({ success: true, simulated: true, sid: `dev-sms-${Date.now()}` });
+      }
       logger.logError('Twilio not configured', 500);
       return NextResponse.json({ error: 'Twilio is not configured' }, { status: 500 });
     }

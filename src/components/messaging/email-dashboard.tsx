@@ -10,15 +10,14 @@ import { Mail, Upload, Loader2, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ImportContactsDialog } from './import-contacts-dialog';
 import { authorizedFetch } from '@/lib/auth-fetch';
-import { getAuth } from 'firebase/auth';
-import { useAuthState } from 'react-firebase-hooks/auth';
+import { useAuth } from '@/AuthContext';
+import { FIREBASE_AUTH_DISABLED } from '@/lib/firebase/client';
 
 const DEFAULT_SUBJECT = 'New project update from Entrestate';
 
 export function EmailCampaignDashboard() {
   const { toast } = useToast();
-  const auth = getAuth();
-  const [user] = useAuthState(auth);
+  const { user } = useAuth();
 
   const [subject, setSubject] = useState(DEFAULT_SUBJECT);
   const [message, setMessage] = useState('');
@@ -61,7 +60,7 @@ export function EmailCampaignDashboard() {
       return;
     }
 
-    if (mode === 'test' && !testEmail && !user?.email) {
+    if (mode === 'test' && !testEmail && !user?.email && !FIREBASE_AUTH_DISABLED) {
       toast({ title: 'Add a test email', variant: 'destructive' });
       return;
     }

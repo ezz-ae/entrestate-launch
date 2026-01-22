@@ -27,13 +27,30 @@ const payloadSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-    if (!IS_EMAIL_ENABLED) {
-        return NextResponse.json({ error: 'Email is not enabled.' }, { status: 501 });
-    }
+  // Allow simulated sends in dev when email provider isn't configured.
+  const enableDev = process.env.DEV_FIREBASE_AUTH === 'true' || process.env.NODE_ENV !== 'production';
+  if (!IS_EMAIL_ENABLED && !enableDev) {
+    return NextResponse.json({ error: 'Email is not enabled.' }, { status: 501 });
+  }
   const logger = createApiLogger(req, { route: 'POST /api/email/send' });
-  try {
+    try {
     const { tenantId, uid } = await requireRole(req, ADMIN_ROLES);
+    if (!IS_EMAIL_ENABLED) {
+      // Dev-mode simulation: log and return a fake messageId so the UI can proceed.
+      logger.setTenant(tenantId);
+      logger.setActor(uid);
+      logger.logSuccess(200, { simulated: true });
+      return NextResponse.json({ success: true, simulated: true, messageId: `dev-email-${Date.now()}` });
+    }
     if (!CAP.resend || !resend) {
+      // If running in dev allow simulated sends even when the provider integration
+      // isn't present so local QA can exercise flows.
+      if (enableDev) {
+        logger.setTenant(tenantId);
+        logger.setActor(uid);
+        logger.logSuccess(200, { simulated: true, note: 'resend missing' });
+        return NextResponse.json({ success: true, simulated: true, messageId: `dev-email-${Date.now()}` });
+      }
       logger.logError('Resend not configured', 500);
       return NextResponse.json({ error: 'Email provider is not configured' }, { status: 500 });
     }

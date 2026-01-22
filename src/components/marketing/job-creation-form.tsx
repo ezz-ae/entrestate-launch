@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useJobPolling } from '@/hooks/use-job-polling';
-import { getAuth } from 'firebase/auth';
-import { useAuthState } from 'react-firebase-hooks/auth';
+import { useAuth } from '@/AuthContext';
+import { FIREBASE_AUTH_DISABLED } from '@/lib/firebase/client';
 
 type JobType = 'WRITE_COPY' | 'DESIGN_IMAGE' | 'CREATE_CAMPAIGN';
 
@@ -31,8 +31,8 @@ export function JobCreationForm({
   isEmbedded = false
 }: JobCreationFormProps) {
   const [jobId, setJobId] = useState<string | null>(null);
-  const auth = getAuth();
-  const [user, loading] = useAuthState(auth);
+  const { user } = useAuth();
+  const loading = false;
   
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
     defaultValues: { type: defaultType, prompt: initialPrompt }
@@ -43,22 +43,24 @@ export function JobCreationForm({
   const { status, data, error } = useJobPolling(jobId);
 
   const onSubmit = async (formData: FormData) => {
-    if (!user) {
+    if (!user && !FIREBASE_AUTH_DISABLED) {
       alert('You must be logged in to create a job.');
       return;
     }
 
     try {
       setJobId(null); // Reset previous job tracking
-      const token = await user.getIdToken();
+      let headers: Record<string, string> = { 'Content-Type': 'application/json' };
+
+      if (!FIREBASE_AUTH_DISABLED) {
+        const token = await (user as any).getIdToken();
+        headers.Authorization = `Bearer ${token}`;
+      }
 
       // 2. Call the API to create the job
       const res = await fetch('/api/marketing/create', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers,
         body: JSON.stringify({
           type: formData.type,
           payload: { 

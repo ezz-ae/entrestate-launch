@@ -58,6 +58,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   const [fallbackUser, fallbackLoading] = useAuthState(auth);
+  const [devUser, setDevUser] = useState<any | null>(null);
+  const [devLoading, setDevLoading] = useState(false);
 
   const signUp = async (email: string, password: string, name: string) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -75,12 +77,45 @@ export const useAuth = () => {
   };
 
   if (context !== undefined) {
-    return context;
+    // don't return early here — keep hooks order stable. We'll respect the provided context
+    // below when returning the final shape.
   }
 
+  // If Firebase client doesn't have a user, try the server-side dev cookie endpoint
+  useEffect(() => {
+    // If a real AuthContext is present, skip the dev fetch logic.
+    if (context !== undefined) return;
+    let mounted = true;
+    async function fetchDev() {
+      if (!fallbackLoading && !fallbackUser) {
+        setDevLoading(true);
+        try {
+          const resp = await fetch('/api/auth/me');
+          if (!mounted) return;
+          if (resp.ok) {
+            const j = await resp.json();
+            // create a minimal user-like object for client checks
+            setDevUser({ uid: j.uid, email: j.email, displayName: j.email?.split('@')[0] || j.uid });
+          }
+        } catch (e) {
+          // ignore
+        } finally {
+          if (mounted) setDevLoading(false);
+        }
+      }
+    }
+    fetchDev();
+    return () => {
+      mounted = false;
+    };
+  }, [fallbackLoading, fallbackUser, context]);
+
+  // If an AuthContext provider exists, prefer it; otherwise return the fallback/dev blended object.
+  if (context !== undefined) return context;
+
   return {
-    user: fallbackUser,
-    loading: fallbackLoading,
+    user: fallbackUser || devUser,
+    loading: fallbackLoading || devLoading,
     signUp,
     logIn,
     logOut,

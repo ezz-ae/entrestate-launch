@@ -1,0 +1,122 @@
+[
+  {
+    "id": "retry-1769083413446",
+    "ts": "2026-01-22T12:03:33.446Z",
+    "status": "succeeded",
+    "type": "retry",
+    "name": "Retry of smoke-job",
+    "parentId": "cli-test-1769083409090",
+    "logs": [
+      {
+        "ts": "2026-01-22T12:03:33.446Z",
+        "message": "job queued"
+      },
+      {
+        "ts": "2026-01-22T12:03:34.248Z",
+        "message": "status=running"
+      },
+      {
+        "ts": "2026-01-22T12:03:37.249Z",
+        "message": "status=succeeded"
+      }
+    ],
+    "updatedAt": "2026-01-22T12:03:37.249Z"
+  },
+  {
+    "id": "cli-test-1769083409090",
+    "ts": "2026-01-22T12:03:29.090Z",
+    "status": "succeeded",
+    "type": "cli-test",
+    "name": "smoke-job",
+    "logs": [
+      {
+        "ts": "2026-01-22T12:03:29.090Z",
+        "message": "job queued"
+      },
+      {
+        "ts": "2026-01-22T12:03:29.892Z",
+        "message": "status=running"
+      },
+      {
+        "ts": "2026-01-22T12:03:32.892Z",
+        "message": "status=succeeded"
+      },
+      {
+        "ts": "2026-01-22T12:03:33.447Z",
+        "message": "requeued as retry-1769083413446"
+      }
+    ],
+    "updatedAt": "2026-01-22T12:03:32.892Z"
+  },
+  {
+    "id": "cli-test-1769083273172",
+    "ts": "2026-01-22T12:01:13.172Z",
+    "status": "succeeded",
+    "type": "cli-test",
+    "name": "smoke-job",
+    "logs": [
+      {
+        "ts": "2026-01-22T12:01:13.172Z",
+        "message": "job queued"
+      },
+      {
+        "ts": "2026-01-22T12:01:13.974Z",
+        "message": "status=running"
+      },
+      {
+        "ts": "2026-01-22T12:01:16.973Z",
+        "message": "status=succeeded"
+      }
+    ],
+    "updatedAt": "2026-01-22T12:01:16.973Z"
+  },
+  {
+    "id": "retry-1769082661419",
+    "ts": "2026-01-22T11:51:01.419Z",
+    "status": "succeeded",
+    "type": "retry",
+    "name": "Retry of cli-test-job",
+    "parentId": "manual-1769082628245",
+    "logs": [
+      {
+        "ts": "2026-01-22T11:51:01.419Z",
+        "message": "job queued"
+      },
+      {
+        "ts": "2026-01-22T11:51:02.222Z",
+        "message": "status=running"
+      },
+      {
+        "ts": "2026-01-22T11:51:05.223Z",
+        "message": "status=succeeded"
+      }
+    ],
+    "updatedAt": "2026-01-22T11:51:05.223Z"
+  },
+  {
+    "id": "manual-1769082628245",
+    "ts": "2026-01-22T11:50:28.245Z",
+    "status": "succeeded",
+    "type": "manual",
+    "name": "cli-test-job",
+    "logs": [
+      {
+        "ts": "2026-01-22T11:50:28.245Z",
+        "message": "job queued"
+      },
+      {
+        "ts": "2026-01-22T11:50:29.051Z",
+        "message": "status=running"
+      },
+      {
+        "ts": "2026-01-22T11:50:32.053Z",
+        "message": "status=succeeded"
+      },
+      {
+        "ts": "2026-01-22T11:51:01.421Z",
+        "message": "requeued as retry-1769082661419"
+      }
+    ],
+    "updatedAt": "2026-01-22T11:50:32.053Z"
+  }
+]

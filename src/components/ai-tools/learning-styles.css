@@ -1,0 +1,9 @@
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f7fafc;
+  --text-secondary: #6b7280;
+  --border-color: #e5e7eb;
+}
+
+/* Minimal styles used by the learning dashboard component. */
+.learning-grid { display: grid; gap: 12px; }

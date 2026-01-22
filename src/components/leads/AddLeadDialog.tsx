@@ -13,8 +13,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { authorizedFetch } from '@/lib/auth-fetch';
-import { getAuth } from 'firebase/auth';
-import { useAuthState } from 'react-firebase-hooks/auth';
+import { useAuth } from '@/AuthContext';
+import { FIREBASE_AUTH_DISABLED } from '@/lib/firebase/client';
 
 interface AddLeadDialogProps {
   open: boolean;
@@ -29,7 +29,7 @@ export function AddLeadDialog({ open, onOpenChange, onLeadAdded }: AddLeadDialog
   const [message, setMessage] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [user] = useAuthState(getAuth());
+  const { user } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +41,7 @@ export function AddLeadDialog({ open, onOpenChange, onLeadAdded }: AddLeadDialog
     setSubmitting(true);
 
     try {
-      if (!user) {
+      if (!user && !FIREBASE_AUTH_DISABLED) {
         throw new Error('You must be logged in to add a lead.');
       }
       const res = await authorizedFetch('/api/leads/create', {

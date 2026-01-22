@@ -5,7 +5,7 @@ const config = Array.isArray(next) ? next : [next];
 const eslintConfig = [
   ...config,
   {
-    ignores: ['node_modules/**', '.next/**', 'public/**', 'dist/**'],
+    ignores: ['node_modules/**', '.next/**', 'public/**', 'dist/**', 'legacy_quarantine/**'],
   },
   {
     rules: {

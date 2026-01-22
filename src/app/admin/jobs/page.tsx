@@ -11,12 +11,14 @@ import { RefreshCw, Play, Terminal, Loader2, CheckCircle2, AlertCircle } from 'l
 import { formatDistanceToNow } from 'date-fns';
 import { getAuth } from 'firebase/auth';
 import { useAuthState } from 'react-firebase-hooks/auth';
+import { FIREBASE_AUTH_DISABLED } from '@/lib/firebase/client';
 import { cn } from '@/lib/utils';
 
 export default function JobsDashboard() {
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [user, authLoading] = useAuthState(getAuth());
+    const [jobs, setJobs] = useState<Job[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [user, authLoading] = useAuthState(getAuth());
+    
 
   useEffect(() => {
     if (!user) return;
@@ -41,6 +43,17 @@ export default function JobsDashboard() {
       </div>
     );
   }
+
+    if (FIREBASE_AUTH_DISABLED) {
+        return (
+            <main className="min-h-screen bg-black text-white p-8 font-sans">
+                <div className="max-w-3xl mx-auto text-center">
+                    <h1 className="text-2xl font-bold">Auth disabled</h1>
+                    <p className="text-zinc-400 mt-4">Firebase auth is currently disabled for this environment. Job monitoring requires sign-in. Re-enable auth to use this page.</p>
+                </div>
+            </main>
+        );
+    }
 
   if (!user) {
     return (
