@@ -98,7 +98,19 @@ optionalKey('PAYPAL_WEBHOOK_ID', 'only needed when you configure live PayPal web
 optionalKey('PAYPAL_API_BASE', 'override optional; defaults to https://api-m.paypal.com');
 optionalKey('ZIINA_BASE_URL', 'optional API endpoint override');
 
-requireIfEnabled('ENABLE_SUPABASE', ['NEXT_PUBLIC_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_ANON_KEY']);
+if (shortBool('ENABLE_SUPABASE')) {
+  requireKey('NEXT_PUBLIC_SUPABASE_URL');
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY &&
+    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  ) {
+    required.push('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY');
+  }
+} else {
+  optionalKey('NEXT_PUBLIC_SUPABASE_URL', 'only required when ENABLE_SUPABASE=true');
+  optionalKey('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY', 'only required when ENABLE_SUPABASE=true');
+  optionalKey('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'legacy fallback key');
+}
 
 optionalKey('NEXT_PUBLIC_ROOT_DOMAIN', 'only required for custom rewrites');
 optionalKey('NEXT_PUBLIC_SITE_DOMAIN', 'optional published site suffix');

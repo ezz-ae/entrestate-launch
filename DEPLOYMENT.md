@@ -26,7 +26,7 @@ Set the following for every environment (production, preview, staging):
 - **SMS:** Set `ENABLE_SMS=true` plus the three Twilio keys (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`) before hitting SMS endpoints; `NOTIFY_SMS_TO` is optional for alerts.
 - **Google Ads:** Enable `ENABLE_GOOGLE_ADS=true` and configure the server/client IDs (`GOOGLE_ADS_CLIENT_ID`, `GOOGLE_ADS_CLIENT_SECRET`, `NEXT_PUBLIC_GOOGLE_ADS_CLIENT_ID`). Override the redirect URIs or notification email via `GOOGLE_ADS_REDIRECT_URI`, `NEXT_PUBLIC_GOOGLE_ADS_REDIRECT_URI`, and `ADS_NOTIFICATION_EMAIL` only when you need custom flows.
 - **Payments:** Toggle `ENABLE_PAYMENTS=true` to turn on PayPal/Ziina. Provide `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `ZIINA_API_KEY`, and `ZIINA_WEBHOOK_SECRET`. Optional helpers: `NEXT_PUBLIC_PAYPAL_CLIENT_ID`, `PAYPAL_WEBHOOK_ID`, `PAYPAL_API_BASE`, and `ZIINA_BASE_URL`.
-- **Supabase:** Enable `ENABLE_SUPABASE=true` only if legacy Supabase flows are required, and populate `NEXT_PUBLIC_SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+- **Supabase:** Enable `ENABLE_SUPABASE=true` only if legacy Supabase flows are required, and populate `NEXT_PUBLIC_SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` (anon key is legacy fallback).
 - **Domains & rewrites:** Optionally set `NEXT_PUBLIC_ROOT_DOMAIN`, `NEXT_PUBLIC_SITE_DOMAIN`, and `NEXT_PUBLIC_FACEBOOK_APP_ID` if you rely on custom rewrites or the Facebook SDK.
 - **Observability:** `SENTRY_DSN` and `NEXT_PUBLIC_SENTRY_DSN` are optional, while `VERCEL_API_TOKEN`, `VERCEL_PROJECT_ID`, and `VERCEL_TEAM_ID` belong in CLI automation tooling, not runtime deployments.
 

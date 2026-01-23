@@ -8,7 +8,9 @@ export async function createSupabaseServerClient() {
   const cookieStore: any = await cookies();
 
   const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const SUPABASE_PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY;
   const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const SUPABASE_KEY = SUPABASE_PUBLISHABLE_KEY || SUPABASE_ANON_KEY;
 
   // If supabase config is missing or invalid, and we're in dev, return a lightweight
   // mock client so server-side rendering doesn't crash. In production we keep failing
@@ -18,7 +20,7 @@ export async function createSupabaseServerClient() {
   let urlValid = false;
   try {
     if (SUPABASE_URL) new URL(SUPABASE_URL);
-    urlValid = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
+    urlValid = Boolean(SUPABASE_URL && SUPABASE_KEY);
   } catch (e) {
     urlValid = false;
   }
@@ -29,7 +31,7 @@ export async function createSupabaseServerClient() {
     }
     // Dev fallback: provide a mock supabase client with the minimal surface used
     // across the app to avoid runtime crashes during local dev when envs are not set.
-    console.warn('[supabase] NEXT_PUBLIC_SUPABASE_URL or ANON_KEY missing or invalid — using mock supabase client in dev');
+    console.warn('[supabase] NEXT_PUBLIC_SUPABASE_URL or publishable key missing/invalid — using mock supabase client in dev');
 
     const fixtures: Record<string, any[]> = {
       projects: [
@@ -144,7 +146,7 @@ export async function createSupabaseServerClient() {
     } as any;
   }
 
-  return createServerClient(SUPABASE_URL as string, SUPABASE_ANON_KEY as string, {
+  return createServerClient(SUPABASE_URL as string, SUPABASE_KEY as string, {
     cookies: {
       getAll() {
         if (typeof cookieStore.getAll === 'function') {
