@@ -139,7 +139,7 @@ export default function ChatAgentLearningDashboard({ agentId }: { agentId?: stri
   }
 
   return (
-    <div style={{ padding: 24 }}>
+    <div className="learning-dashboard" style={{ padding: 24 }}>
       <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800 }}>Learning Dashboard</h2>
       <p style={{ marginTop: 6, color: 'var(--text-secondary)' }}>Upload brochures and documents to teach the AI about your projects. Monitor recent training activity and evaluation runs.</p>
 
@@ -153,7 +153,7 @@ export default function ChatAgentLearningDashboard({ agentId }: { agentId?: stri
           <div>
             <h4 style={{ margin: '0 0 8px 0' }}>Quick Actions</h4>
             <div style={{ display: 'grid', gap: 8 }}>
-              <button onClick={() => alert('Run evaluation (not implemented)')} style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border-color)', background: 'var(--bg-primary)' }}>Run Evaluation</button>
+              <button onClick={() => alert('Run evaluation (not implemented)')} style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'inherit' }}>Run Evaluation</button>
               <button onClick={async () => {
                 try {
                   const res = await fetch('/api/dev/jobs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'retrain', name: 'Manual retrain' }) });
@@ -166,9 +166,9 @@ export default function ChatAgentLearningDashboard({ agentId }: { agentId?: stri
                 } catch (e) {
                   alert('Failed to contact dev jobs endpoint');
                 }
-              }} style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border-color)', background: 'var(--bg-primary)' }}>Retrain Agent</button>
-              <button onClick={async () => { if (!confirm('Clear local dev sends?')) return; await fetch('/api/dev/sends', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'meta', action: 'clear' }) }); setRecentSends([]); }} style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border-color)', background: '#fff1f2' }}>Clear Dev Sends</button>
-              <button onClick={async () => { if (!confirm('Clear local dev jobs?')) return; await fetch('/api/dev/jobs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'meta', action: 'clear' }) }); setTrainingJobs([]); }} style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border-color)', background: '#fff1f2' }}>Clear Dev Jobs</button>
+              }} style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'inherit' }}>Retrain Agent</button>
+              <button onClick={async () => { if (!confirm('Clear local dev sends?')) return; await fetch('/api/dev/sends', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'meta', action: 'clear' }) }); setRecentSends([]); }} style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border-color)', background: 'rgba(248, 113, 113, 0.16)', color: 'inherit' }}>Clear Dev Sends</button>
+              <button onClick={async () => { if (!confirm('Clear local dev jobs?')) return; await fetch('/api/dev/jobs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'meta', action: 'clear' }) }); setTrainingJobs([]); }} style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border-color)', background: 'rgba(248, 113, 113, 0.16)', color: 'inherit' }}>Clear Dev Jobs</button>
             </div>
           </div>
         </div>

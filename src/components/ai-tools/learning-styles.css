@@ -1,8 +1,9 @@
-:root {
-  --bg-primary: #ffffff;
-  --bg-secondary: #f7fafc;
-  --text-secondary: #6b7280;
-  --border-color: #e5e7eb;
+.learning-dashboard {
+  --bg-primary: #0b0b0f;
+  --bg-secondary: #12131a;
+  --text-secondary: #9ca3af;
+  --border-color: rgba(255, 255, 255, 0.08);
+  color: #f4f4f5;
 }
 
 /* Minimal styles used by the learning dashboard component. */

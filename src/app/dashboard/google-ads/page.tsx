@@ -1,9 +1,11 @@
-import { GoogleAdsDashboard } from '@/components/google-ads/google-ads-dashboard';
+import { getUserProjects } from '@/app/actions/google-ads';
+import { GoogleAdsDashboard } from '@/components/google-ads-dashboard';
 
-export default function GoogleAdsPage() {
+export default async function GoogleAdsPage() {
+  const projects = await getUserProjects();
   return (
     <div className="h-full bg-zinc-950">
-      <GoogleAdsDashboard />
+      <GoogleAdsDashboard projects={projects} />
     </div>
   );
 }
