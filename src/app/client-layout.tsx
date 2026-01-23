@@ -23,7 +23,7 @@ function shouldShowPublicChrome(pathname: string) {
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const showPublicChrome = useMemo(() => shouldShowPublicChrome(pathname), [pathname]);
+  const showPublicChrome = useMemo(() => shouldShowPublicChrome(pathname ?? ''), [pathname]);
 
   // Workaround for an intermittent DevTool runtime error where
   // performance.measure gets negative timestamps. Run this patch inside a

@@ -15,6 +15,8 @@ import {
   Copy,
   ExternalLink
 } from 'lucide-react';
+import dynamic from 'next/dynamic';
+const PublishControls = dynamic(() => import('@/components/PublishControls'), { ssr: false });
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
@@ -210,6 +212,12 @@ export function DomainDashboard() {
                           </option>
                         ))}
                     </select>
+                    {/* Publish Controls Integration */}
+                    {selectedSiteId && (
+                      <div className="mt-4">
+                        <PublishControls siteId={selectedSiteId} />
+                      </div>
+                    )}
                  </div>
                  <div className="flex gap-3">
                     <Input 

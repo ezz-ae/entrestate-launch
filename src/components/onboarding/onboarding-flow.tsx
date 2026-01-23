@@ -50,7 +50,7 @@ export function OnboardingFlow() {
   const [selected, setSelected] = useState<string | null>(null);
 
   useEffect(() => {
-    const intent = searchParams.get('intent');
+    const intent = searchParams ? searchParams.get('intent') : null;
     if (intent && START_OPTIONS.some((option) => option.id === intent)) {
       setSelected(intent);
     }

@@ -15,7 +15,7 @@ export function AppHeader() {
   ];
 
   // Check if the current pathname starts with any of the hidden routes
-  const shouldHideHeader = hiddenHeaderRoutes.some(route => pathname.startsWith(route));
+  const shouldHideHeader = pathname && hiddenHeaderRoutes.some(route => pathname.startsWith(route));
 
   if (shouldHideHeader) {
     return null;

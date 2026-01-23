@@ -26,10 +26,18 @@ export default function StatusPage() {
           The core platform is online. Some tools are in pilot or still being prepared for launch.
         </p>
         <div className="flex flex-wrap justify-center gap-3 pt-4">
-          <Badge className="bg-white/5 border-white/10 text-zinc-300">Website Builder: In Progress</Badge>
-          <Badge className="bg-white/5 border-white/10 text-zinc-300">Inventory: Setup Needed</Badge>
-          <Badge className="bg-white/5 border-white/10 text-zinc-300">Ads: Available</Badge>
-          <Badge className="bg-white/5 border-white/10 text-zinc-300">Messaging: Setup Needed</Badge>
+          <Badge className="bg-green-600/10 border-green-600/20 text-green-400">
+            <a href="/dashboard/sites" className="hover:underline">Website Builder: Live</a>
+          </Badge>
+          <Badge className="bg-blue-600/10 border-blue-600/20 text-blue-400">
+            <a href="/dashboard/inventory" className="hover:underline">Inventory: Manage</a>
+          </Badge>
+          <Badge className="bg-yellow-500/10 border-yellow-500/20 text-yellow-400">
+            <a href="/dashboard/ads" className="hover:underline">Ads: Ready</a>
+          </Badge>
+          <Badge className="bg-purple-600/10 border-purple-600/20 text-purple-400">
+            <a href="/dashboard/messaging" className="hover:underline">Messaging: Configure</a>
+          </Badge>
         </div>
       </div>
     </main>

@@ -73,43 +73,45 @@ export function AddLeadDialog({ open, onOpenChange, onLeadAdded }: AddLeadDialog
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add a New Lead</DialogTitle>
-          <DialogDescription>
-            Enter the details of the new lead below.
-          </DialogDescription>
+          <DialogDescription>Enter the details of the new lead below.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 py-4">
             <Input
               placeholder="Name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
               required
+              disabled={submitting}
             />
             <Input
               placeholder="Email"
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
               required
+              disabled={submitting}
             />
             <Input
               placeholder="Phone (optional)"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPhone(e.target.value)}
+              disabled={submitting}
             />
             <Textarea
               placeholder="Message (optional)"
               value={message}
-              onChange={(e) => setMessage(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setMessage(e.target.value)}
+              disabled={submitting}
             />
-            {error && <p className="text-red-500 text-sm">{error}</p>}
+            {error && <p className="text-red-500 text-sm" role="alert">{error}</p>}
           </div>
-          <DialogFooter>
+          <DialogFooter className="mt-6">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting ? 'Adding...' : 'Add Lead'}
+            <Button type="submit" disabled={submitting} className="w-full h-12 font-bold text-lg">
+              {submitting ? 'Adding Lead...' : 'Add Lead'}
             </Button>
           </DialogFooter>
         </form>

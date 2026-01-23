@@ -1,5 +1,16 @@
 [
   {
+    "id": "email-1769094409662",
+    "ts": "2026-01-22T15:06:49.662Z",
+    "type": "email",
+    "to": "sarah@example.com",
+    "result": {
+      "success": true,
+      "simulated": true,
+      "messageId": "dev-email-1769094409644"
+    }
+  },
+  {
     "id": "email-1769082586449",
     "ts": "2026-01-22T11:49:46.449Z",
     "type": "email",

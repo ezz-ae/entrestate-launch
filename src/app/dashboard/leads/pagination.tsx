@@ -15,7 +15,8 @@ export function Pagination({ currentPage, hasNextPage }: PaginationProps) {
   const { replace } = useRouter();
 
   const handlePageChange = (page: number) => {
-    const params = new URLSearchParams(searchParams);
+    // searchParams can be null, so fallback to empty string
+    const params = new URLSearchParams(searchParams ?? '');
     params.set('page', page.toString());
     replace(`${pathname}?${params.toString()}`);
   };

@@ -25,7 +25,7 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname();
-  const showSidebar = pathname !== '/dashboard';
+  const showSidebar = pathname && pathname !== '/dashboard';
 
   const navigation = [
     { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
@@ -57,7 +57,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
           <div className="flex-1 overflow-y-auto py-4 px-4 space-y-1">
             {navigation.map((item) => {
-              const isActive = (pathname === item.href) || (item.href !== '/dashboard' && pathname.startsWith(item.href));
+              const isActive = pathname && ((pathname === item.href) || (item.href !== '/dashboard' && pathname.startsWith(item.href)));
               return (
                 <Link
                   key={item.name}
@@ -78,7 +78,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
           <div className="p-4 border-t border-white/5 space-y-1">
               {bottomNavigation.map((item) => {
-                   const isActive = pathname.startsWith(item.href);
+                   const isActive = pathname && pathname.startsWith(item.href);
                    return (
                      <Link
                        key={item.name}

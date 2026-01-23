@@ -6,17 +6,29 @@ import { Loader2, CheckCircle2 } from 'lucide-react';
 import { submitLead } from '@/app/actions/project';
 
 export function PublicContactForm({ projectId, brandColor }: { projectId: string, brandColor?: string }) {
-  const [status, setStatus] = useState<'idle' | 'submitting' | 'success'>('idle');
+  const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
+  const [error, setError] = useState<string | null>(null);
+  const [formData, setFormData] = useState({ name: '', email: '', phone: '' });
 
-  const handleSubmit = async (formData: FormData) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    if (!formData.name || !formData.email) {
+      setError('Name and email are required.');
+      return;
+    }
     setStatus('submitting');
     try {
-      await submitLead(projectId, formData);
+      await submitLead(projectId, new FormData((e.target as HTMLFormElement)));
       setStatus('success');
-    } catch (error) {
-      console.error(error);
-      setStatus('idle');
-      // Handle error state if needed
+    } catch (err) {
+      setError('Failed to submit. Please try again.');
+      setStatus('error');
+      console.error(err);
     }
   };
 
@@ -33,14 +45,17 @@ export function PublicContactForm({ projectId, brandColor }: { projectId: string
   }
 
   return (
-    <form action={handleSubmit} className="space-y-4 bg-white/5 border border-white/10 p-6 rounded-2xl">
+    <form onSubmit={handleSubmit} className="space-y-4 bg-white/5 border border-white/10 p-6 rounded-2xl">
       <h3 className="text-xl font-bold text-white mb-4">Register Your Interest</h3>
       <div className="space-y-2">
         <input 
           name="name" 
           required 
           placeholder="Full Name" 
+          value={formData.name}
+          onChange={handleChange}
           className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:border-white/20"
+          disabled={status === 'submitting'}
         />
       </div>
       <div className="space-y-2">
@@ -49,7 +64,10 @@ export function PublicContactForm({ projectId, brandColor }: { projectId: string
           type="email" 
           required 
           placeholder="Email Address" 
+          value={formData.email}
+          onChange={handleChange}
           className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:border-white/20"
+          disabled={status === 'submitting'}
         />
       </div>
       <div className="space-y-2">
@@ -57,9 +75,15 @@ export function PublicContactForm({ projectId, brandColor }: { projectId: string
           name="phone" 
           type="tel" 
           placeholder="Phone Number" 
+          value={formData.phone}
+          onChange={handleChange}
           className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:border-white/20"
+          disabled={status === 'submitting'}
         />
       </div>
+      {error && (
+        <div className="text-red-500 text-sm font-medium mt-2" role="alert">{error}</div>
+      )}
       <Button 
         type="submit" 
         disabled={status === 'submitting'}

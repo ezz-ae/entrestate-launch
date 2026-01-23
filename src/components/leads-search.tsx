@@ -16,7 +16,8 @@ export function LeadsSearch() {
     }
 
     timeoutRef.current = setTimeout(() => {
-      const params = new URLSearchParams(searchParams);
+      if (!searchParams) return;
+      const params = new URLSearchParams(searchParams as any);
       if (term) {
         params.set('q', term);
       } else {
@@ -32,7 +33,7 @@ export function LeadsSearch() {
       <input
         className="h-10 w-full md:w-[300px] rounded-full bg-zinc-900 border border-zinc-800 pl-10 pr-4 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
         placeholder="Search leads..."
-        defaultValue={searchParams.get('q')?.toString()}
+  defaultValue={searchParams ? searchParams.get('q')?.toString() : ''}
         onChange={(e) => handleSearch(e.target.value)}
       />
     </div>

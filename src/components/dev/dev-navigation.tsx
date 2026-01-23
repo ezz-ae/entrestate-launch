@@ -30,10 +30,10 @@ export function DevNavigation() {
       <NavLink href="/builder" icon={Layout} label="Builder" active={pathname === '/builder'} />
       <NavLink href="/instagram-assistant" icon={TrendingUp} label="Instagram Assistant" active={pathname === '/instagram-assistant'} />
       <NavLink href="/marketing-puzzle" icon={Puzzle} label="Puzzle" active={pathname === '/marketing-puzzle'} />
-      <NavLink href="/blog" icon={FileText} label="Blog" active={pathname?.startsWith('/blog')} />
-      <NavLink href="/docs" icon={Book} label="Docs" active={pathname?.startsWith('/docs')} />
-      <NavLink href="/profile" icon={User} label="Profile" active={pathname === '/profile'} />
-      <NavLink href="/p/demo" icon={Eye} label="Preview" active={pathname?.startsWith('/p/')} />
+  <NavLink href="/blog" icon={FileText} label="Blog" active={!!pathname && pathname.startsWith('/blog')} />
+  <NavLink href="/docs" icon={Book} label="Docs" active={!!pathname && pathname.startsWith('/docs')} />
+  <NavLink href="/profile" icon={User} label="Profile" active={pathname === '/profile'} />
+  <NavLink href="/p/demo" icon={Eye} label="Preview" active={!!pathname && pathname.startsWith('/p/')} />
     </div>
   );
 }

@@ -7,8 +7,15 @@ import { db } from '@/firebase';
 import { Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
+
 export default function JobDetailsPage() {
-  const { jobId } = useParams();
+  const params = useParams();
+  // Handle possible null, string, or string[]
+  let jobId: string | undefined;
+  if (params && typeof params === 'object' && 'jobId' in params) {
+    const val = (params as Record<string, string | string[]>).jobId;
+    jobId = Array.isArray(val) ? val[0] : val;
+  }
   const [job, setJob] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 

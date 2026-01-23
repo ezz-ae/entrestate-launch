@@ -59,7 +59,8 @@ export function LeadsTable({ leads, pagination, totalCount, from, to, currentSor
   };
 
   const handleSort = (column: string) => {
-    const params = new URLSearchParams(searchParams);
+  if (!searchParams) return;
+  const params = new URLSearchParams(searchParams as any);
     if (column === currentSort) {
       params.set('order', currentOrder === 'asc' ? 'desc' : 'asc');
     } else {

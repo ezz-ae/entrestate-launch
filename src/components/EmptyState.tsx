@@ -18,21 +18,26 @@ const EmptyState: React.FC<EmptyStateProps> = ({ title, message, actionLabel, on
       textAlign: 'center',
       padding: '24px'
     }}>
-      <div style={{ fontSize: '48px', marginBottom: '16px' }}>📭</div>
-      <h2 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '8px' }}>{title}</h2>
-      <p style={{ color: '#6B7280', marginBottom: '24px', lineHeight: '1.5' }}>{message}</p>
+      {/* Branded Illustration */}
+      <div style={{ fontSize: '64px', marginBottom: '24px' }} aria-label="Empty">3e0</div>
+      <h2 style={{ fontSize: '24px', fontWeight: '800', marginBottom: '12px', color: '#111827' }}>{title}</h2>
+      <p style={{ color: '#6B7280', marginBottom: '32px', lineHeight: '1.6', maxWidth: '320px' }}>{message}</p>
       <button 
         onClick={onAction}
         style={{
-          backgroundColor: 'var(--primary-color, #000)',
+          backgroundColor: 'var(--primary-color, #2563eb)',
           color: 'white',
-          padding: '12px 24px',
-          borderRadius: '12px',
+          padding: '14px 32px',
+          borderRadius: '14px',
           border: 'none',
-          fontWeight: '600',
-          fontSize: '16px',
-          cursor: 'pointer'
+          fontWeight: '700',
+          fontSize: '18px',
+          boxShadow: '0 2px 8px rgba(37,99,235,0.08)',
+          cursor: 'pointer',
+          letterSpacing: '0.02em',
+          transition: 'background 0.2s',
         }}
+        aria-label={actionLabel}
       >
         {actionLabel}
       </button>

@@ -22,7 +22,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 
 const ProjectDetailPage: NextPage = () => {
-  const { projectId } = useParams();
+  const params = useParams();
+  // Handle possible null, string, or string[]
+  let projectId: string | undefined;
+  if (params && typeof params === 'object' && 'projectId' in params) {
+    const val = (params as Record<string, string | string[]>).projectId;
+    projectId = Array.isArray(val) ? val[0] : val;
+  }
   const [project, setProject] = useState<ProjectData | null>(null);
   const [loading, setLoading] = useState(true);
 
