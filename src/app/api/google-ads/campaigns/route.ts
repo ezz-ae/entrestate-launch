@@ -1,26 +1,33 @@
-'use server';
-
 import { NextRequest, NextResponse } from 'next/server';
-import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
-import { ADMIN_ROLES } from '@/lib/server/roles';
+import { z } from 'zod';
+import { guardGoogleAdsEnabled, handleGoogleAdsError, requireGoogleAdsAccess } from '@/modules/googleAds/api';
+import { listCampaigns } from '@/server/googleAds/repo';
 
-export async function POST(req: NextRequest) {
+const querySchema = z.object({
+  clientId: z.string().optional(),
+  status: z.enum(['draft', 'approved', 'deploying', 'active', 'paused', 'completed']).optional(),
+  page: z.coerce.number().optional().default(1),
+});
+
+export async function GET(req: NextRequest) {
+  const gate = guardGoogleAdsEnabled();
+  if (gate) return gate;
+
   try {
-    await requireRole(req, ADMIN_ROLES);
-    const body = await req.json();
-    const newCampaign = {
-      id: `cam_${Date.now()}`,
-      name: body.name || 'New Campaign',
-      ...body,
-    };
-    return NextResponse.json(newCampaign);
+    const { tenantId } = await requireGoogleAdsAccess(req);
+    const params = querySchema.parse(Object.fromEntries(req.nextUrl.searchParams.entries()));
+
+    const data = await listCampaigns({
+      tenantId,
+      status: params.status,
+      limit: 25,
+    });
+
+    return NextResponse.json({
+      page: params.page,
+      data,
+    });
   } catch (error) {
-    if (error instanceof UnauthorizedError) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    if (error instanceof ForbiddenError) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-    return NextResponse.json({ error: 'Failed to create campaign' }, { status: 500 });
+    return handleGoogleAdsError(error, 'Failed to load campaigns.');
   }
 }
