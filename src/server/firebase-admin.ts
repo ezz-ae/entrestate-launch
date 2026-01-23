@@ -1,82 +1,155 @@
-import { cert, getApps, initializeApp, ServiceAccount } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+import { cert, getApps, initializeApp, type App, type ServiceAccount } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
-import { SERVER_ENV } from '@/lib/server/env';
-import fs from 'fs';
-import path from 'path';
+import { getFirestore } from 'firebase-admin/firestore';
 
-let adminApp: import('firebase-admin/app').App | null = null;
-let credentialsFound = false;
+type AdminCredentials = {
+  projectId: string;
+  clientEmail: string;
+  privateKey: string;
+};
 
-function getServiceAccount(): ServiceAccount | null {
-    // --- SECONDARY METHOD: Load from Environment Variables (Production/Vercel) ---
-    const projectId = process.env.FIREBASE_PROJECT_ID || SERVER_ENV.FIREBASE_PROJECT_ID;
-    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL || SERVER_ENV.FIREBASE_CLIENT_EMAIL;
-    const privateKey = (process.env.FIREBASE_PRIVATE_KEY || SERVER_ENV.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g, '\n');
+type RawServiceAccount = ServiceAccount & {
+  project_id?: string;
+  client_email?: string;
+  private_key?: string;
+};
 
-    if (projectId && clientEmail && privateKey) {
-        credentialsFound = true;
-        return { projectId, clientEmail, privateKey };
-    }
-    
-    // --- PRIMARY METHOD: Load service account from file (for Local Dev) ---
-    try {
-        const files = fs.readdirSync(process.cwd()).filter(f => f.endsWith('.json'));
-        for (const file of files) {
-            try {
-                const filePath = path.resolve(process.cwd(), file);
-                const content = fs.readFileSync(filePath, 'utf-8');
-                const key = JSON.parse(content);
-                if (key.type === 'service_account' && key.project_id && key.private_key) {
-                    credentialsFound = true;
-                    return {
-                        projectId: key.project_id,
-                        clientEmail: key.client_email,
-                        privateKey: key.private_key
-                    };
-                }
-            } catch (e) {}
-        }
-    } catch (e) {}
-    
-    return null;
+const isProductionLike =
+  process.env.NODE_ENV === 'production' ||
+  process.env.VERCEL_ENV === 'production' ||
+  process.env.VERCEL_ENV === 'preview';
+
+const isDebugMode = !isProductionLike || process.env.DEBUG_ENV === 'true';
+
+let cachedCredentials: AdminCredentials | null = null;
+let adminApp: App | null = null;
+
+function normalizePrivateKey(value?: string) {
+  return value?.replace(/\\n/g, '\n');
 }
 
-function initAdmin() {
-  if (adminApp) return;
+function logDebug(message: string) {
+  if (isDebugMode) {
+    console.warn(message);
+  }
+}
+
+function parseJsonCredentials(raw?: string): AdminCredentials {
+  const trimmed = raw?.trim();
+  if (!trimmed) {
+    throw new Error('Empty FIREBASE_ADMIN_CREDENTIALS payload.');
+  }
+  const parsed = JSON.parse(trimmed) as RawServiceAccount;
+  const projectId = parsed.projectId || parsed.project_id;
+  const clientEmail = parsed.clientEmail || parsed.client_email;
+  const privateKey = normalizePrivateKey(parsed.privateKey || parsed.private_key);
+
+  if (!projectId || !clientEmail || !privateKey) {
+    throw new Error('FIREBASE_ADMIN_CREDENTIALS JSON is missing required fields.');
+  }
+
+  return {
+    projectId,
+    clientEmail,
+    privateKey,
+  };
+}
+
+function readCredentials(): AdminCredentials | null {
+  if (cachedCredentials) {
+    return cachedCredentials;
+  }
+
+  const rawJson = process.env.FIREBASE_ADMIN_CREDENTIALS;
+  if (rawJson) {
+    try {
+      const parsed = parseJsonCredentials(rawJson);
+      cachedCredentials = parsed;
+      return parsed;
+    } catch (error) {
+      const parsedError =
+        error instanceof Error ? error : new Error('Unable to parse FIREBASE_ADMIN_CREDENTIALS payload.');
+      logDebug(`[firebase-admin] ${parsedError.message}`);
+      throw parsedError;
+    }
+  }
+
+  const projectId =
+    process.env.FIREBASE_ADMIN_PROJECT_ID ||
+    process.env.FIREBASE_PROJECT_ID ||
+    process.env.project_id;
+  const clientEmail =
+    process.env.FIREBASE_ADMIN_CLIENT_EMAIL ||
+    process.env.FIREBASE_CLIENT_EMAIL ||
+    process.env.client_email;
+  const privateKey = normalizePrivateKey(
+    process.env.FIREBASE_ADMIN_PRIVATE_KEY ||
+      process.env.FIREBASE_PRIVATE_KEY ||
+      process.env.private_key
+  );
+
+  if (!projectId || !clientEmail || !privateKey) {
+    return null;
+  }
+
+  const parsed = { projectId, clientEmail, privateKey };
+  cachedCredentials = parsed;
+  return parsed;
+}
+
+function requireCredentials(): AdminCredentials {
+  const credentials = readCredentials();
+  if (!credentials) {
+    throw describeMissingCredentials();
+  }
+  return credentials;
+}
+
+function describeMissingCredentials() {
+  return new Error(
+    'Missing Firebase admin credentials. Set FIREBASE_ADMIN_CREDENTIALS or FIREBASE_ADMIN_PROJECT_ID/FIREBASE_ADMIN_CLIENT_EMAIL/FIREBASE_ADMIN_PRIVATE_KEY.'
+  );
+}
+
+function initAdminApp(): App {
+  if (adminApp) {
+    return adminApp;
+  }
 
   if (getApps().length) {
     adminApp = getApps()[0];
-    return;
+    return adminApp;
   }
 
-  const credentials = getServiceAccount();
-  
-  if (credentials) {
+  const credentials = requireCredentials();
+  try {
     adminApp = initializeApp({ credential: cert(credentials) });
+  } catch (error) {
+    const initError = error instanceof Error ? error : new Error('Failed to initialize Firebase admin SDK.');
+    logDebug(`[firebase-admin] Initialization failed while constructing admin SDK: ${initError.message}`);
+    throw initError;
+  }
+
+  return adminApp;
+}
+
+export function getAdminProjectId() {
+  if (adminApp?.options?.projectId) {
+    return adminApp.options.projectId;
+  }
+  try {
+    return readCredentials()?.projectId || null;
+  } catch {
+    return null;
   }
 }
 
-// Initialize on load. If credentials are not present, this will do nothing.
-initAdmin();
-
 export function getAdminDb() {
-  if (!adminApp) {
-      // During build, return a mock-like object to prevent crash
-      if (process.env.NODE_ENV !== 'production' || process.env.VERCEL_ENV) {
-        return { collection: () => ({ doc: () => ({ get: async () => ({ exists: false }) }) }) } as any;
-      }
-      throw new Error("Firebase Admin not initialized. Missing credentials.");
-  }
-  return getFirestore(adminApp);
+  const app = initAdminApp();
+  return getFirestore(app);
 }
 
 export function getAdminAuth() {
-  if (!adminApp) {
-    if (process.env.NODE_ENV !== 'production' || process.env.VERCEL_ENV) {
-        return {} as any; // Return mock for build
-    }
-    throw new Error("Firebase Admin not initialized. Missing credentials.");
-  }
-  return getAuth(adminApp);
+  const app = initAdminApp();
+  return getAuth(app);
 }

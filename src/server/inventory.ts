@@ -1,4 +1,4 @@
-import { getAdminDb } from '@/server/firebase-admin';
+import { getAdminDb, getAdminProjectId } from '@/server/firebase-admin';
 import { ENTRESTATE_INVENTORY } from '@/data/entrestate-inventory';
 import { firebaseConfig } from '@/lib/firebase/config';
 import type { ProjectData } from '@/lib/types';
@@ -14,19 +14,7 @@ const PUBLIC_PROJECT_ID =
   firebaseConfig.projectId;
 const PUBLIC_API_KEY =
   process.env.NEXT_PUBLIC_FIREBASE_API_KEY || firebaseConfig.apiKey;
-const ADMIN_PROJECT_ID = (() => {
-  if (process.env.FIREBASE_PROJECT_ID || process.env.project_id) {
-    return process.env.FIREBASE_PROJECT_ID || process.env.project_id;
-  }
-  const adminConfig = process.env.FIREBASE_ADMIN_SDK_CONFIG;
-  if (!adminConfig) return undefined;
-  try {
-    const parsed = JSON.parse(adminConfig) as { project_id?: string; projectId?: string };
-    return parsed.project_id || parsed.projectId;
-  } catch {
-    return undefined;
-  }
-})();
+const ADMIN_PROJECT_ID = getAdminProjectId();
 const ADMIN_PROJECT_MISMATCH =
   ADMIN_PROJECT_ID && PUBLIC_PROJECT_ID && ADMIN_PROJECT_ID !== PUBLIC_PROJECT_ID;
 

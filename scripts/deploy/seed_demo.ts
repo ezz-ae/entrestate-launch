@@ -2,36 +2,70 @@ import dotenv from 'dotenv';
 import { cert, getApps, initializeApp, ServiceAccount } from 'firebase-admin/app';
 import { FieldValue, getFirestore } from 'firebase-admin/firestore';
 
+type RawServiceAccount = ServiceAccount & {
+  project_id?: string;
+  client_email?: string;
+  private_key?: string;
+};
+
 dotenv.config({ path: process.env.ENV_FILE || '.env.local' });
 
+function normalizePrivateKey(value?: string) {
+  return value?.replace(/\\n/g, '\n');
+}
+
+function parseJsonCredentials(raw: string): ServiceAccount {
+  const parsed = JSON.parse(raw) as RawServiceAccount;
+  const projectId = parsed.projectId || parsed.project_id;
+  const clientEmail = parsed.clientEmail || parsed.client_email;
+  const privateKey = normalizePrivateKey(
+    (parsed.privateKey || parsed.private_key) as string | undefined
+  );
+
+  if (!projectId || !clientEmail || !privateKey) {
+    throw new Error('FIREBASE_ADMIN_CREDENTIALS JSON is missing required fields.');
+  }
+
+  return {
+    projectId,
+    clientEmail,
+    privateKey,
+  } as ServiceAccount;
+}
+
 function getServiceAccount(): ServiceAccount {
-  const raw = process.env.FIREBASE_ADMIN_SDK_CONFIG;
+  const raw = process.env.FIREBASE_ADMIN_CREDENTIALS;
   if (raw) {
     try {
-      const parsed = JSON.parse(raw) as ServiceAccount;
-      if (parsed.privateKey) {
-        parsed.privateKey = String(parsed.privateKey).replace(/\\n/g, '\n');
-      }
-      return parsed;
-    } catch (error) {
-      throw new Error('FIREBASE_ADMIN_SDK_CONFIG is not valid JSON.');
+      return parseJsonCredentials(raw);
+    } catch (error: any) {
+      throw new Error(error.message || 'FIREBASE_ADMIN_CREDENTIALS is not valid JSON.');
     }
   }
 
-  const projectId = process.env.FIREBASE_PROJECT_ID || process.env.project_id;
-  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL || process.env.client_email;
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY || process.env.private_key;
+  const projectId =
+    process.env.FIREBASE_ADMIN_PROJECT_ID ||
+    process.env.FIREBASE_PROJECT_ID ||
+    process.env.project_id;
+  const clientEmail =
+    process.env.FIREBASE_ADMIN_CLIENT_EMAIL ||
+    process.env.FIREBASE_CLIENT_EMAIL ||
+    process.env.client_email;
+  const privateKey =
+    process.env.FIREBASE_ADMIN_PRIVATE_KEY ||
+    process.env.FIREBASE_PRIVATE_KEY ||
+    process.env.private_key;
 
   if (!projectId || !clientEmail || !privateKey) {
     throw new Error(
-      'Missing Firebase admin credentials. Set FIREBASE_ADMIN_SDK_CONFIG or FIREBASE_PROJECT_ID/FIREBASE_CLIENT_EMAIL/FIREBASE_PRIVATE_KEY.'
+      'Missing Firebase admin credentials. Set FIREBASE_ADMIN_CREDENTIALS or FIREBASE_ADMIN_PROJECT_ID/FIREBASE_ADMIN_CLIENT_EMAIL/FIREBASE_ADMIN_PRIVATE_KEY.'
     );
   }
 
   return {
     projectId,
     clientEmail,
-    privateKey: privateKey.replace(/\\n/g, '\n'),
+    privateKey: normalizePrivateKey(privateKey) ?? privateKey,
   } as ServiceAccount;
 }
 

@@ -11,7 +11,8 @@ export async function GET(request: NextRequest) {
     const db = getAdminDb();
     const walletRef = db.collection('tenants').doc(tenantId).collection('wallet').doc('main');
     const walletSnap = await walletRef.get();
-    const balance = walletSnap.exists ? walletSnap.data().balance || 0 : 0;
+    const walletData = walletSnap.data();
+    const balance = walletData?.balance ?? 0;
     const txRef = db.collection('tenants').doc(tenantId).collection('wallet').doc('main').collection('transactions');
     const txSnap = await txRef.orderBy('createdAt', 'desc').limit(20).get();
     const transactions = txSnap.docs.map(doc => doc.data());

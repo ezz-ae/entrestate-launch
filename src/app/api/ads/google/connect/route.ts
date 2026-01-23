@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from '@/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
-
+import { getAppUrl } from '@/lib/app-url';
 
 import { exchangeAuthCodeForTokens, saveGoogleAdsTokensToFirestore } from '@/lib/google-ads';
 
@@ -14,7 +14,8 @@ export async function POST(request: NextRequest) {
     }
 
   // Exchange authCode for tokens
-  const redirectUri = process.env.GOOGLE_ADS_REDIRECT_URI || '';
+  const redirectUri =
+    process.env.GOOGLE_ADS_REDIRECT_URI || `${getAppUrl()}/api/ads/google/connect`;
   const tokens = await exchangeAuthCodeForTokens(authCode, redirectUri);
   // Store tokens securely in Firestore
   const db = (await import('@/server/firebase-admin')).getAdminDb();

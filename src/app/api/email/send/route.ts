@@ -15,7 +15,7 @@ import {
   planLimitErrorResponse,
 } from '@/lib/server/billing';
 import { getAdminDb } from '@/server/firebase-admin';
-import { IS_EMAIL_ENABLED } from '@/lib/server/env';
+import { FIREBASE_AUTH_ENABLED, IS_EMAIL_ENABLED } from '@/lib/server/env';
 
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX = 30;
@@ -28,7 +28,7 @@ const payloadSchema = z.object({
 
 export async function POST(req: NextRequest) {
   // Allow simulated sends in dev when email provider isn't configured.
-  const enableDev = process.env.DEV_FIREBASE_AUTH === 'true' || process.env.NODE_ENV !== 'production';
+  const enableDev = !FIREBASE_AUTH_ENABLED || process.env.NODE_ENV !== 'production';
   if (!IS_EMAIL_ENABLED && !enableDev) {
     return NextResponse.json({ error: 'Email is not enabled.' }, { status: 501 });
   }

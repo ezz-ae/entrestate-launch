@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { FIREBASE_AUTH_ENABLED } from '@/lib/server/env';
 
 export function createSupabaseServerClient() {
   // cookies() can have differing types across Next.js versions (sync or Promise).
@@ -12,7 +13,7 @@ export function createSupabaseServerClient() {
   // If supabase config is missing or invalid, and we're in dev, return a lightweight
   // mock client so server-side rendering doesn't crash. In production we keep failing
   // loudly to avoid hiding config issues.
-  const enableDev = process.env.DEV_FIREBASE_AUTH === 'true' || process.env.NODE_ENV !== 'production';
+  const enableDev = !FIREBASE_AUTH_ENABLED || process.env.NODE_ENV !== 'production';
 
   let urlValid = false;
   try {

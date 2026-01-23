@@ -5,6 +5,7 @@ import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { ADMIN_ROLES } from '@/lib/server/roles';
 import { BILLING_SKUS, resolveBillingSku } from '@/lib/server/billing';
 import { IS_PAYMENTS_ENABLED } from '@/lib/server/env';
+import { getAppUrl } from '@/lib/app-url';
 
 const requestSchema = z.object({
   planId: z.string().optional(),
@@ -13,15 +14,6 @@ const requestSchema = z.object({
 });
 
 const AED_TO_USD = 1 / 3.67;
-
-function getCheckoutUrl() {
-  const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'entrestate.com';
-  const base =
-    rootDomain.startsWith('http://') || rootDomain.startsWith('https://')
-      ? rootDomain
-      : `https://${rootDomain}`;
-  return base.replace(/\/+$/, '');
-}
 
 export async function POST(req: NextRequest) {
   if (!IS_PAYMENTS_ENABLED) {
@@ -44,7 +36,7 @@ export async function POST(req: NextRequest) {
       currency === 'AED'
         ? amountAed.toFixed(2)
         : (amountAed * AED_TO_USD).toFixed(2);
-    const appUrl = getCheckoutUrl();
+    const appUrl = getAppUrl();
 
     const body = {
       intent: 'CAPTURE',

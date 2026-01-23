@@ -7,6 +7,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const require = createRequire(import.meta.url);
 
+const rawEnableFirebaseAuth = process.env.ENABLE_FIREBASE_AUTH;
+const defaultEnableFirebaseAuth =
+  rawEnableFirebaseAuth === undefined ? (process.env.NODE_ENV === 'production' ? 'true' : 'false') : rawEnableFirebaseAuth;
+const publicEnableFirebaseAuth = process.env.NEXT_PUBLIC_ENABLE_FIREBASE_AUTH ?? defaultEnableFirebaseAuth;
+
 const securityHeaders = [
     {
         key: 'Strict-Transport-Security',
@@ -45,6 +50,9 @@ const securityHeaders = [
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     reactStrictMode: true,
+    env: {
+        NEXT_PUBLIC_ENABLE_FIREBASE_AUTH: publicEnableFirebaseAuth,
+    },
     webpack: (config, { isServer }) => {
         // Resolve Firebase modules to their browser-specific versions for client-side
         if (!isServer) {

@@ -18,84 +18,127 @@ function requireKey(key: string) {
   }
 }
 
-function optionalKey(key: string) {
+function optionalKey(key: string, comment?: string) {
   if (!process.env[key]) {
-    optional.push(key);
+    optional.push(comment ? `${key} (${comment})` : key);
   }
 }
 
-const firebaseClientKeys = [
+const shortBool = (key: string) => process.env[key] === 'true';
+
+const coreClientKeys = [
+  'NEXT_PUBLIC_APP_URL',
   'NEXT_PUBLIC_FIREBASE_API_KEY',
   'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN',
   'NEXT_PUBLIC_FIREBASE_PROJECT_ID',
   'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET',
   'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID',
   'NEXT_PUBLIC_FIREBASE_APP_ID',
-  'NEXT_PUBLIC_ROOT_DOMAIN',
 ];
+coreClientKeys.forEach(requireKey);
 
-firebaseClientKeys.forEach(requireKey);
+requireKey('ENABLE_FIREBASE_AUTH');
 
-const adminProjectId = process.env.FIREBASE_PROJECT_ID || process.env.project_id;
-const adminClientEmail = process.env.FIREBASE_CLIENT_EMAIL || process.env.client_email;
-const adminPrivateKey = process.env.FIREBASE_PRIVATE_KEY || process.env.private_key;
-const hasAdminConfig = Boolean(process.env.FIREBASE_ADMIN_SDK_CONFIG);
-const hasAdminSplit = Boolean(adminProjectId && adminClientEmail && adminPrivateKey);
-
-if (!hasAdminConfig && !hasAdminSplit) {
-  required.push(
-    'FIREBASE_ADMIN_SDK_CONFIG (or FIREBASE_PROJECT_ID + FIREBASE_CLIENT_EMAIL + FIREBASE_PRIVATE_KEY)'
-  );
+const adminJson = Boolean(process.env.FIREBASE_ADMIN_CREDENTIALS?.trim());
+if (!adminJson) {
+  requireKey('FIREBASE_ADMIN_PROJECT_ID');
+  requireKey('FIREBASE_ADMIN_CLIENT_EMAIL');
+  requireKey('FIREBASE_ADMIN_PRIVATE_KEY');
+} else {
+  optionalKey('FIREBASE_ADMIN_PROJECT_ID', 'only needed when you cannot provide FIREBASE_ADMIN_CREDENTIALS');
+  optionalKey('FIREBASE_ADMIN_CLIENT_EMAIL', 'only needed when you cannot provide FIREBASE_ADMIN_CREDENTIALS');
+  optionalKey('FIREBASE_ADMIN_PRIVATE_KEY', 'only needed when you cannot provide FIREBASE_ADMIN_CREDENTIALS');
 }
 
-const aiKey =
-  process.env.GEMINI_API_KEY ||
-  process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
-  process.env.Gemini_api_key;
-
-if (!aiKey) {
-  required.push('GEMINI_API_KEY or GOOGLE_GENERATIVE_AI_API_KEY');
+if (shortBool('ENABLE_CRON')) {
+  requireKey('CRON_SECRET');
+} else {
+  optionalKey('CRON_SECRET', 'set only when ENABLE_CRON=true');
 }
 
-const rateLimitDisabled = process.env.RATE_LIMIT_DISABLED === 'true';
-if (!rateLimitDisabled) {
+const enforceRateLimits = process.env.RATE_LIMIT_DISABLED !== 'true';
+if (enforceRateLimits) {
   requireKey('UPSTASH_REDIS_REST_URL');
   requireKey('UPSTASH_REDIS_REST_TOKEN');
 } else {
-  optional.push('UPSTASH_REDIS_REST_URL (rate limiting disabled)');
-  optional.push('UPSTASH_REDIS_REST_TOKEN (rate limiting disabled)');
+  optionalKey('UPSTASH_REDIS_REST_URL', 'rate limiting explicitly disabled');
+  optionalKey('UPSTASH_REDIS_REST_TOKEN', 'rate limiting explicitly disabled');
 }
 
-optionalKey('CRON_SECRET');
+if (shortBool('ENABLE_EMAIL')) {
+  requireKey('RESEND_API_KEY');
+  requireKey('FROM_EMAIL');
+} else {
+  optionalKey('RESEND_API_KEY', 'only required when ENABLE_EMAIL=true');
+  optionalKey('FROM_EMAIL', 'only required when ENABLE_EMAIL=true');
+}
+optionalKey('NOTIFY_EMAIL_TO', 'optional fallback notification address');
 
-// Optional integrations
-[
-  'RESEND_API_KEY',
-  'FROM_EMAIL',
-  'NOTIFY_EMAIL_TO',
-  'TWILIO_ACCOUNT_SID',
-  'TWILIO_AUTH_TOKEN',
-  'TWILIO_FROM_NUMBER',
-  'NOTIFY_SMS_TO',
-  'HUBSPOT_ACCESS_TOKEN',
-  'PAYPAL_CLIENT_ID',
-  'PAYPAL_CLIENT_SECRET',
-  'NEXT_PUBLIC_PAYPAL_CLIENT_ID',
-  'PAYPAL_WEBHOOK_ID',
-  'PAYPAL_API_BASE',
-  'ZIINA_API_KEY',
-  'ZIINA_WEBHOOK_SECRET',
-  'ZIINA_BASE_URL',
-  'VERCEL_API_TOKEN',
-  'VERCEL_PROJECT_ID',
-  'VERCEL_TEAM_ID',
-  'SENTRY_DSN',
-  'NEXT_PUBLIC_SENTRY_DSN',
-  'NEXT_PUBLIC_SITE_DOMAIN',
-  'ADS_NOTIFICATION_EMAIL',
-  'DOMAIN_REQUEST_EMAIL',
-  'SUPPORT_EMAIL',
-].forEach(optionalKey);
+if (shortBool('ENABLE_SMS')) {
+  requireKey('TWILIO_ACCOUNT_SID');
+  requireKey('TWILIO_AUTH_TOKEN');
+  requireKey('TWILIO_FROM_NUMBER');
+} else {
+  optionalKey('TWILIO_ACCOUNT_SID', 'only required when ENABLE_SMS=true');
+  optionalKey('TWILIO_AUTH_TOKEN', 'only required when ENABLE_SMS=true');
+  optionalKey('TWILIO_FROM_NUMBER', 'only required when ENABLE_SMS=true');
+}
+optionalKey('NOTIFY_SMS_TO', 'optional fallback SMS recipient');
+
+if (shortBool('ENABLE_GOOGLE_ADS')) {
+  requireKey('GOOGLE_ADS_CLIENT_ID');
+  requireKey('GOOGLE_ADS_CLIENT_SECRET');
+  requireKey('NEXT_PUBLIC_GOOGLE_ADS_CLIENT_ID');
+} else {
+  optionalKey('GOOGLE_ADS_CLIENT_ID', 'only required when ENABLE_GOOGLE_ADS=true');
+  optionalKey('GOOGLE_ADS_CLIENT_SECRET', 'only required when ENABLE_GOOGLE_ADS=true');
+  optionalKey('NEXT_PUBLIC_GOOGLE_ADS_CLIENT_ID', 'only required when ENABLE_GOOGLE_ADS=true');
+}
+optionalKey('GOOGLE_ADS_REDIRECT_URI', 'optional redirect override');
+optionalKey('NEXT_PUBLIC_GOOGLE_ADS_REDIRECT_URI', 'optional client redirect override');
+optionalKey('ADS_NOTIFICATION_EMAIL', 'optional email for Google Ads sync alerts');
+
+if (shortBool('ENABLE_PAYMENTS')) {
+  requireKey('PAYPAL_CLIENT_ID');
+  requireKey('PAYPAL_CLIENT_SECRET');
+  requireKey('ZIINA_API_KEY');
+  requireKey('ZIINA_WEBHOOK_SECRET');
+} else {
+  optionalKey('PAYPAL_CLIENT_ID', 'only required when ENABLE_PAYMENTS=true');
+  optionalKey('PAYPAL_CLIENT_SECRET', 'only required when ENABLE_PAYMENTS=true');
+  optionalKey('ZIINA_API_KEY', 'only required when ENABLE_PAYMENTS=true');
+  optionalKey('ZIINA_WEBHOOK_SECRET', 'only required when ENABLE_PAYMENTS=true');
+}
+optionalKey('NEXT_PUBLIC_PAYPAL_CLIENT_ID', 'optional client ID for PayPal buttons');
+optionalKey('PAYPAL_WEBHOOK_ID', 'only needed when you configure live PayPal webhooks');
+optionalKey('PAYPAL_API_BASE', 'override optional; defaults to https://api-m.paypal.com');
+optionalKey('ZIINA_BASE_URL', 'optional API endpoint override');
+
+if (shortBool('ENABLE_SUPABASE')) {
+  requireKey('NEXT_PUBLIC_SUPABASE_URL');
+  requireKey('NEXT_PUBLIC_SUPABASE_ANON_KEY');
+} else {
+  optionalKey('NEXT_PUBLIC_SUPABASE_URL', 'legacy Supabase flows disabled');
+  optionalKey('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'legacy Supabase flows disabled');
+}
+
+optionalKey('NEXT_PUBLIC_ROOT_DOMAIN', 'only required for custom rewrites');
+optionalKey('NEXT_PUBLIC_SITE_DOMAIN', 'optional published site suffix');
+optionalKey('NEXT_PUBLIC_FACEBOOK_APP_ID', 'only needed if you use the Facebook SDK');
+
+optionalKey('GEMINI_API_KEY', 'needed when AI/email/SMS flows are enabled');
+optionalKey('META_ACCESS_TOKEN', 'legacy Meta toggle; use only if still needed');
+optionalKey('HUBSPOT_ACCESS_TOKEN', 'optional CRM token');
+optionalKey('DOMAIN_REQUEST_EMAIL', 'receives domain requests when enabled');
+optionalKey('SUPPORT_EMAIL', 'optional support contact for notifications');
+optionalKey('RATE_LIMIT_DISABLED', 'set to true only when you intentionally disable rate limits');
+
+optionalKey('SENTRY_DSN', 'optional observability integration');
+optionalKey('NEXT_PUBLIC_SENTRY_DSN', 'optional observability integration');
+
+optionalKey('VERCEL_API_TOKEN', 'for CLI automation only; avoid runtime use');
+optionalKey('VERCEL_PROJECT_ID', 'for CLI automation only; avoid runtime use');
+optionalKey('VERCEL_TEAM_ID', 'for CLI automation only; avoid runtime use');
 
 if (required.length) {
   console.error('Missing required env vars:');

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { FIREBASE_AUTH_ENABLED } from '@/lib/server/env';
 
 export async function GET(req: Request) {
   try {
@@ -17,7 +18,7 @@ export async function GET(req: Request) {
       }
     }
 
-    const enableDev = process.env.DEV_FIREBASE_AUTH === 'true' || process.env.NODE_ENV !== 'production';
+    const enableDev = !FIREBASE_AUTH_ENABLED || process.env.NODE_ENV !== 'production';
     if (enableDev && (devUser || devUid)) {
       const email = devUser || (devUid ? `${devUid}@dev.local` : null);
       const uid = devUid || (devUser ? devUser.split('@')[0] : 'dev.user');

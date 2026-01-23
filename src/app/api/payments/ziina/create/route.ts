@@ -4,6 +4,7 @@ import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { ADMIN_ROLES } from '@/lib/server/roles';
 import { BILLING_SKUS, resolveBillingSku } from '@/lib/server/billing';
 import { IS_PAYMENTS_ENABLED } from '@/lib/server/env';
+import { getAppUrl } from '@/lib/app-url';
 
 const API_KEY = process.env.ZIINA_API_KEY;
 const BASE_URL = process.env.ZIINA_BASE_URL || 'https://api.sandbox.ziina.com';
@@ -46,7 +47,8 @@ export async function POST(req: NextRequest) {
         amount: Math.round(amountAed * 100),
         currency: payload.currency.toUpperCase(),
         description: skuInfo.label,
-        return_url: payload.returnUrl || 'https://entrestate.com/dashboard/billing?payment=success',
+        return_url:
+          payload.returnUrl || `${getAppUrl()}/dashboard/billing?payment=success`,
         metadata: {
           tenantId,
           sku,

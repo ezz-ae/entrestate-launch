@@ -7,10 +7,10 @@ import {
   signOut,
   onAuthStateChanged,
   updateProfile,
-  User
+  type Auth,
+  type User
 } from 'firebase/auth';
 import { useState, useEffect, useContext, createContext, ReactNode } from 'react';
-import { useAuthState } from 'react-firebase-hooks/auth';
 
 interface AuthContextType {
   user: User | null;
@@ -22,20 +22,55 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const ensureAuth = (): Auth => {
+  if (!auth) {
+    throw new Error('Firebase auth is disabled. Set NEXT_PUBLIC_ENABLE_FIREBASE_AUTH=true with valid Firebase config.');
+  }
+  return auth;
+};
+
+function useSafeAuthState(targetAuth: Auth | null) {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState<boolean>(Boolean(targetAuth));
+
+  useEffect(() => {
+    if (!targetAuth) {
+      setUser(null);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    const unsubscribe = onAuthStateChanged(targetAuth, (nextUser) => {
+      setUser(nextUser);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [targetAuth]);
+
+  return [user, loading] as const;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+    if (!auth) {
+      setLoading(false);
+      return;
+    }
+
+    const unsubscribe = onAuthStateChanged(auth, (nextUser) => {
+      setUser(nextUser);
       setLoading(false);
     });
     return () => unsubscribe();
   }, []);
 
   const signUp = async (email: string, password: string, name: string) => {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const userCredential = await createUserWithEmailAndPassword(ensureAuth(), email, password);
     if (userCredential.user) {
       await updateProfile(userCredential.user, { displayName: name });
       setUser(userCredential.user);
@@ -43,11 +78,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logIn = (email: string, password: string) => {
-    return signInWithEmailAndPassword(auth, email, password).then(() => {});
+    return signInWithEmailAndPassword(ensureAuth(), email, password).then(() => {});
   };
 
   const logOut = () => {
-    return signOut(auth);
+    return signOut(ensureAuth());
   };
 
   const value = { user, loading, signUp, logIn, logOut };
@@ -57,23 +92,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  const [fallbackUser, fallbackLoading] = useAuthState(auth);
+  const [fallbackUser, fallbackLoading] = useSafeAuthState(auth);
   const [devUser, setDevUser] = useState<any | null>(null);
   const [devLoading, setDevLoading] = useState(false);
 
   const signUp = async (email: string, password: string, name: string) => {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const userCredential = await createUserWithEmailAndPassword(ensureAuth(), email, password);
     if (userCredential.user) {
       await updateProfile(userCredential.user, { displayName: name });
     }
   };
 
   const logIn = (email: string, password: string) => {
-    return signInWithEmailAndPassword(auth, email, password).then(() => {});
+    return signInWithEmailAndPassword(ensureAuth(), email, password).then(() => {});
   };
 
   const logOut = () => {
-    return signOut(auth);
+    return signOut(ensureAuth());
   };
 
   if (context !== undefined) {

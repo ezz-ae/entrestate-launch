@@ -12,7 +12,7 @@ import {
   planLimitErrorResponse,
 } from '@/lib/server/billing';
 import { getAdminDb } from '@/server/firebase-admin';
-import { IS_SMS_ENABLED } from '@/lib/server/env';
+import { FIREBASE_AUTH_ENABLED, IS_SMS_ENABLED } from '@/lib/server/env';
 
 const ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
 const AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
@@ -27,7 +27,7 @@ const payloadSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const enableDev = process.env.DEV_FIREBASE_AUTH === 'true' || process.env.NODE_ENV !== 'production';
+  const enableDev = !FIREBASE_AUTH_ENABLED || process.env.NODE_ENV !== 'production';
   if (!IS_SMS_ENABLED && !enableDev) {
     return NextResponse.json({ error: 'SMS is not enabled.' }, { status: 501 });
   }

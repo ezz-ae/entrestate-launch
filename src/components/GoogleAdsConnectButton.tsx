@@ -1,7 +1,10 @@
 import React, { useCallback } from 'react';
+import { getAppUrl } from '@/lib/app-url';
 
 const GOOGLE_ADS_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_ADS_CLIENT_ID;
-const GOOGLE_ADS_REDIRECT_URI = process.env.NEXT_PUBLIC_GOOGLE_ADS_REDIRECT_URI;
+const DEFAULT_GOOGLE_ADS_REDIRECT_URI = `${getAppUrl()}/api/ads/google/connect`;
+const GOOGLE_ADS_REDIRECT_URI =
+  process.env.NEXT_PUBLIC_GOOGLE_ADS_REDIRECT_URI || DEFAULT_GOOGLE_ADS_REDIRECT_URI;
 const GOOGLE_ADS_SCOPE = 'https://www.googleapis.com/auth/adwords';
 
 export function GoogleAdsConnectButton() {

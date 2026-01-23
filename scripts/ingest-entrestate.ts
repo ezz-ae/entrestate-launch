@@ -9,24 +9,38 @@ dotenv.config();
 
 console.log(`[Ingest] Current working directory: ${process.cwd()}`);
 
+function normalizePrivateKey(value?: string) {
+  return value?.replace(/\\n/g, '\n');
+}
+
 let serviceAccount;
-try {
-  if (process.env.FIREBASE_ADMIN_SDK_CONFIG) {
-    serviceAccount = JSON.parse(process.env.FIREBASE_ADMIN_SDK_CONFIG);
+if (process.env.FIREBASE_ADMIN_CREDENTIALS) {
+  try {
+    const parsed = JSON.parse(process.env.FIREBASE_ADMIN_CREDENTIALS);
+    const privateKey =
+      normalizePrivateKey((parsed.privateKey || parsed.private_key) as string | undefined) ||
+      parsed.private_key ||
+      parsed.privateKey;
+    if ((parsed.projectId || parsed.project_id) && privateKey) {
+      serviceAccount = {
+        projectId: parsed.projectId || parsed.project_id,
+        clientEmail: parsed.clientEmail || parsed.client_email,
+        privateKey,
+      };
+    }
+  } catch (e) {
+    console.warn('[Ingest] WARN: Unable to parse FIREBASE_ADMIN_CREDENTIALS JSON.');
   }
-} catch (e) {
-  // Ignore invalid JSON and fall back to individual keys
 }
 
 if (!serviceAccount) {
   console.log('[Ingest] Scanning directory for service account files...');
   try {
-    const files = fs.readdirSync(process.cwd()).filter(f => f.endsWith('.json'));
+    const files = fs.readdirSync(process.cwd()).filter((f) => f.endsWith('.json'));
     for (const file of files) {
       try {
         const filePath = path.resolve(process.cwd(), file);
         const content = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-        // Check for standard service account fields to identify the correct file
         if (content.type === 'service_account' && content.project_id && content.private_key) {
           console.log(`[Ingest] Auto-detected service account: ${file}`);
           serviceAccount = content;
@@ -43,18 +57,31 @@ if (!serviceAccount) {
 
 if (!serviceAccount) {
   console.log('[Ingest] Checking environment variables...');
-  console.log(`  - FIREBASE_PROJECT_ID: ${process.env.FIREBASE_PROJECT_ID ? 'Found' : 'Missing'}`);
-  console.log(`  - FIREBASE_PRIVATE_KEY: ${process.env.FIREBASE_PRIVATE_KEY ? 'Found' : 'Missing'}`);
+  const projectId =
+    process.env.FIREBASE_ADMIN_PROJECT_ID ||
+    process.env.FIREBASE_PROJECT_ID ||
+    process.env.project_id;
+  const clientEmail =
+    process.env.FIREBASE_ADMIN_CLIENT_EMAIL ||
+    process.env.FIREBASE_CLIENT_EMAIL ||
+    process.env.client_email;
+  const privateKey =
+    process.env.FIREBASE_ADMIN_PRIVATE_KEY ||
+    process.env.FIREBASE_PRIVATE_KEY ||
+    process.env.private_key;
 
-  if (process.env.FIREBASE_PROJECT_ID) {
+  console.log(`  - FIREBASE_PROJECT_ID: ${projectId ? 'Found' : 'Missing'}`);
+  console.log(`  - FIREBASE_PRIVATE_KEY: ${privateKey ? 'Found' : 'Missing'}`);
+
+  if (projectId) {
     console.log('[Ingest] Falling back to .env variables (FIREBASE_PROJECT_ID detected)...');
-    if (!process.env.FIREBASE_PRIVATE_KEY) {
+    if (!privateKey) {
       console.warn('[Ingest] Warning: FIREBASE_PRIVATE_KEY is missing in .env variables.');
     }
     serviceAccount = {
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      projectId,
+      clientEmail,
+      privateKey: normalizePrivateKey(privateKey) ?? privateKey,
     };
   } else {
     console.log('[Ingest] FIREBASE_PROJECT_ID not found in .env.local or environment.');

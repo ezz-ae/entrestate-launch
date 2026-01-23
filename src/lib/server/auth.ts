@@ -1,5 +1,6 @@
 import type { DecodedIdToken } from 'firebase-admin/auth';
 import type { NextRequest } from 'next/server';
+import { FIREBASE_AUTH_ENABLED } from '@/lib/server/env';
 import { getAdminAuth, getAdminDb } from '@/server/firebase-admin';
 
 export type Role = 'public' | 'agent' | 'team_admin' | 'agency_admin' | 'super_admin';
@@ -15,6 +16,56 @@ export type AuthContext = {
 
 const ROLE_PRIORITY: Role[] = ['public', 'agent', 'team_admin', 'agency_admin', 'super_admin'];
 const ROLE_RANK = new Map<Role, number>(ROLE_PRIORITY.map((role, index) => [role, index]));
+
+const isDevEnvironment = process.env.NODE_ENV !== 'production';
+const anonymousClaims = {
+  uid: 'anonymous',
+  tenantId: 'public',
+  roles: ['public'],
+} as unknown as DecodedIdToken;
+
+let loggedAuthDisabledWarning = false;
+
+function buildDevContext(req: NextRequest | Request) {
+  const devUserHeader = req.headers.get('x-dev-user') || req.headers.get('x-dev-uid');
+  let devUserFromCookie: string | null = null;
+  const cookieHeader = req.headers.get('cookie');
+  if (cookieHeader) {
+    const cookies = cookieHeader.split(';').map((c) => c.trim());
+    for (const c of cookies) {
+      if (c.startsWith('dev_user=')) {
+        devUserFromCookie = decodeURIComponent(c.slice('dev_user='.length));
+        break;
+      }
+      if (c.startsWith('dev_uid=')) {
+        devUserFromCookie = decodeURIComponent(c.slice('dev_uid='.length));
+        break;
+      }
+    }
+  }
+
+  const effectiveDevUser = devUserHeader || devUserFromCookie;
+  if (!effectiveDevUser) {
+    return null;
+  }
+
+  const raw = effectiveDevUser.trim();
+  const email = raw.includes('@') ? raw : `${raw}@dev.local`;
+  const uid = raw.includes('@') ? raw.split('@')[0] : raw;
+  const rolesHeader = req.headers.get('x-dev-roles') || '';
+  const normalizedRoles = rolesHeader ? normalizeRoles(rolesHeader) : [];
+  const roles = normalizedRoles.length ? normalizedRoles : ['agency_admin'];
+
+  const claims = {
+    uid,
+    email,
+    tenantId: uid,
+    roles: roles.length ? roles : ['agency_admin'],
+    dev: true,
+  } as unknown as DecodedIdToken;
+
+  return { uid, email, claims };
+}
 
 export class UnauthorizedError extends Error {
   constructor(message = 'Unauthorized') {
@@ -112,47 +163,24 @@ function getClaimsRoles(claims: DecodedIdToken) {
 }
 
 export async function verifyFirebaseIdToken(req: NextRequest | Request) {
-  // Dev shortcut: allow a fake/dev user when DEV_FIREBASE_AUTH=true or when
-  // running in non-production and the x-dev-user header is present.
   try {
-    const enableDev = process.env.DEV_FIREBASE_AUTH === 'true' || process.env.NODE_ENV !== 'production';
-    const devUserHeader = req.headers.get('x-dev-user') || req.headers.get('x-dev-uid');
-    // also allow a dev cookie named `dev_user` or `dev_uid`
-    let devUserFromCookie: string | null = null;
-    const cookieHeader = req.headers.get('cookie');
-    if (cookieHeader) {
-      const cookies = cookieHeader.split(';').map((c) => c.trim());
-      for (const c of cookies) {
-        if (c.startsWith('dev_user=')) {
-          devUserFromCookie = decodeURIComponent(c.slice('dev_user='.length));
-          break;
-        }
-        if (c.startsWith('dev_uid=')) {
-          devUserFromCookie = decodeURIComponent(c.slice('dev_uid='.length));
-          break;
-        }
+    const devContext = buildDevContext(req);
+
+    if (!FIREBASE_AUTH_ENABLED) {
+      if (devContext) {
+        return devContext;
       }
+      if (isDevEnvironment && !loggedAuthDisabledWarning) {
+        loggedAuthDisabledWarning = true;
+        console.warn(
+          '[auth] ENABLE_FIREBASE_AUTH=false; requests are treated as anonymous. Set ENABLE_FIREBASE_AUTH=true to enforce ID tokens.'
+        );
+      }
+      return { uid: 'anonymous', email: null, claims: anonymousClaims };
     }
-    const effectiveDevUser = devUserHeader || devUserFromCookie;
-    if (enableDev && effectiveDevUser) {
-      const raw = effectiveDevUser.trim();
-      const email = raw.includes('@') ? raw : `${raw}@dev.local`;
-      const uid = raw.includes('@') ? raw.split('@')[0] : raw;
-      const rolesHeader = req.headers.get('x-dev-roles') || '';
-      const roles = rolesHeader
-        ? rolesHeader.split(',').map((r) => r.trim()).filter(Boolean)
-        : ['agency_admin'];
 
-      const claims = {
-        uid,
-        email,
-        // provide tenantId and roles so downstream logic doesn't hit Firestore
-        tenantId: uid,
-        roles,
-        dev: true,
-      } as unknown as DecodedIdToken;
-
-      return { uid, email, claims };
+    if (devContext && isDevEnvironment) {
+      return devContext;
     }
 
     const tokenString = getAuthHeader(req);

@@ -17,7 +17,8 @@ export async function POST(request: NextRequest) {
     const db = getAdminDb();
     const walletRef = db.collection('tenants').doc(tenantId).collection('wallet').doc('main');
     const walletSnap = await walletRef.get();
-    const balance = walletSnap.exists ? walletSnap.data().balance || 0 : 0;
+    const walletData = walletSnap.data();
+    const balance = walletData?.balance ?? 0;
     if (balance < budget) {
       return NextResponse.json({ error: 'Insufficient wallet balance' }, { status: 402 });
     }
