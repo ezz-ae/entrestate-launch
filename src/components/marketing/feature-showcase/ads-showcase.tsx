@@ -7,7 +7,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
-export function AdsShowcase() {
+interface AdsShowcaseProps {
+  ctaLabel?: string;
+  ctaHref?: string;
+}
+
+export function AdsShowcase({ ctaLabel = 'Start Setup', ctaHref = '/dashboard/google-ads' }: AdsShowcaseProps) {
   return (
     <section className="py-20 md:py-28 bg-background overflow-hidden">
       <div className="container mx-auto px-6 max-w-[1800px]">
@@ -89,8 +94,8 @@ export function AdsShowcase() {
             </div>
 
             <Button size="lg" className="h-12 sm:h-14 md:h-16 px-8 md:px-10 rounded-full bg-white text-black font-bold text-base sm:text-lg mt-6 sm:mt-8 group w-full sm:w-auto" asChild>
-              <Link href="/dashboard/google-ads">
-                Start Setup <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              <Link href={ctaHref}>
+                {ctaLabel} <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Link>
             </Button>
           </div>
