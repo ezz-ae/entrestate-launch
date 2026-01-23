@@ -1,8 +1,19 @@
-import { getAdminDb, getAdminProjectId } from '@/server/firebase-admin';
+import { getAdminProjectId, tryGetAdminDb } from '@/server/firebase-admin';
 import { ENTRESTATE_INVENTORY } from '@/data/entrestate-inventory';
 import { firebaseConfig } from '@/lib/firebase/config';
 import type { ProjectData } from '@/lib/types';
 import { SERVER_ENV } from '@/lib/server/env';
+
+let hasLoggedAdminInventoryFallback = false;
+function logAdminInventoryFallback(message: string, error?: unknown) {
+  if (hasLoggedAdminInventoryFallback) return;
+  hasLoggedAdminInventoryFallback = true;
+  if (error) {
+    console.warn(`[inventory] ${message}`, error);
+  } else {
+    console.warn(`[inventory] ${message}`);
+  }
+}
 
 // Cache settings
 const CACHE_TTL_MS = 5 * 60 * 1000;
@@ -364,19 +375,24 @@ export async function loadInventoryProjects(max = DEFAULT_MAX, forceRefresh = fa
     );
   }
 
-  try {
-    const db = getAdminDb();
-    // Order by ingestion time to ensure the latest "commits" (projects) appear first
-    const snapshot = await db.collection('inventory_projects')
-      .orderBy('ingestedAt', 'desc')
-      .limit(max)
-      .get();
-    if (!snapshot.empty) {
-      projects = snapshot.docs.map((doc: any) => normalizeProjectData(doc.data(), doc.id));
-      console.log(`[inventory] Successfully loaded ${projects.length} projects from Firestore.`);
+  const db = tryGetAdminDb();
+  if (db && typeof db.collection === 'function') {
+    try {
+      // Order by ingestion time to ensure the latest "commits" (projects) appear first
+      const snapshot = await db
+        .collection('inventory_projects')
+        .orderBy('ingestedAt', 'desc')
+        .limit(max)
+        .get();
+      if (!snapshot.empty) {
+        projects = snapshot.docs.map((doc: any) => normalizeProjectData(doc.data(), doc.id));
+        console.log(`[inventory] Successfully loaded ${projects.length} projects from Firestore.`);
+      }
+    } catch (error) {
+      logAdminInventoryFallback('Admin inventory query failed; falling back to public/static inventory.', error);
     }
-  } catch (error) {
-    console.error('[inventory] admin load failed', error);
+  } else {
+    logAdminInventoryFallback('Admin Firestore is unavailable; falling back to public/static inventory.');
   }
 
   if (!projects.length) {
@@ -404,14 +420,18 @@ export async function loadInventoryProjectById(projectId: string) {
   const resolvedId = safeDecodeURIComponent(projectId);
 
   if (SERVER_ENV.USE_STATIC_INVENTORY === 'false') {
-    try {
-      const db = getAdminDb();
-      const snapshot = await db.collection('inventory_projects').doc(resolvedId).get();
-      if (snapshot.exists) {
-        return normalizeProjectData(snapshot.data(), snapshot.id);
+    const db = tryGetAdminDb();
+    if (db && typeof db.collection === 'function') {
+      try {
+        const snapshot = await db.collection('inventory_projects').doc(resolvedId).get();
+        if (snapshot.exists) {
+          return normalizeProjectData(snapshot.data(), snapshot.id);
+        }
+      } catch (error) {
+        logAdminInventoryFallback('Admin project lookup failed; falling back to public/static inventory.', error);
       }
-    } catch (error) {
-      console.error('[inventory] admin project lookup failed', error);
+    } else {
+      logAdminInventoryFallback('Admin Firestore is unavailable; falling back to public/static inventory.');
     }
 
     try {

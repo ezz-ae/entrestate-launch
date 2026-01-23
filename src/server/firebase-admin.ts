@@ -153,3 +153,13 @@ export function getAdminAuth() {
   const app = initAdminApp();
   return getAuth(app);
 }
+
+export function tryGetAdminDb() {
+  try {
+    return getAdminDb();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unable to initialize Firebase admin Firestore.';
+    logDebug(`[firebase-admin] ${message}`);
+    return null;
+  }
+}

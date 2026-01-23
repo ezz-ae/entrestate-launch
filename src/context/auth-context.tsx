@@ -1,8 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
-import { app } from '@/lib/firebase/client';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { auth } from '@/lib/firebase/client';
 
 interface AuthContextType {
   user: User | null;
@@ -14,16 +14,21 @@ const AuthContext = createContext<AuthContextType>({ user: null, loading: true }
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const auth = getAuth(app);
+  const firebaseAuth = auth;
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    if (!firebaseAuth) {
+      setLoading(false);
+      return;
+    }
+
+    const unsubscribe = onAuthStateChanged(firebaseAuth, (user) => {
       setUser(user);
       setLoading(false);
     });
 
     return () => unsubscribe();
-  }, [auth]);
+  }, [firebaseAuth]);
 
   return <AuthContext.Provider value={{ user, loading }}>{children}</AuthContext.Provider>;
 };

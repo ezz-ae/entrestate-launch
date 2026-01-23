@@ -15,6 +15,7 @@ import { useState, useEffect, useContext, createContext, ReactNode } from 'react
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  error?: 'FIREBASE_NOT_CONFIGURED';
   signUp: (email: string, password: string, name: string) => Promise<void>;
   logIn: (email: string, password: string) => Promise<void>;
   logOut: () => Promise<void>;
@@ -55,6 +56,7 @@ function useSafeAuthState(targetAuth: Auth | null) {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const configError: AuthContextType['error'] = auth ? undefined : 'FIREBASE_NOT_CONFIGURED';
 
   useEffect(() => {
     if (!auth) {
@@ -85,7 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return signOut(ensureAuth());
   };
 
-  const value = { user, loading, signUp, logIn, logOut };
+  const value = { user, loading, error: configError, signUp, logIn, logOut };
 
   return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;
 }
@@ -95,6 +97,7 @@ export const useAuth = () => {
   const [fallbackUser, fallbackLoading] = useSafeAuthState(auth);
   const [devUser, setDevUser] = useState<any | null>(null);
   const [devLoading, setDevLoading] = useState(false);
+  const fallbackError: AuthContextType['error'] = auth ? undefined : 'FIREBASE_NOT_CONFIGURED';
 
   const signUp = async (email: string, password: string, name: string) => {
     const userCredential = await createUserWithEmailAndPassword(ensureAuth(), email, password);
@@ -151,6 +154,7 @@ export const useAuth = () => {
   return {
     user: fallbackUser || devUser,
     loading: fallbackLoading || devLoading,
+    error: fallbackError,
     signUp,
     logIn,
     logOut,

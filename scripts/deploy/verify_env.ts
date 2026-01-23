@@ -25,6 +25,13 @@ function optionalKey(key: string, comment?: string) {
 }
 
 const shortBool = (key: string) => process.env[key] === 'true';
+function requireIfEnabled(flag: string, keys: string[], note?: string) {
+  if (shortBool(flag)) {
+    keys.forEach(requireKey);
+  } else {
+    keys.forEach((key) => optionalKey(key, note || `only required when ${flag}=true`));
+  }
+}
 
 const coreClientKeys = [
   'NEXT_PUBLIC_APP_URL',
@@ -65,62 +72,33 @@ if (enforceRateLimits) {
   optionalKey('UPSTASH_REDIS_REST_TOKEN', 'rate limiting explicitly disabled');
 }
 
-if (shortBool('ENABLE_EMAIL')) {
-  requireKey('RESEND_API_KEY');
-  requireKey('FROM_EMAIL');
-} else {
-  optionalKey('RESEND_API_KEY', 'only required when ENABLE_EMAIL=true');
-  optionalKey('FROM_EMAIL', 'only required when ENABLE_EMAIL=true');
-}
+requireIfEnabled('ENABLE_EMAIL', ['RESEND_API_KEY', 'FROM_EMAIL']);
 optionalKey('NOTIFY_EMAIL_TO', 'optional fallback notification address');
 
-if (shortBool('ENABLE_SMS')) {
-  requireKey('TWILIO_ACCOUNT_SID');
-  requireKey('TWILIO_AUTH_TOKEN');
-  requireKey('TWILIO_FROM_NUMBER');
-} else {
-  optionalKey('TWILIO_ACCOUNT_SID', 'only required when ENABLE_SMS=true');
-  optionalKey('TWILIO_AUTH_TOKEN', 'only required when ENABLE_SMS=true');
-  optionalKey('TWILIO_FROM_NUMBER', 'only required when ENABLE_SMS=true');
-}
+requireIfEnabled('ENABLE_SMS', ['TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'TWILIO_FROM_NUMBER']);
 optionalKey('NOTIFY_SMS_TO', 'optional fallback SMS recipient');
 
-if (shortBool('ENABLE_GOOGLE_ADS')) {
-  requireKey('GOOGLE_ADS_CLIENT_ID');
-  requireKey('GOOGLE_ADS_CLIENT_SECRET');
-  requireKey('NEXT_PUBLIC_GOOGLE_ADS_CLIENT_ID');
-} else {
-  optionalKey('GOOGLE_ADS_CLIENT_ID', 'only required when ENABLE_GOOGLE_ADS=true');
-  optionalKey('GOOGLE_ADS_CLIENT_SECRET', 'only required when ENABLE_GOOGLE_ADS=true');
-  optionalKey('NEXT_PUBLIC_GOOGLE_ADS_CLIENT_ID', 'only required when ENABLE_GOOGLE_ADS=true');
-}
+requireIfEnabled('ENABLE_GOOGLE_ADS', [
+  'GOOGLE_ADS_CLIENT_ID',
+  'GOOGLE_ADS_CLIENT_SECRET',
+  'NEXT_PUBLIC_GOOGLE_ADS_CLIENT_ID',
+]);
 optionalKey('GOOGLE_ADS_REDIRECT_URI', 'optional redirect override');
 optionalKey('NEXT_PUBLIC_GOOGLE_ADS_REDIRECT_URI', 'optional client redirect override');
 optionalKey('ADS_NOTIFICATION_EMAIL', 'optional email for Google Ads sync alerts');
 
-if (shortBool('ENABLE_PAYMENTS')) {
-  requireKey('PAYPAL_CLIENT_ID');
-  requireKey('PAYPAL_CLIENT_SECRET');
-  requireKey('ZIINA_API_KEY');
-  requireKey('ZIINA_WEBHOOK_SECRET');
-} else {
-  optionalKey('PAYPAL_CLIENT_ID', 'only required when ENABLE_PAYMENTS=true');
-  optionalKey('PAYPAL_CLIENT_SECRET', 'only required when ENABLE_PAYMENTS=true');
-  optionalKey('ZIINA_API_KEY', 'only required when ENABLE_PAYMENTS=true');
-  optionalKey('ZIINA_WEBHOOK_SECRET', 'only required when ENABLE_PAYMENTS=true');
-}
+requireIfEnabled('ENABLE_PAYMENTS', [
+  'PAYPAL_CLIENT_ID',
+  'PAYPAL_CLIENT_SECRET',
+  'ZIINA_API_KEY',
+  'ZIINA_WEBHOOK_SECRET',
+]);
 optionalKey('NEXT_PUBLIC_PAYPAL_CLIENT_ID', 'optional client ID for PayPal buttons');
 optionalKey('PAYPAL_WEBHOOK_ID', 'only needed when you configure live PayPal webhooks');
 optionalKey('PAYPAL_API_BASE', 'override optional; defaults to https://api-m.paypal.com');
 optionalKey('ZIINA_BASE_URL', 'optional API endpoint override');
 
-if (shortBool('ENABLE_SUPABASE')) {
-  requireKey('NEXT_PUBLIC_SUPABASE_URL');
-  requireKey('NEXT_PUBLIC_SUPABASE_ANON_KEY');
-} else {
-  optionalKey('NEXT_PUBLIC_SUPABASE_URL', 'legacy Supabase flows disabled');
-  optionalKey('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'legacy Supabase flows disabled');
-}
+requireIfEnabled('ENABLE_SUPABASE', ['NEXT_PUBLIC_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_ANON_KEY']);
 
 optionalKey('NEXT_PUBLIC_ROOT_DOMAIN', 'only required for custom rewrites');
 optionalKey('NEXT_PUBLIC_SITE_DOMAIN', 'optional published site suffix');
