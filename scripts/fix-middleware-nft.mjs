@@ -20,7 +20,12 @@ if (fs.existsSync(middlewareJson)) {
 } else {
   const copied = copyCandidate();
   if (!copied) {
-    log('No suitable .nft.json candidate found for middleware; continuing without copying.');
+    try {
+      fs.writeFileSync(middlewareJson, JSON.stringify({ version: 1, files: [] }, null, 2));
+      log('No suitable .nft.json candidate found; created an empty middleware.js.nft.json fallback.');
+    } catch (error) {
+      log(`No suitable .nft.json candidate found and failed to write fallback: ${error instanceof Error ? error.message : 'unknown error'}`);
+    }
   }
 }
 
@@ -32,7 +37,27 @@ if (!fs.existsSync(middlewareJs) && fs.existsSync(proxyJs)) {
     log(`Unable to copy proxy.js -> middleware.js: ${error instanceof Error ? error.message : 'unknown error'}`);
   }
 } else if (!fs.existsSync(middlewareJs)) {
-  log('middleware.js key file not generated, and proxy.js was not available to copy.');
+  try {
+    fs.writeFileSync(
+      middlewareJs,
+      [
+        "'use strict';",
+        '',
+        '// Auto-generated fallback to satisfy Vercel packaging when middleware.js is missing.',
+        'function middleware() {',
+        '  return;',
+        '}',
+        '',
+        'const config = { matcher: [] };',
+        '',
+        'module.exports = { middleware, config };',
+        '',
+      ].join('\n')
+    );
+    log('Created fallback middleware.js stub to satisfy packaging.');
+  } catch (error) {
+    log(`middleware.js key file not generated, and failed to write stub: ${error instanceof Error ? error.message : 'unknown error'}`);
+  }
 }
 
 function copyCandidate() {
