@@ -1,27 +1,24 @@
 'use client';
 
-import { firebaseConfig } from '@/firebase/config';
-import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import type { FirebaseApp } from 'firebase/app';
+import type { Auth } from 'firebase/auth';
+import type { Firestore } from 'firebase/firestore';
 
-let firebaseApp: FirebaseApp;
+import { firebaseApp, auth, db, FIREBASE_AUTH_DISABLED } from '@/lib/firebase/client';
 
-if (!getApps().length) {
-  firebaseApp = initializeApp(firebaseConfig);
-} else {
-  firebaseApp = getApp();
-}
-
-const auth = getAuth(firebaseApp);
-const db = getFirestore(firebaseApp);
-
+// Backwards compatible exports:
 export { firebaseApp, auth, db };
 
-export function getSdks() {
+export function getSdks(): {
+  firebaseApp?: FirebaseApp;
+  auth?: Auth;
+  db?: Firestore;
+  disabled: boolean;
+} {
   return {
     firebaseApp,
     auth,
-    firestore: db,
+    db,
+    disabled: FIREBASE_AUTH_DISABLED,
   };
 }

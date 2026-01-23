@@ -1,12 +1,34 @@
 import { collection, getDocs, query, where, getCountFromServer } from 'firebase/firestore';
-import { db } from '@/firebase';
+import { db } from '@/lib/firebase/client';
+
+let hasWarnedMissingDb = false;
+const getDb = () => {
+    if (!db) {
+        if (!hasWarnedMissingDb) {
+            console.warn('[dashboard] Client Firestore is not configured.');
+            hasWarnedMissingDb = true;
+        }
+        return null;
+    }
+    return db;
+};
 
 export async function getDashboardStats(ownerUid?: string) {
     let totalProjects = 0;
     let userSitesCount = 0;
 
     try {
-        const countSnapshot = await getCountFromServer(collection(db, 'inventory_projects'));
+        const firestore = getDb();
+        if (!firestore) {
+            return {
+                totalProjects,
+                userSites: userSitesCount,
+                newLeads: 0,
+                systemHealth: "100%",
+                aiEfficiency: "94%"
+            };
+        }
+        const countSnapshot = await getCountFromServer(collection(firestore, 'inventory_projects'));
         totalProjects = countSnapshot.data().count;
     } catch (error) {
         console.error('Failed to count inventory projects:', error);
@@ -14,7 +36,17 @@ export async function getDashboardStats(ownerUid?: string) {
 
     if (ownerUid) {
         try {
-            const sitesQuery = query(collection(db, 'sites'), where('ownerUid', '==', ownerUid));
+            const firestore = getDb();
+            if (!firestore) {
+                return {
+                    totalProjects,
+                    userSites: userSitesCount,
+                    newLeads: 0,
+                    systemHealth: "100%",
+                    aiEfficiency: "94%"
+                };
+            }
+            const sitesQuery = query(collection(firestore, 'sites'), where('ownerUid', '==', ownerUid));
             const sitesSnap = await getDocs(sitesQuery);
             userSitesCount = sitesSnap.size;
         } catch (e) {

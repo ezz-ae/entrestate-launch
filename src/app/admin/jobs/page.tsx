@@ -32,6 +32,7 @@ export default function JobsDashboard() {
   const handleCreateTestJob = async () => {
     if (!user) return;
     const newJob = await createJob(user.uid, 'site_generation', { prompt: 'Luxury Villa' });
+    if (!newJob) return;
     processJob(newJob.id as string);
   };
 

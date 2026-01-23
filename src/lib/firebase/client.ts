@@ -1,9 +1,13 @@
+'use client';
 
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { firebaseConfig } from '@/firebase/config';
+import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
+import { getAuth, type Auth } from 'firebase/auth';
+import { getFirestore, type Firestore } from 'firebase/firestore';
+
+import { firebaseConfig } from '@/lib/firebase/config';
 
 const enableFirebaseAuth = process.env.NEXT_PUBLIC_ENABLE_FIREBASE_AUTH === 'true';
+
 const hasFirebaseConfig =
   !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY &&
   !!process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN &&
@@ -12,17 +16,21 @@ const hasFirebaseConfig =
   !!process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID &&
   !!process.env.NEXT_PUBLIC_FIREBASE_APP_ID;
 
-// Initialize Firebase only when config is complete to avoid broken auth instances.
-const app = hasFirebaseConfig
-  ? (!getApps().length ? initializeApp(firebaseConfig) : getApp())
-  : undefined;
-
 export const FIREBASE_AUTH_DISABLED = !enableFirebaseAuth || !hasFirebaseConfig;
 
 if (enableFirebaseAuth && !hasFirebaseConfig && process.env.NODE_ENV !== 'production') {
   console.warn('[firebase] Auth enabled but NEXT_PUBLIC_FIREBASE_* config is incomplete. Auth is disabled.');
 }
 
-const auth = !FIREBASE_AUTH_DISABLED && app ? getAuth(app) : undefined;
+export const firebaseApp: FirebaseApp | undefined =
+  hasFirebaseConfig ? (!getApps().length ? initializeApp(firebaseConfig) : getApp()) : undefined;
 
-export { app, auth };
+export const auth: Auth | undefined =
+  !FIREBASE_AUTH_DISABLED && firebaseApp ? getAuth(firebaseApp) : undefined;
+
+export const db: Firestore | undefined =
+  firebaseApp ? getFirestore(firebaseApp) : undefined;
+
+export function getAuthSafe(): Auth | undefined {
+  return auth;
+}

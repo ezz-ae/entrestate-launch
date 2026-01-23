@@ -11,7 +11,7 @@ import {
   onSnapshot,
   where
 } from 'firebase/firestore';
-import { db } from '@/firebase';
+import { db } from '@/lib/firebase/client';
 
 export interface JobStep {
   name: string;
@@ -39,7 +39,21 @@ export interface Job {
 
 const JOBS_COLLECTION = 'jobs';
 
+let hasWarnedMissingDb = false;
+const getDb = () => {
+  if (!db) {
+    if (!hasWarnedMissingDb) {
+      console.warn('[jobs] Client Firestore is not configured.');
+      hasWarnedMissingDb = true;
+    }
+    return null;
+  }
+  return db;
+};
+
 export const createJob = async (ownerUid: string, type: Job['type'], params: any) => {
+  const firestore = getDb();
+  if (!firestore) return null;
   let planSteps = ['init'];
   if (type === 'site_generation') {
     planSteps = ['renderBlocks', 'seoGenerate', 'adsGenerate', 'deploy'];
@@ -63,14 +77,16 @@ export const createJob = async (ownerUid: string, type: Job['type'], params: any
     updatedAt: serverTimestamp(),
   };
 
-  const docRef = await addDoc(collection(db, JOBS_COLLECTION), jobData);
+  const docRef = await addDoc(collection(firestore, JOBS_COLLECTION), jobData);
   return { id: docRef.id, ...jobData };
 };
 
 export const getJobs = async (ownerUid: string) => {
   try {
+    const firestore = getDb();
+    if (!firestore) return [];
     const q = query(
-      collection(db, JOBS_COLLECTION),
+      collection(firestore, JOBS_COLLECTION),
       where('ownerUid', '==', ownerUid),
       orderBy('createdAt', 'desc')
     );
@@ -86,8 +102,10 @@ export const getJobs = async (ownerUid: string) => {
 };
 
 export const subscribeToJobs = (ownerUid: string, callback: (jobs: Job[]) => void) => {
+  const firestore = getDb();
+  if (!firestore) return () => {};
   const q = query(
-    collection(db, JOBS_COLLECTION),
+    collection(firestore, JOBS_COLLECTION),
     where('ownerUid', '==', ownerUid),
     orderBy('createdAt', 'desc')
   );
@@ -104,7 +122,9 @@ export const processJob = async (jobId: string) => {
   console.log(`Processing job \${jobId}...`);
   
   try {
-    const jobRef = doc(db, JOBS_COLLECTION, jobId);
+    const firestore = getDb();
+    if (!firestore) return;
+    const jobRef = doc(firestore, JOBS_COLLECTION, jobId);
     
     await updateDoc(jobRef, { 
       status: 'running',
@@ -132,7 +152,9 @@ export const processJob = async (jobId: string) => {
 
   } catch (error) {
     console.error("Error processing job:", error);
-    const jobRef = doc(db, JOBS_COLLECTION, jobId);
+    const firestore = getDb();
+    if (!firestore) return;
+    const jobRef = doc(firestore, JOBS_COLLECTION, jobId);
     await updateDoc(jobRef, { status: 'error', updatedAt: serverTimestamp() });
   }
 };

@@ -1,7 +1,21 @@
-import { getStorage, ref, uploadBytes, getDownloadURL, listAll } from "firebase/storage";
-import { firebaseApp } from "@/firebase";
+import { getStorage, ref, uploadBytes, getDownloadURL, listAll, type FirebaseStorage } from "firebase/storage";
+import { firebaseApp } from "@/lib/firebase/client";
 
-const storage = getStorage(firebaseApp);
+let cachedStorage: FirebaseStorage | undefined;
+let hasWarnedMissingStorage = false;
+const getStorageSafe = () => {
+  if (!firebaseApp) {
+    if (!hasWarnedMissingStorage) {
+      console.warn('[storage] Firebase client is not configured.');
+      hasWarnedMissingStorage = true;
+    }
+    return undefined;
+  }
+  if (!cachedStorage) {
+    cachedStorage = getStorage(firebaseApp);
+  }
+  return cachedStorage;
+};
 
 export interface UploadResult {
   url: string;
@@ -14,6 +28,8 @@ export const ProjectLibrary = {
    * Uploads a file to the specific project folder
    */
   uploadAsset: async (projectId: string, file: File, type: 'images' | 'brochures' | 'floorplans'): Promise<UploadResult> => {
+    const storage = getStorageSafe();
+    if (!storage) return { url: '', path: '' };
     const path = `projects/\${projectId}/\${type}/\${file.name}`;
     const storageRef = ref(storage, path);
     
@@ -27,6 +43,8 @@ export const ProjectLibrary = {
    * Lists all assets for a project
    */
   getAssets: async (projectId: string): Promise<string[]> => {
+    const storage = getStorageSafe();
+    if (!storage) return [];
     const projectRef = ref(storage, `projects/\${projectId}`);
     // This assumes a flat structure or requires recursive listing. 
     // For V1, we'll listing images.
@@ -46,6 +64,8 @@ export const ProjectLibrary = {
    * "Purification" Helper: Takes a scraped URL, downloads it, and uploads to our storage
    */
   migrateExternalAsset: async (projectId: string, externalUrl: string, type: 'images' | 'brochures'): Promise<string> => {
+    const storage = getStorageSafe();
+    if (!storage) return externalUrl;
     try {
         // 1. Fetch the external image
         const response = await fetch(externalUrl);

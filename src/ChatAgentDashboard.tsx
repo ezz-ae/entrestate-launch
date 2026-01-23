@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './mobile-styles.css';
-import { db } from '@/firebase/get-sdks'; // Import client-side Firebase db
+import { db } from '@/lib/firebase/client';
 import { collection, query, orderBy, onSnapshot, DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
 
 export interface Message {

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { doc, onSnapshot } from 'firebase/firestore';
-import { db } from '@/firebase';
+import { db } from '@/lib/firebase/client';
 import { Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -21,6 +21,11 @@ export default function JobDetailsPage() {
 
   useEffect(() => {
     if (!jobId) return;
+    if (!db) {
+      setJob(null);
+      setLoading(false);
+      return;
+    }
 
     const jobRef = doc(db, 'jobs', jobId as string);
     const unsubscribe = onSnapshot(jobRef, (doc) => {

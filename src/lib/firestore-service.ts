@@ -9,7 +9,7 @@ import {
   getDocs,
   setDoc,
 } from 'firebase/firestore';
-import { db } from '@/firebase';
+import { db } from '@/lib/firebase/client';
 import type { SitePage } from './types';
 import { authorizedFetch } from '@/lib/auth-fetch';
 
@@ -34,6 +34,18 @@ export interface UserProfile {
   credits: number;
 }
 
+let hasWarnedMissingDb = false;
+const getDb = () => {
+  if (!db) {
+    if (!hasWarnedMissingDb) {
+      console.warn('[firestore] Client Firestore is not configured.');
+      hasWarnedMissingDb = true;
+    }
+    return null;
+  }
+  return db;
+};
+
 // --- Site Operations ---
 
 export const saveSite = async (ownerUid: string, site: SitePage) => {
@@ -51,6 +63,8 @@ export const saveSite = async (ownerUid: string, site: SitePage) => {
 };
 
 export const updateSiteMetadata = async (siteId: string, data: Partial<SitePage>) => {
+  const firestore = getDb();
+  if (!firestore) return;
   if (!siteId) {
     throw new Error('Site ID is required to update metadata.');
   }
@@ -64,11 +78,13 @@ export const updateSiteMetadata = async (siteId: string, data: Partial<SitePage>
     return;
   }
   updates.updatedAt = serverTimestamp();
-  await setDoc(doc(db, 'sites', siteId), updates, { merge: true });
+  await setDoc(doc(firestore, 'sites', siteId), updates, { merge: true });
 };
 
 export const getUserSites = async (ownerUid: string) => {
-  const q = query(collection(db, 'sites'), where('ownerUid', '==', ownerUid));
+  const firestore = getDb();
+  if (!firestore) return [];
+  const q = query(collection(firestore, 'sites'), where('ownerUid', '==', ownerUid));
   const snapshot = await getDocs(q);
   return snapshot.docs.map(d => d.data() as SitePage);
 };
@@ -80,6 +96,8 @@ export const getUserSites = async (ownerUid: string) => {
  * This is the "Fire and Forget" trigger for AI agents.
  */
 export const createJob = async (ownerUid: string, type: Job['type'], data: any) => {
+  const firestore = getDb();
+  if (!firestore) return '';
   const jobData = {
     ownerUid,
     type,
@@ -89,7 +107,7 @@ export const createJob = async (ownerUid: string, type: Job['type'], data: any) 
     updatedAt: serverTimestamp(),
   };
   
-  const docRef = await addDoc(collection(db, 'jobs'), jobData);
+  const docRef = await addDoc(collection(firestore, 'jobs'), jobData);
   return docRef.id;
 };
 
@@ -98,7 +116,9 @@ export const createJob = async (ownerUid: string, type: Job['type'], data: any) 
  * Use this in the UI to show progress bars / "AI Thinking" states.
  */
 export const subscribeToJob = (jobId: string, callback: (job: Job) => void) => {
-  return onSnapshot(doc(db, 'jobs', jobId), (doc) => {
+  const firestore = getDb();
+  if (!firestore) return () => {};
+  return onSnapshot(doc(firestore, 'jobs', jobId), (doc) => {
     if (doc.exists()) {
       callback({ id: doc.id, ...doc.data() } as Job);
     }
