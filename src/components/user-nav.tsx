@@ -15,31 +15,46 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { auth } from "@/lib/firebase/client";
-import { signOut } from "firebase/auth";
-import { useAuthState } from 'react-firebase-hooks/auth';
 import { ClientOnly } from "@/components/client-only";
 import { LoginDialog } from "./auth/login-dialog";
+import { useAuth } from "@/hooks/useAuth";
+import { FIREBASE_AUTH_DISABLED } from "@/lib/firebase/client";
 
 export function UserNav() {
-  const [user] = useAuthState(auth);
+  const { user, logOut } = useAuth();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
 
-  const handleLogout = () => {
-    signOut(auth);
+  const handleLogout = async () => {
+    try {
+      await logOut();
+    } catch (error) {
+      console.warn('[auth] Sign out failed.', error);
+    }
   };
 
   if (!user) {
     return (
         <ClientOnly>
-            <Button
-              variant="ghost"
-              className="h-10 px-4 rounded-full border border-white/10 text-xs font-bold uppercase tracking-widest"
-              onClick={() => setIsLoginOpen(true)}
-            >
-              Log In
-            </Button>
-            <LoginDialog isOpen={isLoginOpen} onOpenChange={setIsLoginOpen} />
+            {FIREBASE_AUTH_DISABLED ? (
+              <Button
+                variant="ghost"
+                className="h-10 px-4 rounded-full border border-white/10 text-xs font-bold uppercase tracking-widest"
+                disabled
+              >
+                Guest
+              </Button>
+            ) : (
+              <>
+                <Button
+                  variant="ghost"
+                  className="h-10 px-4 rounded-full border border-white/10 text-xs font-bold uppercase tracking-widest"
+                  onClick={() => setIsLoginOpen(true)}
+                >
+                  Log In
+                </Button>
+                <LoginDialog isOpen={isLoginOpen} onOpenChange={setIsLoginOpen} />
+              </>
+            )}
         </ClientOnly>
     )
   }

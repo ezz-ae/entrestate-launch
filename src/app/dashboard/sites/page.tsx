@@ -42,13 +42,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from '@/lib/utils';
 import { getUserSites } from '@/lib/firestore-service';
-import { auth } from '@/firebase';
-import { useAuthState } from 'react-firebase-hooks/auth';
 import type { SitePage } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
 import { fetchSiteStats, type SiteStatsMap } from '@/lib/sites';
 import { apiFetch } from '@/lib/apiFetch';
+import { useAuth } from '@/hooks/useAuth';
 
 type RefinerMeta = {
   badgeLabel: string;
@@ -136,7 +135,7 @@ export default function SitesDashboardPage() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [sites, setSites] = useState<SitePage[]>([]);
   const [loading, setLoading] = useState(true);
-  const [user] = useAuthState(auth);
+  const { user } = useAuth();
   const router = useRouter();
   const [newSitePrompt, setNewSitePrompt] = useState('');
   const [siteStats, setSiteStats] = useState<SiteStatsMap>({});

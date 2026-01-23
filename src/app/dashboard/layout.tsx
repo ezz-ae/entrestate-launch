@@ -27,6 +27,7 @@ import { UserNav } from "@/components/user-nav";
 import { EntrestateLogo } from "@/components/icons";
 import { MobileBottomNav } from "@/components/mobile-app/mobile-bottom-nav";
 import { useAuth } from '@/hooks/useAuth'; // Import useAuth
+import { FIREBASE_AUTH_DISABLED } from '@/lib/firebase/client';
 import { 
   Dialog, 
   DialogContent, 
@@ -54,17 +55,18 @@ const secondaryNavItems = [
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const { user, loading } = useAuth(); // Use useAuth hook
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false); // State for login modal
+    const authRequired = !FIREBASE_AUTH_DISABLED;
 
     // Check authentication status and show modal if not logged in
     React.useEffect(() => {
-        if (!loading && !user) {
+        if (authRequired && !loading && !user) {
             setIsLoginModalOpen(true);
         } else {
             setIsLoginModalOpen(false);
         }
-    }, [user, loading]);
+    }, [user, loading, authRequired]);
 
-    if (loading) {
+    if (authRequired && loading) {
         return (
             <div className="flex min-h-screen items-center justify-center bg-[#030303] text-zinc-100">
                 <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
@@ -72,7 +74,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         );
     }
 
-    if (!user) {
+    if (authRequired && !user) {
         return (
             <div className="flex min-h-screen items-center justify-center bg-[#030303] text-zinc-100">
                 <Dialog open={isLoginModalOpen} onOpenChange={setIsLoginModalOpen}>

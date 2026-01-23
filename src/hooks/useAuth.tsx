@@ -30,7 +30,7 @@ const ensureAuth = (): Auth => {
   return auth;
 };
 
-function useSafeAuthState(targetAuth: Auth | null) {
+function useSafeAuthState(targetAuth: Auth | null | undefined) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(Boolean(targetAuth));
 
