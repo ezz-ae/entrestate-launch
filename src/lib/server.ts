@@ -56,12 +56,22 @@ export async function createSupabaseServerClient() {
     };
 
     const makeTable = (tableName?: string) => {
-      // Chainable builder that mimics supabase-js behaviour: methods are chainable
-      // and the final awaited result resolves to an object { data, error }.
-      const state: any = { _selected: '*', _filters: [], _order: null, _limit: undefined };
+      const state: any = {
+        _selected: '*',
+        _filters: [],
+        _order: null,
+        _limit: undefined,
+        _range: null,
+        _mutation: null,
+      };
+
       const chain: any = {
         select: (..._args: any[]) => {
           state._selected = _args && _args.length ? _args[0] : '*';
+          return chain;
+        },
+        range: (from: number, to: number) => {
+          state._range = { from, to };
           return chain;
         },
         order: (col: string, opts?: any) => {
@@ -72,25 +82,47 @@ export async function createSupabaseServerClient() {
           state._filters.push({ type: 'eq', args: _args });
           return chain;
         },
+        ilike: (..._args: any[]) => {
+          state._filters.push({ type: 'ilike', args: _args });
+          return chain;
+        },
+        in: (..._args: any[]) => {
+          state._filters.push({ type: 'in', args: _args });
+          return chain;
+        },
+        or: (..._args: any[]) => {
+          state._filters.push({ type: 'or', args: _args });
+          return chain;
+        },
         limit: (..._args: any[]) => {
           state._limit = _args[0];
           return chain;
         },
-        insert: (..._args: any[]) => ({ data: null, error: null }),
-        update: (..._args: any[]) => ({ data: null, error: null }),
-        delete: (..._args: any[]) => ({ data: null, error: null }),
+        insert: (..._args: any[]) => {
+          state._mutation = 'insert';
+          return chain;
+        },
+        update: (..._args: any[]) => {
+          state._mutation = 'update';
+          return chain;
+        },
+        delete: (..._args: any[]) => {
+          state._mutation = 'delete';
+          return chain;
+        },
         single: async () => {
-          // apply filters and return a single item
-          const rows = (fixtures[tableName || ''] || []).slice();
-          const matched = applyFilters(rows, state._filters);
-          return { data: matched.length > 0 ? matched[0] : null, error: null };
+          const { data } = executeQuery();
+          return { data: data.length > 0 ? data[0] : null, error: null };
+        },
+        maybeSingle: async () => {
+          const { data } = executeQuery();
+          return { data: data.length > 0 ? data[0] : null, error: null };
         },
         rpc: async () => ({ data: null, error: null }),
+        execute: async () => resolveResult(),
       };
 
-      // Make chain thenable so `await chain` works.
-      (chain as any).then = function (onFulfilled: any, onRejected: any) {
-        // compute result based on current state
+      function executeQuery() {
         const rows = (fixtures[tableName || ''] || []).slice();
         let result = applyFilters(rows, state._filters);
         if (state._order && state._order.col) {
@@ -102,19 +134,35 @@ export async function createSupabaseServerClient() {
             if (A === B) return 0;
             if (A == null) return 1;
             if (B == null) return -1;
-            return asc ? (A > B ? -1 : 1) : (A > B ? 1 : -1);
+            return asc ? (A > B ? 1 : -1) : (A > B ? -1 : 1);
           });
+        }
+        if (state._range) {
+          const start = Math.max(0, state._range.from || 0);
+          const end = Math.max(start, state._range.to ?? start);
+          result = result.slice(start, end + 1);
         }
         if (state._limit !== undefined) {
           result = result.slice(0, state._limit);
         }
-        const promise = Promise.resolve({ data: result, error: null });
+        return { data: result, error: null };
+      }
+
+      function resolveResult() {
+        if (state._mutation) {
+          return { data: null, error: null };
+        }
+        return executeQuery();
+      }
+
+      // Make chain thenable so `await chain` works.
+      (chain as any).then = function (onFulfilled: any, onRejected: any) {
+        const promise = Promise.resolve(resolveResult());
         return promise.then(onFulfilled, onRejected);
       };
 
-      // Also support catching
       (chain as any).catch = function (onRejected: any) {
-        const promise = Promise.resolve({ data: [], error: null });
+        const promise = Promise.resolve(resolveResult());
         return promise.catch(onRejected);
       };
 
@@ -127,10 +175,20 @@ export async function createSupabaseServerClient() {
       for (const f of filters || []) {
         if (f.type === 'eq') {
           const [col, val] = f.args;
-          out = out.filter((r) => {
-            // support nested JSON access if needed in the future
-            return r[col] === val;
-          });
+          out = out.filter((r) => r[col] === val);
+        }
+        if (f.type === 'ilike') {
+          const [col, val] = f.args;
+          const needle = String(val || '').replace(/%/g, '').toLowerCase();
+          out = out.filter((r) => String(r[col] || '').toLowerCase().includes(needle));
+        }
+        if (f.type === 'in') {
+          const [col, val] = f.args;
+          const values = Array.isArray(val) ? val : [val];
+          out = out.filter((r) => values.includes(r[col]));
+        }
+        if (f.type === 'or') {
+          // no-op for dev mock; keep results unfiltered
         }
       }
       return out;
@@ -138,7 +196,7 @@ export async function createSupabaseServerClient() {
 
     return {
       auth: {
-        getUser: async () => ({ data: { user: null } }),
+        getUser: async () => ({ data: { user: null }, error: null }),
       },
       from: (tableName: string) => makeTable(tableName),
       // minimal helpers that some callers may use

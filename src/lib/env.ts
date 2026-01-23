@@ -10,3 +10,20 @@ export function env(name: string, fallback?: string) {
   }
   throw new Error(`Missing required env var: ${name}`);
 }
+
+const warnedBools = new Set<string>();
+
+export function envBool(name: string, defaultValue: boolean) {
+  const raw = process.env[name];
+  if (!raw || raw.trim() === '') {
+    if (process.env.NODE_ENV !== 'production' && !warnedBools.has(name)) {
+      warnedBools.add(name);
+      console.warn(`[env] ${name} is not set; defaulting to ${String(defaultValue)}.`);
+    }
+    return defaultValue;
+  }
+  const normalized = raw.trim().toLowerCase();
+  if (normalized === 'true') return true;
+  if (normalized === 'false') return false;
+  return defaultValue;
+}

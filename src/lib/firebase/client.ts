@@ -5,8 +5,12 @@ import { getAuth, type Auth } from 'firebase/auth';
 import { getFirestore, type Firestore } from 'firebase/firestore';
 
 import { firebaseConfig } from '@/lib/firebase/config';
+import { envBool } from '@/lib/env';
 
-const enableFirebaseAuth = process.env.NEXT_PUBLIC_ENABLE_FIREBASE_AUTH === 'true';
+const enableFirebaseAuth = envBool(
+  'NEXT_PUBLIC_ENABLE_FIREBASE_AUTH',
+  process.env.NODE_ENV === 'production'
+);
 const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY?.trim() || '';
 const apiKeyLooksValid = /^AIza[0-9A-Za-z_-]{35}$/.test(apiKey);
 
@@ -17,6 +21,8 @@ const hasFirebaseConfig =
   !!process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET &&
   !!process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID &&
   !!process.env.NEXT_PUBLIC_FIREBASE_APP_ID;
+
+export const FIREBASE_CONFIG_READY = hasFirebaseConfig;
 
 if (enableFirebaseAuth && !hasFirebaseConfig && process.env.NODE_ENV !== 'production') {
   const reason = apiKeyLooksValid
@@ -46,7 +52,7 @@ if (enableFirebaseAuth && firebaseApp) {
 }
 
 export const FIREBASE_AUTH_DISABLED =
-  !enableFirebaseAuth || !hasFirebaseConfig || !firebaseApp || authInitFailed;
+  !enableFirebaseAuth || !FIREBASE_CONFIG_READY || !firebaseApp || authInitFailed;
 
 let db: Firestore | undefined;
 if (firebaseApp) {

@@ -10,6 +10,7 @@ import { Loader2, Save, Users } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { authorizedFetch } from '@/lib/auth-fetch';
+import { getAuthSafe } from '@/lib/firebase/client';
 import { 
   Dialog, 
   DialogContent, 
@@ -104,8 +105,9 @@ export default function ProfilePage() {
       }
 
       const nextDisplayName = [payload.firstName, payload.lastName].filter(Boolean).join(' ');
-      if (nextDisplayName && nextDisplayName !== user.displayName) {
-        await updateProfile(user, { displayName: nextDisplayName });
+      const firebaseUser = getAuthSafe()?.currentUser;
+      if (nextDisplayName && firebaseUser && nextDisplayName !== user.displayName) {
+        await updateProfile(firebaseUser, { displayName: nextDisplayName });
       }
       toast({ title: 'Profile saved' });
     } catch (error: any) {

@@ -3,6 +3,15 @@ import { FIREBASE_AUTH_ENABLED } from '@/lib/server/env';
 
 export async function GET(req: Request) {
   try {
+    const hasClientConfig = Boolean(
+      process.env.NEXT_PUBLIC_FIREBASE_API_KEY &&
+        process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN &&
+        process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    );
+    if (!FIREBASE_AUTH_ENABLED || !hasClientConfig) {
+      return NextResponse.json({ user: null, mode: 'guest' });
+    }
+
     // Check dev cookie set by /api/dev-login
     const cookieHeader = req.headers.get('cookie') || '';
     let devUser: string | null = null;
@@ -18,16 +27,16 @@ export async function GET(req: Request) {
       }
     }
 
-    const enableDev = !FIREBASE_AUTH_ENABLED || process.env.NODE_ENV !== 'production';
+    const enableDev = process.env.NODE_ENV !== 'production';
     if (enableDev && (devUser || devUid)) {
       const email = devUser || (devUid ? `${devUid}@dev.local` : null);
       const uid = devUid || (devUser ? devUser.split('@')[0] : 'dev.user');
       const roles = devRoles ? devRoles.split(',').map((r) => r.trim()).filter(Boolean) : ['agency_admin'];
-      return NextResponse.json({ uid, email, roles });
+      return NextResponse.json({ user: { uid, email, roles }, mode: 'dev' });
     }
 
-    return NextResponse.json({ ok: false }, { status: 204 });
+    return NextResponse.json({ user: null, mode: 'anonymous' });
   } catch (e) {
-    return NextResponse.json({ ok: false }, { status: 500 });
+    return NextResponse.json({ user: null, mode: 'error' }, { status: 500 });
   }
 }

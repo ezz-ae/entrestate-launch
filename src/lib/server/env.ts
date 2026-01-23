@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { envBool } from '@/lib/env';
 
 const serverEnvSchema = z.object({
   NODE_ENV: z.string().optional(),
@@ -68,26 +69,15 @@ function validateServerEnv(rawEnv: NodeJS.ProcessEnv) {
 
 export const SERVER_ENV = validateServerEnv(process.env);
 
-export const IS_PAYMENTS_ENABLED = SERVER_ENV.ENABLE_PAYMENTS === 'true' || Boolean(process.env.PAYPAL_CLIENT_ID && process.env.PAYPAL_CLIENT_SECRET);
+export const IS_PAYMENTS_ENABLED =
+  SERVER_ENV.ENABLE_PAYMENTS === 'true' || Boolean(process.env.PAYPAL_CLIENT_ID && process.env.PAYPAL_CLIENT_SECRET);
 export const IS_GOOGLE_ADS_ENABLED =
   SERVER_ENV.ENABLE_GOOGLE_ADS === 'true' || Boolean(process.env.META_ACCESS_TOKEN);
-export const IS_SMS_ENABLED = SERVER_ENV.ENABLE_SMS === 'true' || Boolean(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN);
+export const IS_SMS_ENABLED =
+  SERVER_ENV.ENABLE_SMS === 'true' || Boolean(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN);
 export const IS_EMAIL_ENABLED = SERVER_ENV.ENABLE_EMAIL === 'true' || Boolean(process.env.RESEND_API_KEY);
 
-let loggedAuthFlagWarning = false;
-function resolveFirebaseAuthEnabled(raw?: string, nodeEnv?: string) {
-  const normalized = raw?.trim().toLowerCase();
-  if (normalized === 'true') return true;
-  if (normalized === 'false') return false;
-  const isProd = nodeEnv === 'production';
-  if (isProd) return true;
-  if (!loggedAuthFlagWarning) {
-    loggedAuthFlagWarning = true;
-    console.warn(
-      '[env] ENABLE_FIREBASE_AUTH is not set; defaulting to false in non-production. Set it to true/false to avoid ambiguity.'
-    );
-  }
-  return false;
-}
-
-export const FIREBASE_AUTH_ENABLED = resolveFirebaseAuthEnabled(process.env.ENABLE_FIREBASE_AUTH, process.env.NODE_ENV);
+export const FIREBASE_AUTH_ENABLED = envBool(
+  'ENABLE_FIREBASE_AUTH',
+  process.env.NODE_ENV === 'production'
+);

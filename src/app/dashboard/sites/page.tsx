@@ -47,6 +47,7 @@ import { useRouter } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
 import { fetchSiteStats, type SiteStatsMap } from '@/lib/sites';
 import { apiFetch } from '@/lib/apiFetch';
+import { authorizedFetch } from '@/lib/auth-fetch';
 import { useAuth } from '@/hooks/useAuth';
 
 type RefinerMeta = {
@@ -204,13 +205,8 @@ export default function SitesDashboardPage() {
     // For now, we will use a hardcoded project ID.
     // In the future, we will create a project first.
     const projectId = "demo-project";
-    const idToken = await user.getIdToken();
-    const response = await apiFetch('/api/generate/landing', {
+    const response = await authorizedFetch('/api/generate/landing', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${idToken}`,
-        },
         body: JSON.stringify({
             projectId,
             extractedText: newSitePrompt,
@@ -239,13 +235,8 @@ export default function SitesDashboardPage() {
         return;
       }
 
-      const idToken = await user.getIdToken();
-
-      const response = await apiFetch('/api/upload/pdf', {
+      const response = await authorizedFetch('/api/upload/pdf', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${idToken}`,
-        },
         body: formData,
       });
 

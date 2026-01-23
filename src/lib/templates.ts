@@ -4,7 +4,17 @@ import type { SitePage, Block } from './types';
 export interface SiteTemplate {
   id: string;
   name: string;
-  siteType: 'roadshow' | 'developer-focus' | 'partner-launch' | 'full-company' | 'freelancer' | 'map-focused' | 'ads-launch' | 'ready-made' | 'agent-portfolio';
+  siteType:
+    | 'roadshow'
+    | 'developer-focus'
+    | 'partner-launch'
+    | 'full-company'
+    | 'freelancer'
+    | 'map-focused'
+    | 'ads-launch'
+    | 'ready-made'
+    | 'agent-portfolio'
+    | 'custom';
   pages: SitePage[];
   thumbnail?: string;
   description?: string;

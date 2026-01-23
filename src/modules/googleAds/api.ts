@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
-import { ALL_ROLES } from '@/lib/server/roles';
+import { ALL_ROLES, PUBLIC_ROLES } from '@/lib/server/roles';
 import { FIREBASE_AUTH_ENABLED, IS_GOOGLE_ADS_ENABLED } from '@/lib/server/env';
 import { FeatureAccessError, featureAccessErrorResponse } from '@/lib/server/billing';
 import { FirestoreUnavailableError } from '@/server/googleAds/repo';
@@ -19,7 +19,7 @@ export function guardGoogleAdsEnabled() {
 }
 
 export async function requireGoogleAdsAccess(req: NextRequest) {
-  const roles = FIREBASE_AUTH_ENABLED ? ALL_ROLES : [...ALL_ROLES, 'public'];
+  const roles = FIREBASE_AUTH_ENABLED ? ALL_ROLES : [...ALL_ROLES, ...PUBLIC_ROLES];
   return requireRole(req, roles);
 }
 

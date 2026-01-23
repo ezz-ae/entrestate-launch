@@ -4,21 +4,31 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/useAuth';
 import { Loader2 } from 'lucide-react';
 
 export function LoginSignupForm() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { signIn, signUp, loading, error } = useAuth();
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const { logIn, signUp, error } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isLogin) {
-      await signIn(email, password);
-    } else {
-      await signUp(email, password);
+    setFormError(null);
+    setSubmitting(true);
+    try {
+      if (isLogin) {
+        await logIn(email, password);
+      } else {
+        await signUp(email, password);
+      }
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Something went wrong.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -60,11 +70,13 @@ export function LoginSignupForm() {
             </div>
           </div>
 
-          {error && <p className="text-red-500 text-sm">{error}</p>}
+          {(formError || error) && (
+            <p className="text-red-500 text-sm">{formError || error}</p>
+          )}
 
           <div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? <Loader2 className="animate-spin" /> : (isLogin ? 'Sign in' : 'Sign up')}
+            <Button type="submit" className="w-full" disabled={submitting}>
+              {submitting ? <Loader2 className="animate-spin" /> : (isLogin ? 'Sign in' : 'Sign up')}
             </Button>
           </div>
         </form>

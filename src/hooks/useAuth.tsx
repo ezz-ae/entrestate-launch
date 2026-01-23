@@ -1,6 +1,6 @@
 'use client';
 
-import { auth } from '@/lib/firebase/client'; // Assuming you have this configured
+import { useState, useEffect, useContext, createContext, ReactNode, useMemo } from 'react';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -8,29 +8,50 @@ import {
   onAuthStateChanged,
   updateProfile,
   type Auth,
-  type User
+  type User,
 } from 'firebase/auth';
-import { useState, useEffect, useContext, createContext, ReactNode } from 'react';
+import { auth, FIREBASE_AUTH_DISABLED } from '@/lib/firebase/client';
+
+type AppUser = {
+  uid: string;
+  email?: string | null;
+  displayName?: string | null;
+  photoURL?: string | null;
+  roles?: string[];
+  mode: 'firebase' | 'dev';
+};
+
+function mapFirebaseUser(user: User): AppUser {
+  return {
+    uid: user.uid,
+    email: user.email ?? null,
+    displayName: user.displayName ?? null,
+    photoURL: user.photoURL ?? null,
+    mode: 'firebase',
+  };
+}
 
 interface AuthContextType {
-  user: User | null;
+  user: AppUser | null;
   loading: boolean;
   error?: 'FIREBASE_NOT_CONFIGURED';
-  signUp: (email: string, password: string, name: string) => Promise<void>;
+  signUp: (email: string, password: string, name?: string) => Promise<void>;
   logIn: (email: string, password: string) => Promise<void>;
   logOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const ensureAuth = (): Auth => {
-  if (!auth) {
-    throw new Error('Firebase auth is disabled. Set NEXT_PUBLIC_ENABLE_FIREBASE_AUTH=true with valid Firebase config.');
-  }
-  return auth;
-};
+function authDisabledError() {
+  return new Error('Firebase auth is disabled or not configured.');
+}
 
-function useSafeAuthState(targetAuth: Auth | null | undefined) {
+function getActiveAuth(): Auth | undefined {
+  if (FIREBASE_AUTH_DISABLED) return undefined;
+  return auth;
+}
+
+function useFirebaseAuthState(targetAuth?: Auth) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(Boolean(targetAuth));
 
@@ -41,101 +62,109 @@ function useSafeAuthState(targetAuth: Auth | null | undefined) {
       return;
     }
 
+    let mounted = true;
     setLoading(true);
-    const unsubscribe = onAuthStateChanged(targetAuth, (nextUser) => {
-      setUser(nextUser);
+    try {
+      const unsubscribe = onAuthStateChanged(
+        targetAuth,
+        (nextUser) => {
+          if (!mounted) return;
+          setUser(nextUser);
+          setLoading(false);
+        },
+        () => {
+          if (!mounted) return;
+          setLoading(false);
+        }
+      );
+      return () => {
+        mounted = false;
+        unsubscribe();
+      };
+    } catch (error) {
+      console.warn('[auth] Failed to subscribe to auth state.', error);
       setLoading(false);
-    });
-
-    return () => unsubscribe();
+      return () => {
+        mounted = false;
+      };
+    }
   }, [targetAuth]);
 
-  return [user, loading] as const;
+  return { user, loading };
+}
+
+function createAuthActions(targetAuth?: Auth) {
+  if (!targetAuth) {
+    return {
+      signUp: async () => {
+        throw authDisabledError();
+      },
+      logIn: async () => {
+        throw authDisabledError();
+      },
+      logOut: async () => {},
+    };
+  }
+
+  return {
+    signUp: async (email: string, password: string, name?: string) => {
+      const userCredential = await createUserWithEmailAndPassword(targetAuth, email, password);
+      if (userCredential.user && name) {
+        await updateProfile(userCredential.user, { displayName: name });
+      }
+    },
+    logIn: (email: string, password: string) => signInWithEmailAndPassword(targetAuth, email, password).then(() => {}),
+    logOut: () => signOut(targetAuth),
+  };
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const configError: AuthContextType['error'] = auth ? undefined : 'FIREBASE_NOT_CONFIGURED';
+  const activeAuth = getActiveAuth();
+  const { user, loading } = useFirebaseAuthState(activeAuth);
+  const actions = useMemo(() => createAuthActions(activeAuth), [activeAuth]);
+  const configError: AuthContextType['error'] = FIREBASE_AUTH_DISABLED ? 'FIREBASE_NOT_CONFIGURED' : undefined;
 
-  useEffect(() => {
-    if (!auth) {
-      setLoading(false);
-      return;
-    }
-
-    const unsubscribe = onAuthStateChanged(auth, (nextUser) => {
-      setUser(nextUser);
-      setLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  const signUp = async (email: string, password: string, name: string) => {
-    const userCredential = await createUserWithEmailAndPassword(ensureAuth(), email, password);
-    if (userCredential.user) {
-      await updateProfile(userCredential.user, { displayName: name });
-      setUser(userCredential.user);
-    }
-  };
-
-  const logIn = (email: string, password: string) => {
-    return signInWithEmailAndPassword(ensureAuth(), email, password).then(() => {});
-  };
-
-  const logOut = () => {
-    return signOut(ensureAuth());
-  };
-
-  const value = { user, loading, error: configError, signUp, logIn, logOut };
+  const appUser = user ? mapFirebaseUser(user) : null;
+  const value = { user: appUser, loading, error: configError, ...actions };
 
   return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;
 }
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  const [fallbackUser, fallbackLoading] = useSafeAuthState(auth);
-  const [devUser, setDevUser] = useState<any | null>(null);
+  const activeAuth = getActiveAuth();
+  const { user: firebaseUser, loading } = useFirebaseAuthState(activeAuth);
+  const actions = useMemo(() => createAuthActions(activeAuth), [activeAuth]);
+  const [devUser, setDevUser] = useState<AppUser | null>(null);
   const [devLoading, setDevLoading] = useState(false);
-  const fallbackError: AuthContextType['error'] = auth ? undefined : 'FIREBASE_NOT_CONFIGURED';
+  const fallbackError: AuthContextType['error'] = FIREBASE_AUTH_DISABLED ? 'FIREBASE_NOT_CONFIGURED' : undefined;
 
-  const signUp = async (email: string, password: string, name: string) => {
-    const userCredential = await createUserWithEmailAndPassword(ensureAuth(), email, password);
-    if (userCredential.user) {
-      await updateProfile(userCredential.user, { displayName: name });
-    }
-  };
-
-  const logIn = (email: string, password: string) => {
-    return signInWithEmailAndPassword(ensureAuth(), email, password).then(() => {});
-  };
-
-  const logOut = () => {
-    return signOut(ensureAuth());
-  };
-
-  if (context !== undefined) {
-    // don't return early here — keep hooks order stable. We'll respect the provided context
-    // below when returning the final shape.
-  }
-
-  // If Firebase client doesn't have a user, try the server-side dev cookie endpoint
   useEffect(() => {
-    // If a real AuthContext is present, skip the dev fetch logic.
     if (context !== undefined) return;
+    if (FIREBASE_AUTH_DISABLED) return;
     let mounted = true;
     async function fetchDev() {
-      if (!fallbackLoading && !fallbackUser) {
+      if (!loading && !firebaseUser) {
         setDevLoading(true);
         try {
           const resp = await fetch('/api/auth/me');
           if (!mounted) return;
           if (resp.ok) {
-            const j = await resp.json();
-            // create a minimal user-like object for client checks
-            setDevUser({ uid: j.uid, email: j.email, displayName: j.email?.split('@')[0] || j.uid });
+            const payload = await resp.json().catch(() => null);
+            if (payload?.mode === 'guest') return;
+            const uid = payload?.uid ?? payload?.user?.uid ?? payload?.email ?? null;
+            const email = payload?.email ?? payload?.user?.email ?? null;
+            if (uid || email) {
+              setDevUser({
+                uid: uid ?? email ?? 'dev.user',
+                email: email ?? undefined,
+                displayName: payload?.user?.displayName ?? email?.split('@')[0] ?? 'Dev User',
+                roles: payload?.user?.roles ?? payload?.roles ?? [],
+                mode: 'dev',
+              });
+            }
           }
-        } catch (e) {
+        } catch {
           // ignore
         } finally {
           if (mounted) setDevLoading(false);
@@ -146,17 +175,16 @@ export const useAuth = () => {
     return () => {
       mounted = false;
     };
-  }, [fallbackLoading, fallbackUser, context]);
+  }, [context, loading, firebaseUser]);
 
-  // If an AuthContext provider exists, prefer it; otherwise return the fallback/dev blended object.
   if (context !== undefined) return context;
 
+  const mappedFirebaseUser = firebaseUser ? mapFirebaseUser(firebaseUser) : null;
+
   return {
-    user: fallbackUser || devUser,
-    loading: fallbackLoading || devLoading,
+    user: mappedFirebaseUser || devUser,
+    loading: loading || devLoading,
     error: fallbackError,
-    signUp,
-    logIn,
-    logOut,
+    ...actions,
   };
 };
