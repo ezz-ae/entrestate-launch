@@ -2,10 +2,10 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { FIREBASE_AUTH_ENABLED } from '@/lib/server/env';
 
-export function createSupabaseServerClient() {
+export async function createSupabaseServerClient() {
   // cookies() can have differing types across Next.js versions (sync or Promise).
-  // Cast to any to keep this helper compatible across versions used in CI/Dev.
-  const cookieStore: any = cookies();
+  // Await to normalize the result in both cases.
+  const cookieStore: any = await cookies();
 
   const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -147,7 +147,10 @@ export function createSupabaseServerClient() {
   return createServerClient(SUPABASE_URL as string, SUPABASE_ANON_KEY as string, {
     cookies: {
       getAll() {
-        return cookieStore.getAll();
+        if (typeof cookieStore.getAll === 'function') {
+          return cookieStore.getAll();
+        }
+        return [];
       },
       setAll(cookiesToSet) {
         try {

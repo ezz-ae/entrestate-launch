@@ -4,7 +4,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 
 export async function generateLookalikeAudience() {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   
   // Auth check disabled as requested
   // const { data: { user } } = await supabase.auth.getUser();
@@ -41,7 +41,7 @@ export async function triggerCampaign(type: 'email' | 'sms') {
 }
 
 export async function syncLeadsToWebhook(webhookUrl: string) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   
   // Fetch recent leads (limit to 50 for this demo)
   const { data: leads } = await supabase
@@ -74,7 +74,7 @@ export async function syncLeadsToWebhook(webhookUrl: string) {
 }
 
 export async function updateLeadStatus(leadId: string, status: string) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   
   const { error } = await supabase
     .from('leads')
@@ -88,7 +88,7 @@ export async function updateLeadStatus(leadId: string, status: string) {
 }
 
 export async function deleteLeads(leadIds: string[]) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   
   const { error } = await supabase
     .from('leads')
@@ -102,7 +102,7 @@ export async function deleteLeads(leadIds: string[]) {
 }
 
 export async function getLeadsForExport(query?: string) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   
   let leadsQuery = supabase
     .from('leads')
@@ -120,7 +120,7 @@ export async function getLeadsForExport(query?: string) {
 }
 
 export async function updateLeadNotes(leadId: string, notes: string) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   
   const { error } = await supabase
     .from('leads')

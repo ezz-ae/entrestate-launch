@@ -12,7 +12,7 @@ interface PublicPageProps {
 }
 
 export default async function PublicLandingPage({ params }: PublicPageProps) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const { id } = params;
 
   // Fetch project by ID

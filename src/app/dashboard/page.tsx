@@ -5,7 +5,7 @@ import { FileText, Plus, ArrowRight, Clock, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default async function DashboardPage() {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   
   const { data: { user } } = await supabase.auth.getUser();
 

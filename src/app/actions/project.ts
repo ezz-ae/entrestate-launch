@@ -6,7 +6,7 @@ import { redirect } from 'next/navigation';
 import { sendLeadNotification } from '@/lib/notifications';
 
 export async function deleteProject(id: string) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   // Auth check bypassed for local testing as requested
   // const { data: { user } } = await supabase.auth.getUser();
@@ -28,7 +28,7 @@ export async function deleteProject(id: string) {
 }
 
 export async function updateProject(id: string, data: any) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   
   const { error } = await supabase
     .from('projects')
@@ -42,7 +42,7 @@ export async function updateProject(id: string, data: any) {
 }
 
 export async function publishProject(id: string) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   
   // Optional: Update status to 'published' if you have a status column
   // await supabase.from('projects').update({ status: 'published' }).eq('id', id);
@@ -57,7 +57,7 @@ export async function publishProject(id: string) {
 }
 
 export async function submitLead(projectId: string, formData: FormData) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   
   const name = formData.get('name') as string;
   const email = formData.get('email') as string;

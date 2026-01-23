@@ -8,7 +8,7 @@ interface LeadData {
 
 export async function sendLeadNotification(projectId: string, lead: LeadData) {
   try {
-    const supabase = createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
     
     // Fetch project details to customize the email
     const { data: project } = await supabase

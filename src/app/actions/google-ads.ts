@@ -3,7 +3,7 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 export async function getUserProjects() {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   // Fetch projects to populate the dropdown
   const { data } = await supabase
     .from('projects')
@@ -14,7 +14,7 @@ export async function getUserProjects() {
 }
 
 export async function generateAdConfig(projectId: string) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const { data: project } = await supabase
     .from('projects')
     .select('*')

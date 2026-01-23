@@ -10,7 +10,7 @@ import { ExportLeadsButton } from '@/components/export-leads-button';
 import { LeadsTable } from '@/components/leads-table';
 
 export default async function LeadsPipelinePage({ searchParams }: any) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const query = searchParams?.q || '';
   const currentPage = Number(searchParams?.page) || 1;
   const sortColumn = searchParams?.sort || 'created_at';
