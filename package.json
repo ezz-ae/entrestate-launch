@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "next build",
-    "postbuild": "node scripts/fix-middleware-nft.mjs && node scripts/fix-react-loadable-manifest.mjs",
+    "postbuild": "node scripts/fix-middleware-nft.mjs && node scripts/fix-react-loadable-manifest.mjs && node scripts/fix-page-client-reference-manifest.mjs",
     "start": "next start",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx --ignore-pattern gemini-app/",
     "test:dev": "tsx scripts/test/dev-sends-smoke.ts",
