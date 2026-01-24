@@ -5,16 +5,13 @@ import { logError } from '@/lib/server/log';
 import { Button } from '@/components/ui/button';
 import { AudienceGenerator } from '@/components/audience-generator';
 import { CampaignTriggers } from '@/components/campaign-triggers';
-import { ConnectCrmButton } from '@/components/connect-crm-button';
 import { SyncCrmButton } from '@/components/sync-crm-button';
 import { Pagination } from '@/components/pagination';
-import { ExportLeadsButton } from '@/components/export-leads-button';
 import { LeadsTable } from '@/components/leads-table';
 
-const LeadsSearch = dynamic(
-  () => import('@/components/leads-search').then((mod) => mod.LeadsSearch),
-  { suspense: true } as any
-);
+const LeadsControls = dynamic(() => import('./leads-controls'), {
+  suspense: true,
+} as any);
 
 export default async function LeadsPipelinePage({ searchParams }: any) {
   const scope = 'dashboard/leads';
@@ -68,13 +65,9 @@ export default async function LeadsPipelinePage({ searchParams }: any) {
             <h1 className="text-3xl font-bold">Leads Execution Pipe</h1>
             <p className="text-zinc-400 mt-1">Orchestrate your lead data, campaigns, and audiences.</p>
           </div>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Suspense fallback={null}>
-              <LeadsSearch />
-            </Suspense>
-            <ConnectCrmButton />
-            <ExportLeadsButton query={query} />
-          </div>
+          <Suspense fallback={<div className="h-10 w-full rounded-full bg-zinc-900" />}>
+            <LeadsControls query={query} />
+          </Suspense>
         </div>
 
         {/* Action Cards (The "Pipe" aspect) */}
