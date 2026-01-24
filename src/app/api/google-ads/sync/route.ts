@@ -43,6 +43,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ deploymentId: deployment.id, status: deployment.status });
   } catch (error) {
-    return handleGoogleAdsError(error, 'Failed to sync campaign.');
+    return handleGoogleAdsError(error, 'Failed to sync campaign.', 'api/google-ads/sync');
   }
 }

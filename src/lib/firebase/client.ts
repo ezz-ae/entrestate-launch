@@ -36,7 +36,8 @@ if (hasFirebaseConfig) {
   try {
     firebaseApp = !getApps().length ? initializeApp(firebaseConfig) : getApp();
   } catch (error) {
-    console.warn('[firebase] Failed to initialize Firebase client. Auth is disabled.', error);
+    console.warn('[firebase] Failed to initialize Firebase client.', error);
+    firebaseApp = undefined;
   }
 }
 
@@ -48,6 +49,7 @@ if (enableFirebaseAuth && firebaseApp) {
   } catch (error) {
     authInitFailed = true;
     console.warn('[firebase] Failed to initialize Firebase auth. Auth is disabled.', error);
+    auth = undefined;
   }
 }
 
@@ -60,11 +62,17 @@ if (firebaseApp) {
     db = getFirestore(firebaseApp);
   } catch (error) {
     console.warn('[firebase] Failed to initialize Firestore client.', error);
+    db = undefined;
   }
 }
 
 export { firebaseApp, auth, db };
 
 export function getAuthSafe(): Auth | undefined {
+  if (FIREBASE_AUTH_DISABLED) return undefined;
   return auth;
+}
+
+export function getDbSafe(): Firestore | undefined {
+  return db;
 }

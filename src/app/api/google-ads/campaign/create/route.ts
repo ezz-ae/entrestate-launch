@@ -57,6 +57,6 @@ export async function POST(req: NextRequest) {
       plan: campaign.plan,
     });
   } catch (error) {
-    return handleGoogleAdsError(error, 'Failed to create campaign.');
+    return handleGoogleAdsError(error, 'Failed to create campaign.', 'api/google-ads/campaign/create');
   }
 }

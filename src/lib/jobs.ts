@@ -11,7 +11,7 @@ import {
   onSnapshot,
   where
 } from 'firebase/firestore';
-import { db } from '@/lib/firebase/client';
+import { getDbSafe } from '@/lib/firebase/client';
 
 export interface JobStep {
   name: string;
@@ -41,14 +41,15 @@ const JOBS_COLLECTION = 'jobs';
 
 let hasWarnedMissingDb = false;
 const getDb = () => {
-  if (!db) {
+  const firestore = getDbSafe();
+  if (!firestore) {
     if (!hasWarnedMissingDb) {
       console.warn('[jobs] Client Firestore is not configured.');
       hasWarnedMissingDb = true;
     }
     return null;
   }
-  return db;
+  return firestore;
 };
 
 export const createJob = async (ownerUid: string, type: Job['type'], params: any) => {

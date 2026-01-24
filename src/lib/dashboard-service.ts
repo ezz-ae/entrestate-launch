@@ -1,16 +1,17 @@
 import { collection, getDocs, query, where, getCountFromServer } from 'firebase/firestore';
-import { db } from '@/lib/firebase/client';
+import { getDbSafe } from '@/lib/firebase/client';
 
 let hasWarnedMissingDb = false;
 const getDb = () => {
-    if (!db) {
+    const firestore = getDbSafe();
+    if (!firestore) {
         if (!hasWarnedMissingDb) {
             console.warn('[dashboard] Client Firestore is not configured.');
             hasWarnedMissingDb = true;
         }
         return null;
     }
-    return db;
+    return firestore;
 };
 
 export async function getDashboardStats(ownerUid?: string) {

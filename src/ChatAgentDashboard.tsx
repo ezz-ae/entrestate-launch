@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './mobile-styles.css';
-import { db } from '@/lib/firebase/client';
+import { getDbSafe } from '@/lib/firebase/client';
 import { collection, query, orderBy, onSnapshot, DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
 
 export interface Message {
@@ -33,12 +33,13 @@ const ChatAgentDashboard: React.FC<ChatAgentDashboardProps> = ({ onBack, onUpdat
   const [meetingsBooked, setMeetingsBooked] = useState(0);
 
   useEffect(() => {
-    if (!db) {
+    const firestore = getDbSafe();
+    if (!firestore) {
       console.error("Firestore DB is not initialized.");
       return;
     }
 
-    const q = query(collection(db, 'instagram_conversations'), orderBy('updatedAt', 'desc'));
+    const q = query(collection(firestore, 'instagram_conversations'), orderBy('updatedAt', 'desc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const fetchedConversations: InstagramConversation[] = snapshot.docs.map((doc: QueryDocumentSnapshot<DocumentData>) => {
         const data = doc.data();

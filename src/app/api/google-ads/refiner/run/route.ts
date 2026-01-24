@@ -34,6 +34,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ refinerId: refId, result });
   } catch (error) {
-    return handleGoogleAdsError(error, 'Failed to run refiner.');
+    return handleGoogleAdsError(error, 'Failed to run refiner.', 'api/google-ads/refiner/run');
   }
 }

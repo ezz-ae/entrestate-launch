@@ -4,10 +4,18 @@ import type { FirebaseApp } from 'firebase/app';
 import type { Auth } from 'firebase/auth';
 import type { Firestore } from 'firebase/firestore';
 
-import { firebaseApp, auth, db, FIREBASE_AUTH_DISABLED } from '@/lib/firebase/client';
+import {
+  firebaseApp,
+  FIREBASE_AUTH_DISABLED,
+  getAuthSafe,
+  getDbSafe,
+} from '@/lib/firebase/client';
 
-// Backwards compatible exports:
-export { firebaseApp, auth, db };
+const firebaseAuth = getAuthSafe();
+const firestoreInstance = getDbSafe();
+
+export { firebaseApp, FIREBASE_AUTH_DISABLED };
+export { firebaseAuth as auth, firestoreInstance as db };
 
 export function getSdks(): {
   firebaseApp?: FirebaseApp;
@@ -17,8 +25,8 @@ export function getSdks(): {
 } {
   return {
     firebaseApp,
-    auth,
-    db,
+    auth: firebaseAuth,
+    db: firestoreInstance,
     disabled: FIREBASE_AUTH_DISABLED,
   };
 }

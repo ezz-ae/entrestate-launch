@@ -39,6 +39,6 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error) {
-    return handleGoogleAdsError(error, 'Failed to load report.');
+    return handleGoogleAdsError(error, 'Failed to load report.', 'api/google-ads/report');
   }
 }

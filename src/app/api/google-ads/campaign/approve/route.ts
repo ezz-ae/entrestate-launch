@@ -17,6 +17,6 @@ export async function POST(req: NextRequest) {
     await updateCampaignStatus(payload.campaignId, 'approved');
     return NextResponse.json({ campaignId: payload.campaignId, status: 'approved' });
   } catch (error) {
-    return handleGoogleAdsError(error, 'Failed to approve campaign.');
+    return handleGoogleAdsError(error, 'Failed to approve campaign.', 'api/google-ads/campaign/approve');
   }
 }

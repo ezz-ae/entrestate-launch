@@ -2,11 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAdminDb } from '@/server/firebase-admin';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { SUPER_ADMIN_ROLES } from '@/lib/server/roles';
+import { logError } from '@/lib/server/log';
 
 export async function GET(req: NextRequest) {
+  const scope = 'api/health';
   try {
     await requireRole(req, SUPER_ADMIN_ROLES);
   } catch (error) {
+    logError(scope, error, { phase: 'auth' });
     if (error instanceof UnauthorizedError) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -34,8 +37,8 @@ export async function GET(req: NextRequest) {
     await db.collection('health').limit(1).get();
     status.firebase = 'connected';
   } catch (error) {
-    status.firebase = 'error';
-    console.error('Health check database error:', error);
+    logError(scope, error, { phase: 'database' });
+    return NextResponse.json({ ok: false, error: 'INTERNAL', scope }, { status: 500 });
   }
 
   return NextResponse.json(status);

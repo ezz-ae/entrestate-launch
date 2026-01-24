@@ -57,6 +57,6 @@ export async function POST(req: NextRequest) {
       trackingPlan: blueprint.trackingPlan,
     });
   } catch (error) {
-    return handleGoogleAdsError(error, 'Failed to generate blueprint.');
+    return handleGoogleAdsError(error, 'Failed to generate blueprint.', 'api/google-ads/blueprint/generate');
   }
 }

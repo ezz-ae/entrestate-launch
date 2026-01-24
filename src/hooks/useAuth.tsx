@@ -10,7 +10,7 @@ import {
   type Auth,
   type User,
 } from 'firebase/auth';
-import { auth, FIREBASE_AUTH_DISABLED } from '@/lib/firebase/client';
+import { getAuthSafe, FIREBASE_AUTH_DISABLED } from '@/lib/firebase/client';
 
 type AppUser = {
   uid: string;
@@ -48,7 +48,7 @@ function authDisabledError() {
 
 function getActiveAuth(): Auth | undefined {
   if (FIREBASE_AUTH_DISABLED) return undefined;
-  return auth;
+  return getAuthSafe();
 }
 
 function useFirebaseAuthState(targetAuth?: Auth) {
@@ -132,6 +132,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
+  if (context !== undefined) {
+    return context;
+  }
+
   const activeAuth = getActiveAuth();
   const { user: firebaseUser, loading } = useFirebaseAuthState(activeAuth);
   const actions = useMemo(() => createAuthActions(activeAuth), [activeAuth]);
@@ -140,7 +144,6 @@ export const useAuth = () => {
   const fallbackError: AuthContextType['error'] = FIREBASE_AUTH_DISABLED ? 'FIREBASE_NOT_CONFIGURED' : undefined;
 
   useEffect(() => {
-    if (context !== undefined) return;
     if (FIREBASE_AUTH_DISABLED) return;
     let mounted = true;
     async function fetchDev() {
@@ -175,9 +178,7 @@ export const useAuth = () => {
     return () => {
       mounted = false;
     };
-  }, [context, loading, firebaseUser]);
-
-  if (context !== undefined) return context;
+  }, [loading, firebaseUser]);
 
   const mappedFirebaseUser = firebaseUser ? mapFirebaseUser(firebaseUser) : null;
 

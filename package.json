@@ -8,11 +8,14 @@
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "next build",
-    "postbuild": "node scripts/fix-middleware-nft.mjs && node scripts/fix-react-loadable-manifest.mjs && node scripts/fix-page-client-reference-manifest.mjs",
+    "postbuild": "node scripts/postbuild-safe.mjs",
     "start": "next start",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx --ignore-pattern gemini-app/",
     "test:dev": "tsx scripts/test/dev-sends-smoke.ts",
     "test:dev-jobs": "tsx scripts/test/dev-jobs-retry-smoke.ts",
+    "test:env-safety": "tsx scripts/test/env-safety.ts",
+    "test:supabase-chain": "tsx scripts/test/supabase-chain.ts",
+    "test:vercel-env-sanity": "tsx scripts/test/vercel-env-sanity.ts",
     "test:e2e": "playwright test",
     "smoke": "tsx scripts/smoke/projects-filter-smoke.ts",
     "ingest": "ts-node --esm scripts/ingest-entrestate.ts"

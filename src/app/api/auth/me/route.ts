@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { FIREBASE_AUTH_ENABLED } from '@/lib/server/env';
+import { logError } from '@/lib/server/log';
 
 export async function GET(req: Request) {
+  const scope = 'api/auth/me';
   try {
     const hasClientConfig = Boolean(
       process.env.NEXT_PUBLIC_FIREBASE_API_KEY &&
@@ -12,7 +14,6 @@ export async function GET(req: Request) {
       return NextResponse.json({ user: null, mode: 'guest' });
     }
 
-    // Check dev cookie set by /api/dev-login
     const cookieHeader = req.headers.get('cookie') || '';
     let devUser: string | null = null;
     let devUid: string | null = null;
@@ -36,7 +37,11 @@ export async function GET(req: Request) {
     }
 
     return NextResponse.json({ user: null, mode: 'anonymous' });
-  } catch (e) {
-    return NextResponse.json({ user: null, mode: 'error' }, { status: 500 });
+  } catch (error) {
+    logError(scope, error);
+    return NextResponse.json(
+      { ok: false, error: 'INTERNAL', scope, user: null, mode: 'error' },
+      { status: 500 }
+    );
   }
 }

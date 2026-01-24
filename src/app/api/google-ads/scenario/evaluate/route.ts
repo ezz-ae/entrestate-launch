@@ -52,6 +52,6 @@ export async function POST(req: NextRequest) {
       actions: outcome.actions,
     });
   } catch (error) {
-    return handleGoogleAdsError(error, 'Failed to evaluate scenario.');
+    return handleGoogleAdsError(error, 'Failed to evaluate scenario.', 'api/google-ads/scenario/evaluate');
   }
 }

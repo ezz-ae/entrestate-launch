@@ -42,6 +42,9 @@ The script loads the curated dataset in `src/data/entrestate-inventory.ts` and s
 
 - `npm run lint` &mdash; Next.js + ESLint (`next/core-web-vitals`) with custom React rules disabled only where marketing copy would otherwise fail the build.
 - `npm run smoke` &mdash; Runs a lightweight TypeScript script to validate the Entrestate dataset (queries by city, keyword, and price range) plus pagination safety before you push fresh inventory or depend on fallback data in production.
+- `npm run test:env-safety` — Verifies Firebase/Supabase modules load even when public env vars are absent.
+- `npm run test:vercel-env-sanity` — Reports boolean signals for the Vercel/Firebase/Supabase environment.
+- `npm run test:supabase-chain` — Confirms the mock Supabase client honors `.ilike().order().range().limit()` chains.
 
 ## Secrets & Security Checklist
 
@@ -54,3 +57,25 @@ The script loads the curated dataset in `src/data/entrestate-inventory.ts` and s
 ## Next Steps
 
 The immediate roadmap is captured in the planning notes (locking Firestore rules, wiring data ingestion, replacing client-side secret storage, making every dashboard module call a real backend). Use this README as a quick reference for environment setup while implementing those stages.
+
+## Vercel Env Checklist
+
+- `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID`, `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`, `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`, `NEXT_PUBLIC_FIREBASE_APP_ID` &mdash; must all exist when `NEXT_PUBLIC_ENABLE_FIREBASE_AUTH` is `true`.
+- `NEXT_PUBLIC_ENABLE_FIREBASE_AUTH` — flip to `false` to treat Firebase auth as disabled in public builds; the server still enforces `ENABLE_FIREBASE_AUTH` when running with admin creds.
+- `FIREBASE_ADMIN_CREDENTIALS` **or** the trio `FIREBASE_ADMIN_PROJECT_ID`, `FIREBASE_ADMIN_CLIENT_EMAIL`, `FIREBASE_ADMIN_PRIVATE_KEY` &mdash; required for every production/preview deployment so Firebase Admin can initialize.
+- `NEXT_PUBLIC_SUPABASE_URL` plus either `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` or `NEXT_PUBLIC_SUPABASE_ANON_KEY` when Supabase-backed APIs are enabled; otherwise the mock client is used.
+- `NEXT_PUBLIC_APP_URL` — keep site metadata and webhooks aligned between Preview and Production (this repo reads it when submitting forms or generating metadata).
+- `ENABLE_NEXT_BUILD_HACKS` should remain unset on Vercel; locally set it to `true` only when you intentionally want to run the manifest-fix scripts during debugging.
+
+## Deployment via Git
+
+1. Configure the Production and Preview environment variables listed above inside the Vercel dashboard and confirm the Firebase admin credentials are visible for both targets.
+2. Push to `main` (or the linked production branch). Vercel’s build hooks now skip the manifest copy scripts when `VERCEL=1`. If you still encounter `missing /vercel/path0/.next/server/middleware.js.nft.json`, trigger a redeploy with **Clear Cache**—do not patch `.next` manually.
+3. After the deployment completes, curl the health endpoints (see below) to confirm the runtime flags and Firebase connectivity.
+4. For local sanity before pushing, run `npm run test:vercel-env-sanity` and `npm run test:supabase-chain` so the environment booleans update and the Supabase chain still resolves without the public keys.
+
+## Health Endpoints
+
+- `curl https://<your-deploy>/api/health` &mdash; verifies the admin SDK and Firestore connectivity.
+- `curl https://<your-deploy>/api/health/env` &mdash; returns boolean flags for Firebase auth, Supabase configuration, and the Node/Vercel env.
+- `curl https://<your-deploy>/api/auth/me` &mdash; confirms guest/dev/anonymous modes remain stable; authenticated clients should check `user?.uid`.

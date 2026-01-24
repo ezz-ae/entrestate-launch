@@ -28,6 +28,6 @@ export async function GET(req: NextRequest) {
       data,
     });
   } catch (error) {
-    return handleGoogleAdsError(error, 'Failed to load campaigns.');
+    return handleGoogleAdsError(error, 'Failed to load campaigns.', 'api/google-ads/campaigns');
   }
 }

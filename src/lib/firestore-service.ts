@@ -9,7 +9,7 @@ import {
   getDocs,
   setDoc,
 } from 'firebase/firestore';
-import { db } from '@/lib/firebase/client';
+import { getDbSafe } from '@/lib/firebase/client';
 import type { SitePage } from './types';
 import { authorizedFetch } from '@/lib/auth-fetch';
 
@@ -36,14 +36,15 @@ export interface UserProfile {
 
 let hasWarnedMissingDb = false;
 const getDb = () => {
-  if (!db) {
+  const firestore = getDbSafe();
+  if (!firestore) {
     if (!hasWarnedMissingDb) {
       console.warn('[firestore] Client Firestore is not configured.');
       hasWarnedMissingDb = true;
     }
     return null;
   }
-  return db;
+  return firestore;
 };
 
 // --- Site Operations ---
