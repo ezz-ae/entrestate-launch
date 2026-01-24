@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { logError } from '@/lib/server/log';
 import { Button } from '@/components/ui/button';
@@ -63,7 +64,9 @@ export default async function LeadsPipelinePage({ searchParams }: any) {
             <p className="text-zinc-400 mt-1">Orchestrate your lead data, campaigns, and audiences.</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
-             <LeadsSearch />
+            <Suspense fallback={null}>
+              <LeadsSearch />
+            </Suspense>
              <ConnectCrmButton />
              <ExportLeadsButton query={query} />
           </div>
