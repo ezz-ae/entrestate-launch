@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { InteractiveAgentCreator } from '@/components/ai-tools/interactive-agent-creator';
 import ChatAgentLearningDashboard from '@/components/ai-tools/chat-agent-learning-dashboard';
 import { cn } from '@/lib/utils';
@@ -9,18 +9,18 @@ import { cn } from '@/lib/utils';
 type ChatAgentTab = 'studio' | 'training';
 
 export default function ChatAgentClient() {
-  const searchParams = useSearchParams();
   const router = useRouter();
-  const queryTab = searchParams?.get('tab') === 'training' ? 'training' : 'studio';
-  const [activeTab, setActiveTab] = useState<ChatAgentTab>(queryTab);
+  const [activeTab, setActiveTab] = useState<ChatAgentTab>('studio');
 
   useEffect(() => {
-    setActiveTab(queryTab);
-  }, [queryTab]);
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    setActiveTab(params.get('tab') === 'training' ? 'training' : 'studio');
+  }, []);
 
   const handleTabChange = (nextTab: ChatAgentTab) => {
     setActiveTab(nextTab);
-    const params = new URLSearchParams(searchParams?.toString() ?? '');
+    const params = new URLSearchParams(window.location.search);
     if (nextTab === 'training') {
       params.set('tab', 'training');
     } else {
