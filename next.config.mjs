@@ -80,6 +80,18 @@ const nextConfig = {
                 port: '',
                 pathname: '/**',
             },
+            {
+                protocol: 'https',
+                hostname: 'upload.wikimedia.org',
+                port: '',
+                pathname: '/**',
+            },
+            {
+                protocol: 'https',
+                hostname: 'images.adsttc.com',
+                port: '',
+                pathname: '/**',
+            },
         ],
     },
     experimental: {

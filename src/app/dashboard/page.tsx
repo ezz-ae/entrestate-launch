@@ -33,7 +33,7 @@ export default async function DashboardPage() {
                 <Users className="mr-2 h-4 w-4" /> Leads Pipeline
               </Button>
             </Link>
-            <Link href="/">
+            <Link href="/start">
               <Button className="rounded-full font-bold bg-blue-600 hover:bg-blue-700">
                 <Plus className="mr-2 h-4 w-4" /> New Project
               </Button>
@@ -82,7 +82,7 @@ export default async function DashboardPage() {
             </div>
             <h3 className="text-xl font-bold mb-2">No projects yet</h3>
             <p className="text-zinc-400 mb-6 max-w-sm text-center">Upload a brochure to generate your first landing page.</p>
-            <Link href="/">
+            <Link href="/start">
                 <Button className="rounded-full font-bold bg-white text-black hover:bg-zinc-200">
                     Create Project
                 </Button>
