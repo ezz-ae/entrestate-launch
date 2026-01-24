@@ -1,3 +1,4 @@
+import dynamic from 'next/dynamic';
 import { Suspense } from 'react';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { logError } from '@/lib/server/log';
@@ -6,10 +7,14 @@ import { AudienceGenerator } from '@/components/audience-generator';
 import { CampaignTriggers } from '@/components/campaign-triggers';
 import { ConnectCrmButton } from '@/components/connect-crm-button';
 import { SyncCrmButton } from '@/components/sync-crm-button';
-import { LeadsSearch } from '@/components/leads-search';
 import { Pagination } from '@/components/pagination';
 import { ExportLeadsButton } from '@/components/export-leads-button';
 import { LeadsTable } from '@/components/leads-table';
+
+const LeadsSearch = dynamic(
+  () => import('@/components/leads-search').then((mod) => mod.LeadsSearch),
+  { suspense: true } as any
+);
 
 export default async function LeadsPipelinePage({ searchParams }: any) {
   const scope = 'dashboard/leads';
@@ -67,8 +72,8 @@ export default async function LeadsPipelinePage({ searchParams }: any) {
             <Suspense fallback={null}>
               <LeadsSearch />
             </Suspense>
-             <ConnectCrmButton />
-             <ExportLeadsButton query={query} />
+            <ConnectCrmButton />
+            <ExportLeadsButton query={query} />
           </div>
         </div>
 
