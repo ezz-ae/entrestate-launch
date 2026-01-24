@@ -1,37 +1,35 @@
-import dynamic from 'next/dynamic';
 import { Suspense } from 'react';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { logError } from '@/lib/server/log';
-import { Button } from '@/components/ui/button';
-import { AudienceGenerator } from '@/components/audience-generator';
-import { CampaignTriggers } from '@/components/campaign-triggers';
-import { SyncCrmButton } from '@/components/sync-crm-button';
-import { Pagination } from '@/components/pagination';
-import { LeadsTable } from '@/components/leads-table';
+import LeadsClient from './leads-client';
+import type { LeadRecord } from './types';
 
-const LeadsControls = dynamic(() => import('./leads-controls'), {
-  suspense: true,
-} as any);
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
-export default async function LeadsPipelinePage({ searchParams }: any) {
+interface LeadsPageProps {
+  searchParams?: {
+    q?: string;
+    page?: string;
+    sort?: string;
+    order?: string;
+  };
+}
+
+export default async function LeadsPipelinePage({ searchParams }: LeadsPageProps) {
   const scope = 'dashboard/leads';
-  let leads: any[] = [];
+  let leads: LeadRecord[] = [];
   let totalLeads = 0;
   let hasNextPage = false;
   let fetchError: string | null = null;
   type SupabaseClient = Awaited<ReturnType<typeof createSupabaseServerClient>>;
   let supabase: SupabaseClient | undefined;
-  const query = searchParams?.q || '';
+  const query = searchParams?.q ?? '';
   const currentPage = Number(searchParams?.page) || 1;
-  const sortColumn = searchParams?.sort || 'created_at';
-  const sortOrder = searchParams?.order || 'desc';
+  const sortColumn = searchParams?.sort ?? 'created_at';
+  const sortOrder = searchParams?.order ?? 'desc';
   const pageSize = 10; // Number of leads per page
-  
-  // Auth check bypassed for testing as requested previously
-  // const { data: { user } } = await supabase.auth.getUser();
 
-  // Fetch leads with project details
-  // Note: This assumes a foreign key relationship exists between leads.project_id and projects.id
   const from = (currentPage - 1) * pageSize;
   const to = from + pageSize - 1;
 
@@ -48,8 +46,8 @@ export default async function LeadsPipelinePage({ searchParams }: any) {
     }
 
     const { data, count } = await leadsQuery;
-    leads = data || [];
-    totalLeads = count || 0;
+    leads = (data ?? []) as LeadRecord[];
+    totalLeads = count ?? 0;
     hasNextPage = to < totalLeads - 1;
   } catch (error) {
     logError(scope, error, { query, currentPage, sortColumn, sortOrder });
@@ -57,47 +55,44 @@ export default async function LeadsPipelinePage({ searchParams }: any) {
   }
 
   return (
+    <Suspense fallback={<LeadsSkeleton />}>
+      <LeadsClient
+        leads={leads}
+        totalLeads={totalLeads}
+        hasNextPage={hasNextPage}
+        from={from}
+        to={to}
+        currentSort={sortColumn}
+        currentOrder={sortOrder}
+        currentPage={currentPage}
+        query={query}
+        fetchError={fetchError}
+      />
+    </Suspense>
+  );
+}
+
+function LeadsSkeleton() {
+  return (
     <div className="min-h-screen bg-black text-white p-6 pt-24">
-      <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header */}
+      <div className="max-w-7xl mx-auto space-y-8 animate-pulse">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold">Leads Execution Pipe</h1>
-            <p className="text-zinc-400 mt-1">Orchestrate your lead data, campaigns, and audiences.</p>
+            <div className="h-8 w-48 rounded-full bg-zinc-900" />
+            <div className="h-4 w-64 mt-2 rounded-full bg-zinc-900" />
           </div>
-          <Suspense fallback={<div className="h-10 w-full rounded-full bg-zinc-900" />}>
-            <LeadsControls query={query} />
-          </Suspense>
+          <div className="h-10 w-40 rounded-full bg-zinc-900" />
         </div>
-
-        {/* Action Cards (The "Pipe" aspect) */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-           {/* Audience Card */}
-           <AudienceGenerator />
-
-           {/* Campaigns Card */}
-           <CampaignTriggers />
-
-           {/* Data Pool Card */}
-           <SyncCrmButton />
+          <div className="h-24 rounded-2xl bg-zinc-900" />
+          <div className="h-24 rounded-2xl bg-zinc-900" />
+          <div className="h-24 rounded-2xl bg-zinc-900" />
         </div>
-
-        {/* Leads List */}
-        {fetchError && (
-          <div className="rounded border border-red-500 bg-red-900/60 p-4 text-sm text-red-100">
-            {fetchError}
-          </div>
-        )}
-        <LeadsTable
-          leads={leads}
-          pagination={<Pagination currentPage={currentPage} hasNextPage={hasNextPage} />}
-          totalCount={totalLeads}
-          from={from}
-          to={to}
-          currentSort={sortColumn}
-          currentOrder={sortOrder}
-        />
+        <div className="space-y-3">
+          <div className="h-64 rounded-2xl bg-zinc-900" />
+          <div className="h-64 rounded-2xl bg-zinc-900" />
+        </div>
       </div>
     </div>
-  )
+  );
 }
