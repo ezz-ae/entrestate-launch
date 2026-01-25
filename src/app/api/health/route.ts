@@ -1,22 +1,29 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { getAdminDb } from '@/server/firebase-admin';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { SUPER_ADMIN_ROLES } from '@/lib/server/roles';
 import { logError } from '@/lib/server/log';
+import {
+  createRequestId,
+  errorResponse,
+  jsonWithRequestId,
+} from '@/lib/server/request-id';
 
 export async function GET(req: NextRequest) {
   const scope = 'api/health';
+  const requestId = createRequestId();
+  const path = req.url;
   try {
     await requireRole(req, SUPER_ADMIN_ROLES);
   } catch (error) {
-    logError(scope, error, { phase: 'auth' });
+    logError(scope, error, { phase: 'auth', requestId, path });
     if (error instanceof UnauthorizedError) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return jsonWithRequestId(requestId, { error: 'Unauthorized' }, { status: 401 });
     }
     if (error instanceof ForbiddenError) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      return jsonWithRequestId(requestId, { error: 'Forbidden' }, { status: 403 });
     }
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return jsonWithRequestId(requestId, { error: 'Unauthorized' }, { status: 401 });
   }
 
   const status = {
@@ -37,9 +44,9 @@ export async function GET(req: NextRequest) {
     await db.collection('health').limit(1).get();
     status.firebase = 'connected';
   } catch (error) {
-    logError(scope, error, { phase: 'database' });
-    return NextResponse.json({ ok: false, error: 'INTERNAL', scope }, { status: 500 });
+    logError(scope, error, { phase: 'database', requestId, path });
+    return errorResponse(requestId, scope);
   }
 
-  return NextResponse.json(status);
+  return jsonWithRequestId(requestId, status);
 }

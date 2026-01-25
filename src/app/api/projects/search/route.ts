@@ -1,10 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { filterProjects, paginateProjects } from '@/lib/projects/filter';
 import { loadInventoryProjects } from '@/server/inventory';
 import { enforceRateLimit, getRequestIp } from '@/lib/server/rateLimit';
 import { ENTRESTATE_INVENTORY } from '@/data/entrestate-inventory';
 import { SERVER_ENV } from '@/lib/server/env';
 import { logError } from '@/lib/server/log';
+import {
+  createRequestId,
+  jsonWithRequestId,
+  errorResponse,
+} from '@/lib/server/request-id';
 
 const MAX_DATA_LOAD = 8000;
 
@@ -30,13 +35,17 @@ export async function GET(req: NextRequest) {
   const scope = 'api/projects/search';
   const { searchParams } = new URL(req.url);
   const filters = parseFilters(searchParams);
+  const requestId = createRequestId();
+  const path = req.url;
+  const respond = (body: unknown, init?: ResponseInit) =>
+    jsonWithRequestId(requestId, body, init);
 
   console.log('[projects/search] Incoming Request:', filters);
 
   try {
     const ip = getRequestIp(req);
     if (!(await enforceRateLimit(`projects:search:${ip}`, 120, 60_000))) {
-      return NextResponse.json({ message: 'Rate limit exceeded' }, { status: 429 });
+      return respond({ message: 'Rate limit exceeded' }, { status: 429 });
     }
 
     let source: any[] = [];
@@ -57,7 +66,7 @@ export async function GET(req: NextRequest) {
 
     if (!source.length) {
       console.warn('[projects/search] inventory_projects is empty.');
-      return NextResponse.json({
+      return respond({
         data: [],
         pagination: { total: 0, page: 1, limit: filters.limit, totalPages: 1 },
       });
@@ -68,20 +77,18 @@ export async function GET(req: NextRequest) {
 
     const { pageItems, meta } = paginateProjects(filtered, filters.page, filters.limit);
 
-    return NextResponse.json(
+    return jsonWithRequestId(
+      requestId,
       {
         data: pageItems,
         pagination: meta,
       },
       {
-        headers: { 'X-Inventory-Source': dataSource },
+        headers: { ...{ 'X-Inventory-Source': dataSource } },
       }
     );
   } catch (error) {
-    logError(scope, error, { url: req.url });
-    return NextResponse.json(
-      { ok: false, error: 'INTERNAL', scope },
-      { status: 500 }
-    );
+    logError(scope, error, { url: req.url, requestId, path });
+    return errorResponse(requestId, scope);
   }
 }
