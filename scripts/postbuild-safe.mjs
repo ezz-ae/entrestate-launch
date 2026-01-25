@@ -6,8 +6,6 @@ const HACK_SCRIPTS = [
   'scripts/fix-page-client-reference-manifest.mjs',
 ];
 
-const GUARD_SCRIPT = 'scripts/vercel-middleware-nft-guard.mjs';
-
 function runHack(script) {
   const result = spawnSync('node', [script], { stdio: 'inherit' });
   if (result.status !== 0) {
@@ -17,8 +15,7 @@ function runHack(script) {
 
 async function main() {
   if (process.env.VERCEL) {
-    console.log('[postbuild] Vercel: running nft guard only.');
-    runHack(GUARD_SCRIPT);
+    console.log('[postbuild] Skipping build hacks on Vercel.');
     return;
   }
 

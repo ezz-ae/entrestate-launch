@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { logError } from '@/lib/server/log';
-import LeadsClient from './leads-client';
+import LeadsClient from './LeadsClient';
 import type { LeadRecord } from './types';
 
 export const dynamic = 'force-dynamic';
@@ -55,7 +55,7 @@ export default async function LeadsPipelinePage({ searchParams }: LeadsPageProps
   }
 
   return (
-    <Suspense fallback={<LeadsSkeleton />}>
+    <Suspense fallback={<LeadsLoading />}>
       <LeadsClient
         leads={leads}
         totalLeads={totalLeads}
@@ -72,7 +72,7 @@ export default async function LeadsPipelinePage({ searchParams }: LeadsPageProps
   );
 }
 
-function LeadsSkeleton() {
+function LeadsLoading() {
   return (
     <div className="min-h-screen bg-black text-white p-6 pt-24">
       <div className="max-w-7xl mx-auto space-y-8 animate-pulse">

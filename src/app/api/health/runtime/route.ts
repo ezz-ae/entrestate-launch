@@ -28,6 +28,18 @@ export async function GET(req: NextRequest) {
             process.env.private_key)
       );
 
+    const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY?.trim() || '';
+    const apiKeyLooksValid = /^AIza[0-9A-Za-z_-]{35}$/.test(apiKey);
+    const hasFirebasePublicConfigReady =
+      apiKeyLooksValid &&
+      Boolean(
+        process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN &&
+          process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID &&
+          process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET &&
+          process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID &&
+          process.env.NEXT_PUBLIC_FIREBASE_APP_ID
+      );
+
     const hasSupabasePublic =
       Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL) &&
       Boolean(
@@ -37,19 +49,18 @@ export async function GET(req: NextRequest) {
 
     const hasAppUrl = Boolean(process.env.NEXT_PUBLIC_APP_URL?.trim());
 
-    const firebaseAuthPublic = envBool(
+    const firebaseAuthEnabledPublic = envBool(
       'NEXT_PUBLIC_ENABLE_FIREBASE_AUTH',
       process.env.NODE_ENV === 'production'
     );
 
     return jsonWithRequestId(requestId, {
       hasFirebaseAdminCreds,
+      hasFirebasePublicConfigReady,
       hasSupabasePublic,
       hasAppUrl,
-      firebaseAuthEnabled: {
-        server: FIREBASE_AUTH_ENABLED,
-        public: firebaseAuthPublic,
-      },
+      firebaseAuthEnabledServer: FIREBASE_AUTH_ENABLED,
+      firebaseAuthEnabledPublic,
     });
   } catch (error) {
     logError(scope, error, { requestId, path });

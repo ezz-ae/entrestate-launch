@@ -54,6 +54,16 @@ The script loads the curated dataset in `src/data/entrestate-inventory.ts` and s
 - Before shipping, update `firestore.rules` to the tenant-aware ruleset and deploy through the Firebase CLI.
 - Dashboard-only API routes (e.g., `/api/leads/list`, `/api/sms/send`, `/api/email/send`, `/api/payments/*`, `/api/domains`) require a Firebase ID token via `Authorization: Bearer <idToken>`; fetch the token with `getIdToken()` on the client before calling these endpoints, and include the tenant ID when applicable.
 
+## Production minimum env
+
+Every production or preview deployment must expose the booleans reported by `/api/health/runtime`. At a minimum, make sure the following variables exist or evaluate to the expected truthy values before you ship:
+
+- `ENABLE_FIREBASE_AUTH` (server) **and** `NEXT_PUBLIC_ENABLE_FIREBASE_AUTH` (public) are always defined as `true`/`false`.
+- `FIREBASE_ADMIN_CREDENTIALS` **or** the trio `FIREBASE_ADMIN_PROJECT_ID`, `FIREBASE_ADMIN_CLIENT_EMAIL`, `FIREBASE_ADMIN_PRIVATE_KEY` so Firebase Admin can bootstrap.
+- Public Firebase config: `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID`, `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`, `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`, and `NEXT_PUBLIC_FIREBASE_APP_ID`.
+- `NEXT_PUBLIC_SUPABASE_URL` plus either `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` or `NEXT_PUBLIC_SUPABASE_ANON_KEY` when any Supabase-backed API is enabled.
+- `NEXT_PUBLIC_APP_URL` (the canonical hostname your deployment uses, e.g., `https://app.entrestate.com`).
+
 ## Next Steps
 
 The immediate roadmap is captured in the planning notes (locking Firestore rules, wiring data ingestion, replacing client-side secret storage, making every dashboard module call a real backend). Use this README as a quick reference for environment setup while implementing those stages.
