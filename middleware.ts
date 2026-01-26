@@ -1,10 +1,11 @@
+import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
-// Provide a no-op middleware so Next outputs only the trivial bundle with a static matcher.
-export function middleware() {
+// Minimal middleware so Next outputs the middleware bundle for packaging.
+export function middleware(_req: NextRequest) {
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/__middleware_stub__/:path*'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };
