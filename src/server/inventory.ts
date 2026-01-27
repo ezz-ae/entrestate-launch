@@ -22,9 +22,9 @@ const PUBLIC_PROJECT_ID =
   process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ||
   process.env.FIREBASE_PROJECT_ID ||
   process.env.project_id ||
-  firebaseConfig.projectId;
+  firebaseConfig?.projectId;
 const PUBLIC_API_KEY =
-  process.env.NEXT_PUBLIC_FIREBASE_API_KEY || firebaseConfig.apiKey;
+  process.env.NEXT_PUBLIC_FIREBASE_API_KEY || firebaseConfig?.apiKey;
 const ADMIN_PROJECT_ID = getAdminProjectId();
 const ADMIN_PROJECT_MISMATCH =
   ADMIN_PROJECT_ID && PUBLIC_PROJECT_ID && ADMIN_PROJECT_ID !== PUBLIC_PROJECT_ID;

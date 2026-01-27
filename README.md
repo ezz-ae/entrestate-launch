@@ -75,17 +75,17 @@ The immediate roadmap is captured in the planning notes (locking Firestore rules
 - `FIREBASE_ADMIN_CREDENTIALS` **or** the trio `FIREBASE_ADMIN_PROJECT_ID`, `FIREBASE_ADMIN_CLIENT_EMAIL`, `FIREBASE_ADMIN_PRIVATE_KEY` &mdash; required for every production/preview deployment so Firebase Admin can initialize.
 - `NEXT_PUBLIC_SUPABASE_URL` plus either `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` or `NEXT_PUBLIC_SUPABASE_ANON_KEY` when Supabase-backed APIs are enabled; otherwise the mock client is used.
 - `NEXT_PUBLIC_APP_URL` — keep site metadata and webhooks aligned between Preview and Production (this repo reads it when submitting forms or generating metadata).
-- No root `proxy.ts` or `middleware.ts` files remain, so Vercel will never build a middleware lambda.
+- Dashboard access is enforced in `app/dashboard/layout.tsx`, so unauthorized visitors are redirected to `/login` via layout guards instead of extra runtime lambdas.
 
 ## Deployment via Git
 
 1. Configure the Production and Preview environment variables listed above inside the Vercel dashboard and confirm the Firebase admin credentials are visible for both targets.
-2. Push to `main` (or the linked production branch) and trigger a Clear Cache deploy so Vercel discards the cached middleware bundle before packaging the new build.
+2. Push to `main` (or the linked production branch) and allow Vercel to build the release; verify `/api/health/env` after the rollout to confirm runtime flags.
 3. After the deployment completes, curl the health endpoints (see below) to confirm the runtime flags and Firebase connectivity.
 4. For local sanity before pushing, run `npm run test:vercel-env-sanity` and `npm run test:supabase-chain` so the environment booleans update and the Supabase chain still resolves without the public keys.
 
 ## Health Endpoints
 
 - `curl https://<your-deploy>/api/health` &mdash; verifies the admin SDK and Firestore connectivity.
-- `curl https://<your-deploy>/api/health/env` &mdash; returns boolean flags for Firebase auth, Supabase configuration, and the Node/Vercel env.
+- `curl https://<your-deploy>/api/health/env` &mdash; returns boolean flags for `NEXT_PUBLIC_ENABLE_FIREBASE_AUTH`, public Firebase config readiness, server auth availability, Supabase configuration, and the Node/Vercel env.
 - `curl https://<your-deploy>/api/auth/me` &mdash; confirms guest/dev/anonymous modes remain stable; authenticated clients should check `user?.uid`.

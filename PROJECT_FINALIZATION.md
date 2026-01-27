@@ -3,7 +3,7 @@
 ## Repo Inventory
 
 ### Stack + Routing
-- Framework: Next.js 16.1.1 (App Router under `src/app`, middleware at `middleware.ts`).
+- Framework: Next.js 16.1.1 (App Router under `src/app`; server auth uses layout guards instead of a dedicated routing entrypoint).
 - Runtime: React 18, Tailwind, Radix UI.
 - Backend: Next.js route handlers under `src/app/api/*`.
 - Data: Firebase (Firestore + Auth) via `firebase-admin` (`src/server/firebase-admin.ts`).

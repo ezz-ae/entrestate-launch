@@ -6,6 +6,7 @@ import {
   errorResponse,
   jsonWithRequestId,
 } from '@/lib/server/request-id';
+import { verifyFirebaseIdToken } from '@/lib/server/auth';
 
 export async function GET(req: Request) {
   const scope = 'api/auth/me';
@@ -35,12 +36,24 @@ export async function GET(req: Request) {
       }
     }
 
-    const enableDev = process.env.NODE_ENV !== 'production';
-    if (enableDev && (devUser || devUid)) {
-      const email = devUser || (devUid ? `${devUid}@dev.local` : null);
-      const uid = devUid || (devUser ? devUser.split('@')[0] : 'dev.user');
-      const roles = devRoles ? devRoles.split(',').map((r) => r.trim()).filter(Boolean) : ['agency_admin'];
-      return jsonWithRequestId(requestId, { user: { uid, email, roles }, mode: 'dev' });
+    try {
+      const { uid, email, claims } = await verifyFirebaseIdToken(req);
+      const roles = Array.isArray(claims.roles)
+        ? (claims.roles as string[])
+        : typeof claims.roles === 'string'
+        ? claims.roles.split(',').map((role) => role.trim()).filter(Boolean)
+        : [];
+
+      const normalizedRoles = roles.length ? roles : [];
+
+      return jsonWithRequestId(requestId, {
+        user: { uid, email, roles: normalizedRoles },
+        mode: claims.dev ? 'dev' : 'authenticated',
+      });
+    } catch (error) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.debug('[api/auth/me] token verification failed', error);
+      }
     }
 
     return jsonWithRequestId(requestId, { user: null, mode: 'anonymous' });

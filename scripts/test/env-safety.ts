@@ -42,8 +42,16 @@ async function runChecks() {
       true,
       'Firebase auth should be flagged disabled when config is missing.'
     );
-    assert.strictEqual(getAuthSafe(), undefined, 'getAuthSafe should return undefined when auth is disabled.');
-    assert.strictEqual(getDbSafe(), undefined, 'getDbSafe should return undefined when Firebase app is unavailable.');
+    assert.strictEqual(
+      getAuthSafe(),
+      null,
+      'getAuthSafe should return null when auth is disabled.'
+    );
+    assert.strictEqual(
+      getDbSafe(),
+      null,
+      'getDbSafe should return null when Firebase app is unavailable.'
+    );
 
     const { createMockSupabaseClient } = await import('../../src/lib/server');
     const mock = createMockSupabaseClient({ shouldLog: true });

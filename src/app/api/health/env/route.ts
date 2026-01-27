@@ -9,15 +9,20 @@ export async function GET() {
       process.env.NEXT_PUBLIC_SUPABASE_URL &&
         (process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
     );
+    const publicFirebaseAuthEnabled =
+      process.env.NEXT_PUBLIC_ENABLE_FIREBASE_AUTH?.trim().toLowerCase() === 'true';
+    const nodeEnvProduction = process.env.NODE_ENV === 'production';
+    const onVercel = Boolean(process.env.VERCEL);
 
     return NextResponse.json({
       ok: true,
       flags: {
+        publicFirebaseAuthEnabled,
+        firebasePublicConfigReady: FIREBASE_CONFIG_READY,
         firebaseAuthEnabled: !FIREBASE_AUTH_DISABLED,
-        firebaseConfigReady: FIREBASE_CONFIG_READY,
         supabaseConfigured,
-        nodeEnv: process.env.NODE_ENV === 'production',
-        vercelEnv: Boolean(process.env.VERCEL),
+        nodeEnvProduction,
+        onVercel,
       },
     });
   } catch (error) {

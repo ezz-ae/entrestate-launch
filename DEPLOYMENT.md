@@ -57,7 +57,6 @@ Set the following for every environment (production, preview, staging):
 - **Firestore composite indexes:** Firebase will raise index errors for `jobs` queries (e.g., `ownerUid+createdAt` or `type+status+createdAt`). Keep `firestore.indexes.json` updated and redeploy after adding new queries.
 
 ## Troubleshooting
-- **middleware.js.nft.json missing:** With no middleware entrypoint in the repo, this ENOENT points to a stale artifact; redeploy with **Clear Cache**, then verify `/api/health/env` and `/dashboard` to confirm the lambda is gone.
 - **react-loadable-manifest.json missing:** If Vercel logs this ENOENT, compare the local `.next/server` output against the deployment log to confirm the manifest was generated before touching `.next`.
 - **page_client-reference-manifest.js missing:** When this ENOENT appears, inspect your `.next/server` build output and the Vercel log to understand which artifacts were produced; don’t mutate `.next` on the server.
 - **Auth null crash:** If the browser logs `Firebase auth is disabled` or `FIREBASE_NOT_CONFIGURED`, double-check that all `NEXT_PUBLIC_FIREBASE_*` values are populated and `ENABLE_FIREBASE_AUTH` is set (`true` or `false`). The client now surfaces `FIREBASE_NOT_CONFIGURED` instead of throwing, so you can safely run locally without those envs.

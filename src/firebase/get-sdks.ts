@@ -18,9 +18,9 @@ export { firebaseApp, FIREBASE_AUTH_DISABLED };
 export { firebaseAuth as auth, firestoreInstance as db };
 
 export function getSdks(): {
-  firebaseApp?: FirebaseApp;
-  auth?: Auth;
-  db?: Firestore;
+  firebaseApp?: FirebaseApp | null;
+  auth?: Auth | null;
+  db?: Firestore | null;
   disabled: boolean;
 } {
   return {

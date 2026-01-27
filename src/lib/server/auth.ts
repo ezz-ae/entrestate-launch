@@ -18,6 +18,7 @@ const ROLE_PRIORITY: Role[] = ['public', 'agent', 'team_admin', 'agency_admin', 
 const ROLE_RANK = new Map<Role, number>(ROLE_PRIORITY.map((role, index) => [role, index]));
 
 const isDevEnvironment = process.env.NODE_ENV !== 'production';
+export const SESSION_COOKIE_NAME = 'entrestate_auth_token';
 const anonymousClaims = {
   uid: 'anonymous',
   tenantId: 'public',
@@ -123,16 +124,36 @@ function getHighestRole(roles: Role[]): Role {
   }, roles[0]);
 }
 
+function parseCookieValue(header: string | null, name: string) {
+  if (!header) return null;
+  const cookies = header.split(';');
+  for (const cookie of cookies) {
+    const pair = cookie.trim();
+    const separatorIndex = pair.indexOf('=');
+    if (separatorIndex === -1) continue;
+    const key = pair.slice(0, separatorIndex).trim();
+    if (key !== name) continue;
+    return pair.slice(separatorIndex + 1).trim();
+  }
+  return null;
+}
+
 function getAuthHeader(req: NextRequest | Request) {
   const header = req.headers.get('authorization') || '';
   if (!header.startsWith('Bearer ')) {
-    throw new UnauthorizedError('Missing Authorization header');
+    return null;
   }
   const token = header.slice(7).trim();
-  if (!token) {
-    throw new UnauthorizedError('Invalid Authorization header');
+  return token || null;
+}
+
+function getSessionToken(req: NextRequest | Request) {
+  const headerToken = getAuthHeader(req);
+  if (headerToken) {
+    return headerToken;
   }
-  return token;
+  const cookieHeader = req.headers.get('cookie');
+  return parseCookieValue(cookieHeader, SESSION_COOKIE_NAME);
 }
 
 async function loadUserProfile(uid: string) {
@@ -183,7 +204,10 @@ export async function verifyFirebaseIdToken(req: NextRequest | Request) {
       return devContext;
     }
 
-    const tokenString = getAuthHeader(req);
+    const tokenString = getSessionToken(req);
+    if (!tokenString) {
+      throw new UnauthorizedError('Missing Authorization token');
+    }
     const auth = getAdminAuth();
     const claims = await auth.verifyIdToken(tokenString);
     return { uid: claims.uid, email: claims.email ?? null, claims };

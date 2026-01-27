@@ -12,6 +12,9 @@ import {
 } from 'firebase/auth';
 import { getAuthSafe, FIREBASE_AUTH_DISABLED } from '@/lib/firebase/client';
 
+const SESSION_ENDPOINT = '/api/auth/session';
+const SESSION_REFRESH_INTERVAL_MS = 25 * 60 * 1000;
+
 type AppUser = {
   uid: string;
   email?: string | null;
@@ -46,12 +49,12 @@ function authDisabledError() {
   return new Error('Firebase auth is disabled or not configured.');
 }
 
-function getActiveAuth(): Auth | undefined {
-  if (FIREBASE_AUTH_DISABLED) return undefined;
+function getActiveAuth(): Auth | null {
+  if (FIREBASE_AUTH_DISABLED) return null;
   return getAuthSafe();
 }
 
-function useFirebaseAuthState(targetAuth?: Auth) {
+function useFirebaseAuthState(targetAuth?: Auth | null) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(Boolean(targetAuth));
 
@@ -93,7 +96,7 @@ function useFirebaseAuthState(targetAuth?: Auth) {
   return { user, loading };
 }
 
-function createAuthActions(targetAuth?: Auth) {
+function createAuthActions(targetAuth?: Auth | null) {
   if (!targetAuth) {
     return {
       signUp: async () => {
@@ -120,12 +123,60 @@ function createAuthActions(targetAuth?: Auth) {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const activeAuth = getActiveAuth();
-  const { user, loading } = useFirebaseAuthState(activeAuth);
+  const { user: firebaseUser, loading } = useFirebaseAuthState(activeAuth);
   const actions = useMemo(() => createAuthActions(activeAuth), [activeAuth]);
   const configError: AuthContextType['error'] = FIREBASE_AUTH_DISABLED ? 'FIREBASE_NOT_CONFIGURED' : undefined;
 
-  const appUser = user ? mapFirebaseUser(user) : null;
+  const appUser = firebaseUser ? mapFirebaseUser(firebaseUser) : null;
   const value = { user: appUser, loading, error: configError, ...actions };
+
+  useEffect(() => {
+    let intervalId: ReturnType<typeof setInterval> | undefined;
+    let cancelled = false;
+
+    const clearSession = async () => {
+      try {
+        await fetch(SESSION_ENDPOINT, { method: 'DELETE' });
+      } catch (error) {
+        console.warn('[auth] Failed to clear session cookie.', error);
+      }
+    };
+
+    const syncSession = async () => {
+      if (cancelled) return;
+      if (!firebaseUser || FIREBASE_AUTH_DISABLED) {
+        await clearSession();
+        return;
+      }
+      try {
+        const token = await firebaseUser.getIdToken(true);
+        const response = await fetch(SESSION_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token }),
+        });
+        if (!response.ok) {
+          const text = await response.text().catch(() => '');
+          console.warn('[auth] Session sync failed.', response.status, text);
+        }
+      } catch (error) {
+        console.warn('[auth] Session sync error.', error);
+      }
+    };
+
+    syncSession();
+
+    if (!FIREBASE_AUTH_DISABLED) {
+      intervalId = setInterval(syncSession, SESSION_REFRESH_INTERVAL_MS);
+    }
+
+    return () => {
+      cancelled = true;
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [firebaseUser, FIREBASE_AUTH_DISABLED]);
 
   return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;
 }
