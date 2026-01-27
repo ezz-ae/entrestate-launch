@@ -1,6 +1,7 @@
 'use client';
 
 import { Suspense } from 'react';
+import Link from 'next/link';
 import { AudienceGenerator } from '@/components/audience-generator';
 import { CampaignTriggers } from '@/components/campaign-triggers';
 import { SyncCrmButton } from '@/components/sync-crm-button';
@@ -53,6 +54,14 @@ export default function LeadsClient({
           <Suspense fallback={<div className="h-10 w-full rounded-full bg-zinc-900" />}>
             <LeadsControls query={query} />
           </Suspense>
+        </div>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/dashboard/leads/cold-calling"
+            className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-bold uppercase tracking-widest text-zinc-200 hover:bg-white/10"
+          >
+            Cold Calling List
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

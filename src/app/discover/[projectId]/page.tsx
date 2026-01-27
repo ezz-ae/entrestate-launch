@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { NextPage } from 'next';
 import { useParams } from 'next/navigation';
 import { ProjectData } from '@/lib/types';
+import { useAuth } from '@/hooks/useAuth';
 import { 
     Loader2, 
     Building, 
@@ -31,6 +32,10 @@ const ProjectDetailPage: NextPage = () => {
   }
   const [project, setProject] = useState<ProjectData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [actionResult, setActionResult] = useState<string | null>(null);
+  const { user } = useAuth();
 
   const formatDate = (value?: string) => {
     if (!value) return 'Not shared';
@@ -116,6 +121,44 @@ const ProjectDetailPage: NextPage = () => {
   const launchPackHref = project?.id
     ? `/start?intent=website&project=${encodeURIComponent(project.id)}`
     : '/start?intent=website';
+
+  const handleAction = async (action: string) => {
+    if (!project?.id) return;
+    setActionLoading(true);
+    setActionError(null);
+    setActionResult(null);
+    try {
+      const res = await fetch('/api/projects/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId: project.id, action }),
+      });
+      const payload = await res.json().catch(() => null);
+      if (!res.ok || !payload?.ok) {
+        throw new Error(payload?.error || payload?.message || 'Action failed.');
+      }
+      const data = payload.data || {};
+      if (action === 'create_landing_draft' && data.builderUrl) {
+        window.location.href = data.builderUrl;
+        return;
+      }
+      if (typeof data.text === 'string') {
+        setActionResult(data.text);
+      } else if (typeof data.summary === 'string') {
+        setActionResult(data.summary);
+      } else if (data.payload) {
+        setActionResult(JSON.stringify(data.payload, null, 2));
+      } else {
+        setActionResult('Action completed.');
+      }
+    } catch (error) {
+      setActionError(
+        error instanceof Error ? error.message : 'Action failed. Please try again.'
+      );
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   return (
     <div className="bg-black text-white min-h-screen">
@@ -224,6 +267,61 @@ const ProjectDetailPage: NextPage = () => {
                         Build a launch pack <ArrowRight className="h-4 w-4" />
                       </a>
                     </Button>
+                </Card>
+                <Card className="bg-zinc-900 border-white/10 rounded-2xl p-6 sm:p-8 space-y-4">
+                    <h3 className="text-lg font-bold">Killer Actions</h3>
+                    <p className="text-xs text-zinc-400">
+                      Generate assets for this project with one click.
+                    </p>
+                    {!user && (
+                      <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-100">
+                        Sign in to create landing pages and scripts.
+                      </div>
+                    )}
+                    {actionError && (
+                      <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-100">
+                        {actionError}
+                      </div>
+                    )}
+                    <div className="grid grid-cols-1 gap-2">
+                      <Button
+                        disabled={!user || actionLoading}
+                        onClick={() => handleAction('create_landing_draft')}
+                        className="w-full bg-white text-black font-bold hover:bg-zinc-200"
+                      >
+                        {actionLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                        Create landing page
+                      </Button>
+                      <Button
+                        disabled={!user || actionLoading}
+                        variant="outline"
+                        className="w-full border-white/10 text-white"
+                        onClick={() => handleAction('draft_listing')}
+                      >
+                        Draft listing content
+                      </Button>
+                      <Button
+                        disabled={!user || actionLoading}
+                        variant="outline"
+                        className="w-full border-white/10 text-white"
+                        onClick={() => handleAction('sales_message')}
+                      >
+                        Get sales message
+                      </Button>
+                      <Button
+                        disabled={!user || actionLoading}
+                        variant="outline"
+                        className="w-full border-white/10 text-white"
+                        onClick={() => handleAction('lead_pack')}
+                      >
+                        Prepare lead pack
+                      </Button>
+                    </div>
+                    {actionResult && (
+                      <div className="rounded-xl border border-white/10 bg-black/40 p-3 text-xs text-zinc-200 whitespace-pre-wrap">
+                        {actionResult}
+                      </div>
+                    )}
                 </Card>
                 <Card className="bg-blue-600 text-white rounded-2xl p-6 sm:p-8 text-center">
                     <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">Interested in this project?</h3>
