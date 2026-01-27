@@ -17,9 +17,14 @@ interface BudgetChartProps {
   baseCpc: number;
 }
 
+interface BudgetChartPoint {
+  budget: number;
+  clicks: number;
+}
+
 export function BudgetChart({ budget, baseCpc }: BudgetChartProps) {
   const data = useMemo(() => {
-    const points = [];
+    const points: BudgetChartPoint[] = [];
     for (let i = 50; i <= 500; i += 25) {
       const cpc = baseCpc + (i / 1000);
       const clicks = Math.floor(i / cpc);

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -47,18 +47,18 @@ const START_OPTIONS = [
 export function OnboardingFlow() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [selected, setSelected] = useState<string | null>(null);
-
-  useEffect(() => {
-    const intent = searchParams ? searchParams.get('intent') : null;
+  const defaultOption = START_OPTIONS[0];
+  const [selected, setSelected] = useState<string>(() => {
+    const intent = searchParams?.get('intent');
     if (intent && START_OPTIONS.some((option) => option.id === intent)) {
-      setSelected(intent);
+      return intent;
     }
-  }, [searchParams]);
+    return defaultOption.id;
+  });
 
   const selectedOption = useMemo(
-    () => START_OPTIONS.find((option) => option.id === selected) ?? null,
-    [selected]
+    () => START_OPTIONS.find((option) => option.id === selected) ?? defaultOption,
+    [selected, defaultOption]
   );
 
   const handleContinue = () => {
@@ -118,12 +118,11 @@ export function OnboardingFlow() {
 
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-white/10 pt-6">
           <p className="text-sm text-zinc-500">
-            {selectedOption ? `Selected: ${selectedOption.label}` : 'Select a card to continue.'}
+            Ready to launch <span className="font-semibold text-white">{selectedOption.label}</span>.
           </p>
           <Button
             onClick={handleContinue}
-            disabled={!selectedOption}
-            className="h-11 sm:h-12 px-6 rounded-full bg-white text-black font-bold disabled:opacity-40"
+            className="h-11 sm:h-12 px-6 rounded-full bg-white text-black font-bold"
           >
             Start your first launch <ArrowRight className="ml-2 h-4 w-4" />
           </Button>

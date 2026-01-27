@@ -1,10 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Zap, TrendingUp, Users, MousePointer2, Loader2, CheckCircle2, Globe, BarChart3, LineChart as LineChartIcon, Share2, Copy, Check, Download, Plus, MinusCircle, MapPin, UserCircle, Calendar, Target, Smartphone, Languages, Clock, Phone, Link as LinkIcon, Megaphone, List, Tag } from 'lucide-react';
-import { Search, Zap, TrendingUp, Users, MousePointer2, Loader2, CheckCircle2, Globe, BarChart3, LineChart as LineChartIcon, Share2, Copy, Check, Download, Plus, MinusCircle, MapPin, UserCircle, Calendar, Target, Smartphone, Languages, Clock, Phone, Link as LinkIcon, Megaphone, List, Tag, Activity } from 'lucide-react';
+import { Activity, BarChart3, Calendar, Check, CheckCircle2, Clock, Copy, Download, Globe, Languages, LineChart as LineChartIcon, Link as LinkIcon, Loader2, List, MapPin, Megaphone, MinusCircle, MousePointer2, Phone, Plus, Share2, Smartphone, Tag, Target, TrendingUp, UserCircle, Users, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { generateAdConfig, getCompetitorAnalysis, generateShareLink } from '@/app/actions/google-ads';
 import { generateAdConfig, getCompetitorAnalysis, generateShareLink, getCampaignStatus } from '@/app/actions/google-ads';
 import { cn } from '@/lib/utils';
 import { PaymentModal } from '@/components/payment-modal';

@@ -17,7 +17,13 @@ async function main() {
   await listDirectory(pagesDir, { optional: true });
 
   await logCheck('.next/server/middleware.js', path.join(serverDir, 'middleware.js'));
-  const middlewareNft = await logCheck('.next/server/middleware.js.nft.json', path.join(serverDir, 'middleware.js.nft.json'));
+  const middlewareNftPath = path.join(serverDir, 'middleware.js.nft.json');
+  const middlewareNft = await logCheck('.next/server/middleware.js.nft.json', middlewareNftPath);
+  const edgeMiddlewareManifestPath = path.join(serverDir, 'middleware', 'middleware-manifest.json');
+  const hasEdgeMiddleware = await pathExists(edgeMiddlewareManifestPath);
+  if (hasEdgeMiddleware) {
+    console.log('[vercel-artifact-audit] Edge middleware manifest found at .next/server/middleware/middleware-manifest.json; legacy middleware.js artifacts are not generated in Next 16.');
+  }
 
   const pagesDirExists = await pathExists(pagesDir);
   if (pagesDirExists) {
@@ -27,7 +33,7 @@ async function main() {
     console.log('[vercel-artifact-audit] .next/server/pages directory missing; skipping page-level middleware checks.');
   }
 
-  if (!middlewareNft) {
+  if (!middlewareNft && !hasEdgeMiddleware) {
     console.log(`[vercel-artifact-audit] ❗ middleware.js.nft.json missing in ${cwd}`);
     await printNextConfigSummary();
   }

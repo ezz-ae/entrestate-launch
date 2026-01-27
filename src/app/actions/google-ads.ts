@@ -54,7 +54,7 @@ export async function generateAdConfig(projectId: string) {
         },
         include_adult_keywords: false,
         // geo_target_constants: ['geoTargetConstants/1004074'], // e.g., UAE (1004074)
-      });
+      } as any) as any;
 
       if (keywordIdeas.length > 0) {
         // Use the top 10 keywords
@@ -107,6 +107,17 @@ export async function generateShareLink(projectId: string) {
   const token = Buffer.from(projectId).toString('base64');
   
   return { url: `/dashboard/google-ads/share/${token}` };
+}
+
+export async function getCampaignStatus(projectId: string) {
+  await new Promise(resolve => setTimeout(resolve, 200));
+
+  return {
+    status: 'Idle',
+    impressions: 0,
+    clicks: 0,
+    cost: 0,
+  };
 }
 
 export async function getGoogleAdsAuthUrl() {
