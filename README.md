@@ -75,12 +75,12 @@ The immediate roadmap is captured in the planning notes (locking Firestore rules
 - `FIREBASE_ADMIN_CREDENTIALS` **or** the trio `FIREBASE_ADMIN_PROJECT_ID`, `FIREBASE_ADMIN_CLIENT_EMAIL`, `FIREBASE_ADMIN_PRIVATE_KEY` &mdash; required for every production/preview deployment so Firebase Admin can initialize.
 - `NEXT_PUBLIC_SUPABASE_URL` plus either `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` or `NEXT_PUBLIC_SUPABASE_ANON_KEY` when Supabase-backed APIs are enabled; otherwise the mock client is used.
 - `NEXT_PUBLIC_APP_URL` — keep site metadata and webhooks aligned between Preview and Production (this repo reads it when submitting forms or generating metadata).
-- `postbuild` now runs `scripts/vercel-artifact-audit.mjs` (followed by `scripts/postbuild-safe.mjs`), so the build merely reports what landed in `.next/server`; keep `ENABLE_NEXT_BUILD_HACKS` unset on Vercel.
+- No root `proxy.ts` or `middleware.ts` files remain, so Vercel will never build a middleware lambda.
 
 ## Deployment via Git
 
 1. Configure the Production and Preview environment variables listed above inside the Vercel dashboard and confirm the Firebase admin credentials are visible for both targets.
-2. Push to `main` (or the linked production branch). The build now always runs `scripts/vercel-artifact-audit.mjs` to log `.next/server` plus `scripts/postbuild-safe.mjs`, so you can see what got packaged without mutating `.next`. If `middleware.js.nft.json` or the ENOENT error persists after these changes, trigger a redeploy with **Clear Cache**—do not patch `.next` manually.
+2. Push to `main` (or the linked production branch) and trigger a Clear Cache deploy so Vercel discards the cached middleware bundle before packaging the new build.
 3. After the deployment completes, curl the health endpoints (see below) to confirm the runtime flags and Firebase connectivity.
 4. For local sanity before pushing, run `npm run test:vercel-env-sanity` and `npm run test:supabase-chain` so the environment booleans update and the Supabase chain still resolves without the public keys.
 
