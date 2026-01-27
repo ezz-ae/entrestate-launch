@@ -8,12 +8,12 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 interface LeadsPageProps {
-  searchParams?: {
+  searchParams?: Promise<{
     q?: string;
     page?: string;
     sort?: string;
     order?: string;
-  };
+  }>;
 }
 
 export default async function LeadsPipelinePage({ searchParams }: LeadsPageProps) {
@@ -24,10 +24,11 @@ export default async function LeadsPipelinePage({ searchParams }: LeadsPageProps
   let fetchError: string | null = null;
   type SupabaseClient = Awaited<ReturnType<typeof createSupabaseServerClient>>;
   let supabase: SupabaseClient | undefined;
-  const query = searchParams?.q ?? '';
-  const currentPage = Number(searchParams?.page) || 1;
-  const sortColumn = searchParams?.sort ?? 'created_at';
-  const sortOrder = searchParams?.order ?? 'desc';
+  const resolvedSearchParams = await searchParams;
+  const query = resolvedSearchParams?.q ?? '';
+  const currentPage = Number(resolvedSearchParams?.page) || 1;
+  const sortColumn = resolvedSearchParams?.sort ?? 'created_at';
+  const sortOrder = resolvedSearchParams?.order ?? 'desc';
   const pageSize = 10; // Number of leads per page
 
   const from = (currentPage - 1) * pageSize;

@@ -389,7 +389,11 @@ export async function loadInventoryProjects(max = DEFAULT_MAX, forceRefresh = fa
         console.log(`[inventory] Successfully loaded ${projects.length} projects from Firestore.`);
       }
     } catch (error) {
-      logAdminInventoryFallback('Admin inventory query failed; falling back to public/static inventory.', error);
+      if (error && typeof error === 'object' && 'code' in error && (error as any).code === 8) {
+        logAdminInventoryFallback('Admin inventory query quota exceeded (RESOURCE_EXHAUSTED); falling back to public/static inventory.');
+      } else {
+        logAdminInventoryFallback('Admin inventory query failed; falling back to public/static inventory.', error);
+      }
     }
   } else {
     logAdminInventoryFallback('Admin Firestore is unavailable; falling back to public/static inventory.');

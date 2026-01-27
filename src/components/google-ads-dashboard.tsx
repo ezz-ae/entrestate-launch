@@ -1,10 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Zap, TrendingUp, Users, MousePointer2, Loader2, CheckCircle2, Globe } from 'lucide-react';
+import { Search, Zap, TrendingUp, Users, MousePointer2, Loader2, CheckCircle2, Globe, BarChart3, LineChart as LineChartIcon, Share2, Copy, Check, Download } from 'lucide-react';
+import { Search, Zap, TrendingUp, Users, MousePointer2, Loader2, CheckCircle2, Globe, BarChart3, LineChart as LineChartIcon, Share2, Copy, Check, Download, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { generateAdConfig } from '@/app/actions/google-ads';
+import { generateAdConfig, getCompetitorAnalysis, generateShareLink } from '@/app/actions/google-ads';
 import { cn } from '@/lib/utils';
+import { PaymentModal } from '@/components/payment-modal';
+import { BudgetChart } from '@/components/budget-chart';
+import { jsPDF } from 'jspdf';
 
 interface Project {
   id: string;
@@ -12,12 +16,18 @@ interface Project {
   description: string;
 }
 
-export function GoogleAdsDashboard({ projects }: { projects: Project[] }) {
+export function GoogleAdsDashboard({ projects, readOnly = false }: { projects: Project[], readOnly?: boolean }) {
   const [selectedProjectId, setSelectedProjectId] = useState<string>(projects[0]?.id || '');
   const [budget, setBudget] = useState(50); // Daily budget in AED
   const [adConfig, setAdConfig] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isLaunching, setIsLaunching] = useState(false);
+  const [competitors, setCompetitors] = useState<any[]>([]);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [newKeyword, setNewKeyword] = useState("");
 
   // Load initial ad config when project changes
   useEffect(() => {
@@ -31,6 +41,8 @@ export function GoogleAdsDashboard({ projects }: { projects: Project[] }) {
     try {
       const config = await generateAdConfig(id);
       setAdConfig(config);
+      const compData = await getCompetitorAnalysis(id);
+      setCompetitors(compData);
     } catch (error) {
       console.error(error);
     } finally {
@@ -38,9 +50,94 @@ export function GoogleAdsDashboard({ projects }: { projects: Project[] }) {
     }
   };
 
+  const handleLaunchClick = () => {
+    setShowPaymentModal(true);
+  };
+
+  const handleConfirmLaunch = async () => {
+    setIsLaunching(true);
+    setShowPaymentModal(false);
+    // Simulate launch delay
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    setIsLaunching(false);
+    alert("Campaign launched successfully!");
+  };
+
+  const handleShare = async () => {
+    setIsSharing(true);
+    try {
+      const result = await generateShareLink(selectedProjectId);
+      const fullUrl = `${window.location.origin}${result.url}`;
+      setShareUrl(fullUrl);
+      navigator.clipboard.writeText(fullUrl);
+      setTimeout(() => setShareUrl(null), 3000); // Reset after 3s
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  const handleDownloadReport = () => {
+    setIsDownloading(true);
+    const doc = new jsPDF();
+    const margin = 20;
+    let yPos = 30;
+
+    // Title
+    doc.setFontSize(22);
+    doc.text("Google Ads Campaign Report", margin, yPos);
+    yPos += 15;
+
+    // Project Info
+    doc.setFontSize(12);
+    doc.text(`Project: ${projects.find(p => p.id === selectedProjectId)?.headline || 'Unknown'}`, margin, yPos);
+    yPos += 10;
+    doc.text(`Date: ${new Date().toLocaleDateString()}`, margin, yPos);
+    yPos += 20;
+
+    // Metrics
+    doc.setFontSize(16);
+    doc.text("Projected Performance", margin, yPos);
+    yPos += 10;
+    doc.setFontSize(12);
+    doc.text(`Daily Budget: ${budget} AED`, margin, yPos);
+    yPos += 10;
+    doc.text(`Est. Daily Clicks: ${dailyClicks}`, margin, yPos);
+    yPos += 10;
+    doc.text(`Est. Daily Impressions: ${dailyImpressions.toLocaleString()}`, margin, yPos);
+    yPos += 10;
+    doc.text(`Est. Daily Leads: ${dailyLeads}-${dailyLeads + 2}`, margin, yPos);
+    yPos += 20;
+
+    // Ad Copy
+    doc.setFontSize(16);
+    doc.text("Ad Preview", margin, yPos);
+    yPos += 10;
+    doc.setFontSize(12);
+    if (adConfig) {
+      doc.text(`Headline 1: ${adConfig.headlines[0]}`, margin, yPos);
+      yPos += 7;
+      doc.text(`Headline 2: ${adConfig.headlines[1]}`, margin, yPos);
+      yPos += 7;
+      doc.text(`Description: ${adConfig.descriptions[0]}`, margin, yPos);
+    }
+
+    doc.save("campaign-report.pdf");
+    setIsDownloading(false);
+  };
+
+  const handleAddKeyword = () => {
+    if (newKeyword.trim() && adConfig) {
+      setAdConfig({ ...adConfig, baseKeywords: [...adConfig.baseKeywords, newKeyword.trim()] });
+      setNewKeyword("");
+    }
+  };
+
   // Calculations based on budget
   // As budget increases, CPC might go up slightly (competition), but volume explodes.
-  const cpc = 3.5 + (budget / 500); 
+  const baseCpc = adConfig?.estimatedCpc || 3.5;
+  const cpc = baseCpc + (budget / 1000); 
   const dailyClicks = Math.floor(budget / cpc);
   const dailyImpressions = dailyClicks * 18; // ~5.5% CTR
   const conversionRate = 0.04; // 4%
@@ -74,18 +171,46 @@ export function GoogleAdsDashboard({ projects }: { projects: Project[] }) {
           <h3 className="font-bold text-white flex items-center gap-2">
             <Globe className="h-4 w-4 text-blue-500" /> Source Landing Page
           </h3>
-          <select 
-            value={selectedProjectId}
-            onChange={(e) => setSelectedProjectId(e.target.value)}
-            className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500"
-          >
-            {projects.map(p => (
-              <option key={p.id} value={p.id}>{p.headline || 'Untitled Project'}</option>
-            ))}
-          </select>
+          {readOnly ? (
+            <div className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-zinc-400">
+              {projects.find(p => p.id === selectedProjectId)?.headline || 'Selected Project'}
+            </div>
+          ) : (
+            <select 
+              value={selectedProjectId}
+              onChange={(e) => setSelectedProjectId(e.target.value)}
+              className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500"
+            >
+              {projects.map(p => (
+                <option key={p.id} value={p.id}>{p.headline || 'Untitled Project'}</option>
+              ))}
+            </select>
+          )}
           <p className="text-xs text-zinc-500">
             The AI will analyze this page to generate your ad copy and keywords automatically.
           </p>
+          
+          {!readOnly && (
+            <Button 
+              variant="outline" 
+              className="w-full border-zinc-700 hover:bg-zinc-800 text-zinc-300"
+              onClick={handleShare}
+              disabled={isSharing}
+            >
+              {shareUrl ? <Check className="mr-2 h-4 w-4 text-green-500" /> : <Share2 className="mr-2 h-4 w-4" />}
+              {shareUrl ? "Link Copied!" : "Share Dashboard"}
+            </Button>
+          )}
+
+          <Button 
+            variant="outline" 
+            className="w-full border-zinc-700 hover:bg-zinc-800 text-zinc-300 mt-2"
+            onClick={handleDownloadReport}
+            disabled={isDownloading}
+          >
+            {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+            Download Report
+          </Button>
         </div>
 
         {/* Budget Controller */}
@@ -115,6 +240,7 @@ export function GoogleAdsDashboard({ projects }: { projects: Project[] }) {
               value={budget}
               onChange={(e) => setBudget(Number(e.target.value))}
               className="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-white"
+              disabled={readOnly}
             />
             <div className="flex justify-between text-[10px] text-zinc-600 font-bold uppercase">
               <span>Starter</span>
@@ -124,19 +250,22 @@ export function GoogleAdsDashboard({ projects }: { projects: Project[] }) {
           </div>
         </div>
 
-        {/* Launch Button */}
-        <Button 
-          size="lg" 
-          className="w-full bg-white text-black hover:bg-zinc-200 font-bold h-14 text-lg shadow-xl shadow-white/5"
-          onClick={() => setIsLaunching(true)}
-          disabled={isLaunching || isLoading}
-        >
-          {isLaunching ? <Loader2 className="animate-spin mr-2" /> : <TrendingUp className="mr-2 h-5 w-5" />}
-          {isLaunching ? "Launching Campaign..." : "Launch Campaign"}
-        </Button>
-        <p className="text-[10px] text-center text-zinc-600">
-          Billed via Entrestate Managed Accounts. Cancel anytime.
-        </p>
+        {!readOnly && (
+          <>
+            <Button 
+              size="lg" 
+              className="w-full bg-white text-black hover:bg-zinc-200 font-bold h-14 text-lg shadow-xl shadow-white/5"
+              onClick={handleLaunchClick}
+              disabled={isLaunching || isLoading}
+            >
+              {isLaunching ? <Loader2 className="animate-spin mr-2" /> : <TrendingUp className="mr-2 h-5 w-5" />}
+              {isLaunching ? "Launching Campaign..." : "Launch Campaign"}
+            </Button>
+            <p className="text-[10px] text-center text-zinc-600">
+              Billed via Entrestate Managed Accounts. Cancel anytime.
+            </p>
+          </>
+        )}
       </div>
 
       {/* Right Column: Intelligence & Preview */}
@@ -166,6 +295,14 @@ export function GoogleAdsDashboard({ projects }: { projects: Project[] }) {
             <div className="text-2xl font-bold text-white relative z-10">{dailyLeads}-{dailyLeads + 2}</div>
             <div className="text-xs text-zinc-500 uppercase tracking-wider font-bold relative z-10">Daily Leads</div>
           </div>
+        </div>
+
+        {/* Budget vs Clicks Chart */}
+        <div className="bg-zinc-900/30 border border-white/5 rounded-2xl p-6">
+          <h3 className="font-bold text-white flex items-center gap-2 mb-4">
+            <LineChartIcon className="h-4 w-4 text-blue-500" /> Budget vs. Clicks Projection
+          </h3>
+          <BudgetChart budget={budget} baseCpc={baseCpc} />
         </div>
 
         {/* Ad Preview */}
@@ -207,6 +344,10 @@ export function GoogleAdsDashboard({ projects }: { projects: Project[] }) {
         {/* Keywords Cloud */}
         <div className="bg-zinc-900/30 border border-white/5 rounded-2xl p-6">
           <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-wider mb-4">Targeting Keywords</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-wider">Targeting Keywords</h3>
+            {!readOnly && <span className="text-[10px] text-zinc-600 uppercase tracking-widest">Keyword Planner</span>}
+          </div>
           <div className="flex flex-wrap gap-2">
             {adConfig?.baseKeywords.map((kw: string, i: number) => (
               <span key={i} className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-sm text-zinc-300">
@@ -219,9 +360,61 @@ export function GoogleAdsDashboard({ projects }: { projects: Project[] }) {
             {budget > 350 && <span className="px-3 py-1.5 rounded-lg bg-blue-500/10 border border-blue-500/20 text-sm text-blue-400 animate-in fade-in">high yield investment</span>}
             {budget > 450 && <span className="px-3 py-1.5 rounded-lg bg-blue-500/10 border border-blue-500/20 text-sm text-blue-400 animate-in fade-in">penthouse for sale</span>}
           </div>
+          
+          {!readOnly && (
+            <div className="mt-4 flex gap-2">
+              <input 
+                type="text" 
+                value={newKeyword}
+                onChange={(e) => setNewKeyword(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAddKeyword()}
+                placeholder="Add a keyword..."
+                className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+              />
+              <Button size="sm" onClick={handleAddKeyword} className="bg-white/10 hover:bg-white/20 text-white border border-white/10">
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {/* Competitor Analysis */}
+        <div className="bg-zinc-900/30 border border-white/5 rounded-2xl p-6">
+          <h3 className="font-bold text-white flex items-center gap-2 mb-4">
+            <BarChart3 className="h-4 w-4 text-orange-500" /> Competitor Landscape
+          </h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="text-xs text-zinc-500 uppercase bg-white/5">
+                <tr>
+                  <th className="px-4 py-3 rounded-l-lg">Competitor</th>
+                  <th className="px-4 py-3">Impression Share</th>
+                  <th className="px-4 py-3">Overlap Rate</th>
+                  <th className="px-4 py-3 rounded-r-lg">Position Above</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {competitors.map((comp, i) => (
+                  <tr key={i} className="hover:bg-white/5 transition-colors">
+                    <td className="px-4 py-3 font-medium text-white">{comp.name}</td>
+                    <td className="px-4 py-3 text-zinc-300">{comp.impressionShare}</td>
+                    <td className="px-4 py-3 text-zinc-300">{comp.overlapRate}</td>
+                    <td className="px-4 py-3 text-zinc-300">{comp.positionAboveRate}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
       </div>
+
+      <PaymentModal 
+        isOpen={showPaymentModal} 
+        onClose={() => setShowPaymentModal(false)} 
+        onConfirm={handleConfirmLaunch}
+        amount={budget}
+      />
     </div>
   );
 }
