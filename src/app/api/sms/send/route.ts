@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { enforceRateLimit, getRequestIp } from '@/lib/rate-limit';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
@@ -13,6 +13,13 @@ import {
 } from '@/lib/server/billing';
 import { getAdminDb } from '@/server/firebase-admin';
 import { FIREBASE_AUTH_ENABLED, IS_SMS_ENABLED } from '@/lib/server/env';
+import { resolveEntitlementsForTenant } from '@/lib/server/entitlements';
+import { logError } from '@/lib/server/log';
+import {
+  createRequestId,
+  errorResponse,
+  jsonWithRequestId,
+} from '@/lib/server/request-id';
 
 const ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
 const AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
@@ -27,39 +34,74 @@ const payloadSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  const scope = 'api/sms/send';
+  const requestId = createRequestId();
+  const respond = (body: unknown, init?: ResponseInit) =>
+    jsonWithRequestId(requestId, body, init);
+
   const enableDev = !FIREBASE_AUTH_ENABLED || process.env.NODE_ENV !== 'production';
   if (!IS_SMS_ENABLED && !enableDev) {
-    return NextResponse.json({ error: 'SMS is not enabled.' }, { status: 501 });
+    return respond(
+      { ok: false, error: 'SMS is not enabled.', requestId },
+      { status: 501 }
+    );
   }
   const logger = createApiLogger(req, { route: 'POST /api/sms/send' });
   try {
     const { tenantId, uid } = await requireRole(req, ADMIN_ROLES);
+    const db = getAdminDb();
+    const entitlements = await resolveEntitlementsForTenant(db, tenantId);
+    if (!entitlements.features.senders.allowed) {
+      return respond(
+        {
+          ok: false,
+          error:
+            entitlements.features.senders.reason ||
+            'SMS senders are locked on your plan.',
+          requestId,
+        },
+        { status: 403 }
+      );
+    }
     if (!IS_SMS_ENABLED) {
       // Dev-mode simulation for SMS
       logger.setTenant(tenantId);
       logger.setActor(uid);
       logger.logSuccess(200, { simulated: true });
-      return NextResponse.json({ success: true, simulated: true, sid: `dev-sms-${Date.now()}` });
+      return respond({
+        ok: true,
+        data: { simulated: true, sid: `dev-sms-${Date.now()}` },
+        requestId,
+      });
     }
     if (!CAP.twilio || !ACCOUNT_SID || !AUTH_TOKEN || !FROM_NUMBER) {
       if (enableDev) {
         logger.setTenant(tenantId);
         logger.setActor(uid);
         logger.logSuccess(200, { simulated: true, note: 'twilio missing' });
-        return NextResponse.json({ success: true, simulated: true, sid: `dev-sms-${Date.now()}` });
+        return respond({
+          ok: true,
+          data: { simulated: true, sid: `dev-sms-${Date.now()}` },
+          requestId,
+        });
       }
       logger.logError('Twilio not configured', 500);
-      return NextResponse.json({ error: 'Twilio is not configured' }, { status: 500 });
+      return respond(
+        { ok: false, error: 'Twilio is not configured', requestId },
+        { status: 500 }
+      );
     }
 
     const ip = getRequestIp(req);
     if (!(await enforceRateLimit(`sms:send:${tenantId}:${ip}`, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW_MS))) {
       logger.logRateLimit();
-      return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
+      return respond(
+        { ok: false, error: 'Rate limit exceeded', requestId },
+        { status: 429 }
+      );
     }
 
     const payload = payloadSchema.parse(await req.json());
-    const db = getAdminDb();
     await checkUsageLimit(db, tenantId, 'sms_sends');
     logger.setTenant(tenantId);
     logger.setActor(uid);
@@ -81,7 +123,10 @@ export async function POST(req: NextRequest) {
 
     if (!response.ok) {
       logger.logError('Twilio send failed', 500, { twilioStatus: data?.status });
-      return NextResponse.json({ error: 'Twilio send failed', details: data }, { status: 500 });
+      return respond(
+        { ok: false, error: 'Twilio send failed', details: data, requestId },
+        { status: 500 }
+      );
     }
 
     try {
@@ -92,22 +137,38 @@ export async function POST(req: NextRequest) {
     }
 
     logger.logSuccess(200, { to: payload.to });
-    return NextResponse.json({ success: true, data });
+    return respond({
+      ok: true,
+      data: { sid: data?.sid, to: payload.to },
+      requestId,
+    });
   } catch (error) {
-    console.error('SMS Engine Error:', error);
+    logError(scope, error, { requestId });
     logger.logError(error);
     if (error instanceof PlanLimitError) {
-      return NextResponse.json(planLimitErrorResponse(error), { status: 402 });
+      return respond(
+        { ok: false, requestId, ...planLimitErrorResponse(error) },
+        { status: 402 }
+      );
     }
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors }, { status: 400 });
+      return respond(
+        { ok: false, error: 'Invalid payload', details: error.errors, requestId },
+        { status: 400 }
+      );
     }
     if (error instanceof UnauthorizedError) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return respond(
+        { ok: false, error: 'Unauthorized', requestId },
+        { status: 401 }
+      );
     }
     if (error instanceof ForbiddenError) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      return respond(
+        { ok: false, error: 'Forbidden', requestId },
+        { status: 403 }
+      );
     }
-    return NextResponse.json({ error: 'Failed to send' }, { status: 500 });
+    return errorResponse(requestId, scope);
   }
 }

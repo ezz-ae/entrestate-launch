@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -142,6 +142,10 @@ export default function SitesDashboardPage() {
   const [siteStats, setSiteStats] = useState<SiteStatsMap>({});
   const [statsLoading, setStatsLoading] = useState(false);
   const [uploadTab, setUploadTab] = useState('text');
+  const uploadPollingRef = useRef<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploaded' | 'processing' | 'done' | 'failed'>('idle');
+  const [uploadMessage, setUploadMessage] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadSites() {
@@ -191,12 +195,18 @@ export default function SitesDashboardPage() {
     };
   }, [sites, user]);
 
+  useEffect(() => {
+    return () => {
+      clearUploadPolling();
+    };
+  }, []);
+
   const handleCreateSite = async () => {
     if (!user) {
         setIsLoginModalOpen(true);
         return;
     }
-    
+
     if (!newSitePrompt.trim()) {
         window.alert("Please provide a description or upload a PDF to generate a site.");
         return;
@@ -224,6 +234,66 @@ export default function SitesDashboardPage() {
     }
   };
   
+  const clearUploadPolling = () => {
+    if (uploadPollingRef.current) {
+      window.clearInterval(uploadPollingRef.current);
+      uploadPollingRef.current = null;
+    }
+  };
+
+  const handleRetryUpload = () => {
+    setUploadStatus('idle');
+    setUploadMessage(null);
+    fileInputRef.current?.click();
+  };
+
+  const pollPdfStatus = async (jobId: string) => {
+    try {
+      const statusResponse = await authorizedFetch(`/api/upload/pdf/status?jobId=${encodeURIComponent(jobId)}`);
+      if (!statusResponse.ok) {
+        throw new Error('Failed to fetch PDF status');
+      }
+      const payload = await statusResponse.json();
+      if (!payload?.ok) {
+        throw new Error(payload?.message || payload?.error || 'Status reported failure');
+      }
+      const status = payload?.data?.status as
+        | 'uploaded'
+        | 'processing'
+        | 'done'
+        | 'failed';
+      if (status === 'uploaded') {
+        setUploadStatus('uploaded');
+        setUploadMessage('Queued for PDF analysis...');
+        return;
+      }
+      if (status === 'processing') {
+        setUploadStatus('processing');
+        setUploadMessage('Analyzing PDF…');
+        return;
+      }
+      if (status === 'done') {
+        setUploadStatus('done');
+        setUploadMessage('PDF analysis complete.');
+        setNewSitePrompt(payload?.data?.text || '');
+        setUploadTab('text');
+        clearUploadPolling();
+        return;
+      }
+      if (status === 'failed') {
+        setUploadStatus('failed');
+        setUploadMessage(payload?.data?.error || 'Analysis failed.');
+        clearUploadPolling();
+        window.alert(`PDF analysis failed: ${payload?.data?.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('PDF status check failed:', error);
+      setUploadStatus('failed');
+      setUploadMessage('Unable to check PDF status.');
+      clearUploadPolling();
+    }
+  };
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -240,15 +310,23 @@ export default function SitesDashboardPage() {
         body: formData,
       });
 
-      if (response.ok) {
-        const { text } = await response.json();
-        setNewSitePrompt(text);
-        setUploadTab('text'); // Switch back to the text tab to show the extracted text
-      } else {
-        const errorData = await response.json();
-        console.error("Failed to upload PDF:", errorData.error);
-        window.alert(`Failed to upload PDF: ${errorData.error || 'Unknown error'}`);
+      const payload = await response.json();
+      const jobId = payload?.data?.jobId || payload?.jobId;
+      if (!response.ok || !jobId) {
+        const message = payload?.error || payload?.message || 'Failed to start PDF analysis.';
+        console.error("Failed to upload PDF:", message);
+        setUploadStatus('failed');
+        setUploadMessage(message);
+        window.alert(`Failed to upload PDF: ${message}`);
+        return;
       }
+
+      clearUploadPolling();
+      setUploadStatus('uploaded');
+      setUploadMessage('Queued for PDF analysis...');
+      setUploadTab('pdf');
+      pollPdfStatus(jobId);
+      uploadPollingRef.current = window.setInterval(() => pollPdfStatus(jobId), 2000);
     }
   };
 
@@ -307,17 +385,46 @@ export default function SitesDashboardPage() {
                       </div>
                   ) : (
                     <div className="flex items-center justify-center w-full">
-                        <label htmlFor="dropzone-file" className="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer bg-zinc-900 border-zinc-600 hover:border-zinc-500 hover:bg-zinc-800">
-                            <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                <UploadCloud className="w-8 h-8 mb-4 text-zinc-500" />
-                                <p className="mb-2 text-sm text-zinc-500"><span className="font-semibold">Click to upload</span> or drag and drop</p>
-                                <p className="text-xs text-zinc-500">PDF (MAX. 5MB)</p>
-                            </div>
-                            <input id="dropzone-file" type="file" className="hidden" accept=".pdf" onChange={handleFileChange} />
-                        </label>
-                    </div> 
-                  )}
-                </div>
+                    <label htmlFor="dropzone-file" className="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer bg-zinc-900 border-zinc-600 hover:border-zinc-500 hover:bg-zinc-800">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                            <UploadCloud className="w-8 h-8 mb-4 text-zinc-500" />
+                            <p className="mb-2 text-sm text-zinc-500"><span className="font-semibold">Click to upload</span> or drag and drop</p>
+                            <p className="text-xs text-zinc-500">PDF (MAX. 5MB)</p>
+                        </div>
+                    <input
+                      id="dropzone-file"
+                      type="file"
+                      className="hidden"
+                      accept=".pdf"
+                      onChange={handleFileChange}
+                      ref={fileInputRef}
+                    />
+                    </label>
+                    {uploadStatus !== 'idle' && uploadMessage && (
+                      <p
+                        className={`text-xs mt-2 ${
+                          uploadStatus === 'failed' ? 'text-red-400' : 'text-zinc-400'
+                        }`}
+                      >
+                        {uploadMessage}
+                      </p>
+                    )}
+                    {uploadStatus === 'failed' && (
+                      <div className="mt-2 flex flex-col items-center gap-2 text-xs text-red-300">
+                        <p>Analysis failed. Try uploading a fresh PDF.</p>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-red-400 text-red-200 hover:bg-red-500/10"
+                          onClick={handleRetryUpload}
+                        >
+                          Try again
+                        </Button>
+                      </div>
+                    )}
+                </div> 
+              )}
+            </div>
                 <DialogFooter className="p-4 pt-0">
                     <Button type="submit" className="w-full h-14 text-lg font-bold bg-blue-600 hover:bg-blue-700 rounded-2xl" onClick={handleCreateSite}>
                         Generate Landing Page

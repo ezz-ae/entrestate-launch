@@ -1,15 +1,20 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { generateCampaignStructure } from '@/lib/ai/marketing-os';
 import { ALL_ROLES } from '@/lib/server/roles';
 import { enforceRateLimit, getRequestIp } from '@/lib/server/rateLimit';
+import { logError } from '@/lib/server/log';
 import {
   FeatureAccessError,
   featureAccessErrorResponse,
   requirePlanFeature,
 } from '@/lib/server/billing';
 import { getAdminDb } from '@/server/firebase-admin';
+import {
+  createRequestId,
+  jsonWithRequestId,
+} from '@/lib/server/request-id';
 
 const requestSchema = z.object({
   goal: z.string().min(1),
@@ -80,11 +85,19 @@ function estimatePerformance({
 }
 
 export async function POST(req: NextRequest) {
+  const scope = 'api/ads/google/plan';
+  const requestId = createRequestId();
+  const respond = (body: unknown, init?: ResponseInit) =>
+    jsonWithRequestId(requestId, body, init);
+
   try {
     const { tenantId } = await requireRole(req, ALL_ROLES);
     const ip = getRequestIp(req);
     if (!(await enforceRateLimit(`ads:plan:${tenantId}:${ip}`, 20, 60_000))) {
-      return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
+      return respond(
+        { ok: false, error: 'Rate limit exceeded', requestId },
+        { status: 429 }
+      );
     }
     const payload = requestSchema.parse(await req.json());
     await requirePlanFeature(getAdminDb(), tenantId, 'google_ads');
@@ -138,28 +151,56 @@ export async function POST(req: NextRequest) {
       goal,
     });
 
-    return NextResponse.json({
-      goal: payload.goal,
-      location: payload.location,
-      keywords,
-      headlines: plan.headlines || [],
-      descriptions: plan.descriptions || [],
-      expectations,
+    return respond({
+      ok: true,
+      requestId,
+      data: {
+        goal: payload.goal,
+        location: payload.location,
+        keywords,
+        headlines: plan.headlines || [],
+        descriptions: plan.descriptions || [],
+        expectations,
+      },
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Invalid payload', details: error.errors }, { status: 400 });
+      return respond(
+        {
+          ok: false,
+          error: 'Invalid payload',
+          details: error.errors,
+          requestId,
+        },
+        { status: 400 }
+      );
     }
     if (error instanceof FeatureAccessError) {
-      return NextResponse.json(featureAccessErrorResponse(error), { status: 403 });
+      return respond(
+        {
+          ok: false,
+          requestId,
+          ...featureAccessErrorResponse(error),
+        },
+        { status: 403 }
+      );
     }
     if (error instanceof UnauthorizedError) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return respond(
+        { ok: false, error: 'Unauthorized', requestId },
+        { status: 401 }
+      );
     }
     if (error instanceof ForbiddenError) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      return respond(
+        { ok: false, error: 'Forbidden', requestId },
+        { status: 403 }
+      );
     }
-    console.error('[ads/google/plan] error', error);
-    return NextResponse.json({ error: 'Failed to generate plan' }, { status: 500 });
+    logError(scope, error, { requestId, path: req.url });
+    return respond(
+      { ok: false, error: 'Failed to generate plan', requestId },
+      { status: 500 }
+    );
   }
 }

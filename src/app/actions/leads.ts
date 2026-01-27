@@ -1,7 +1,11 @@
 'use server';
 
-import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { getAdminDb } from '@/server/firebase-admin';
+import { verifyFirebaseIdToken } from '@/lib/server/auth';
+import { resolveEntitlementsForTenant } from '@/lib/server/entitlements';
 
 export async function generateLookalikeAudience() {
   const supabase = await createSupabaseServerClient();
@@ -102,6 +106,14 @@ export async function deleteLeads(leadIds: string[]) {
 }
 
 export async function getLeadsForExport(query?: string) {
+  const tenantId = await resolveTenantForExport();
+  const entitlements = await resolveEntitlementsForTenant(getAdminDb(), tenantId);
+  if (!entitlements.features.leadExports.allowed) {
+    throw new Error(
+      entitlements.features.leadExports.reason || 'Lead exports are not available on your plan.'
+    );
+  }
+
   const supabase = await createSupabaseServerClient();
   
   let leadsQuery = supabase
@@ -117,6 +129,38 @@ export async function getLeadsForExport(query?: string) {
   
   if (error) throw new Error(error.message);
   return data;
+}
+
+async function resolveTenantForExport() {
+  const cookieStore = await cookies();
+  const cookieHeader = cookieStore
+    .getAll()
+    .map((cookie) => `${cookie.name}=${cookie.value}`)
+    .filter(Boolean)
+    .join('; ');
+  const headers = cookieHeader ? { cookie: cookieHeader } : undefined;
+  const context = await verifyFirebaseIdToken(
+    new Request('https://entrestate.com/dashboard/leads', { headers })
+  );
+
+  if (!context.uid || context.uid === 'anonymous') {
+    throw new Error('You must be signed in to export leads.');
+  }
+
+  const claims = context.claims as Record<string, unknown>;
+  const tenantClaim = claims.tenantId || claims.tenant;
+  if (typeof tenantClaim === 'string' && tenantClaim.trim()) {
+    return tenantClaim.trim();
+  }
+
+  const db = getAdminDb();
+  const userSnap = await db.collection('users').doc(context.uid).get();
+  const userData = userSnap.exists ? userSnap.data() : null;
+  const fallbackTenant =
+    (userData?.tenantId as string | undefined) ||
+    (userData?.tenant as string | undefined) ||
+    context.uid;
+  return fallbackTenant;
 }
 
 export async function updateLeadNotes(leadId: string, notes: string) {

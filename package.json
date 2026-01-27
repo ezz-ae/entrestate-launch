@@ -15,6 +15,7 @@
     "test:env-safety": "tsx scripts/test/env-safety.ts",
     "test:supabase-chain": "tsx scripts/test/supabase-chain.ts",
     "test:vercel-env-sanity": "tsx scripts/test/vercel-env-sanity.ts",
+    "test:postrelease": "tsx scripts/test/postrelease-smoke.ts",
     "test:e2e": "playwright test",
     "smoke": "tsx scripts/smoke/projects-filter-smoke.ts",
     "ingest": "ts-node --esm scripts/ingest-entrestate.ts"

@@ -22,13 +22,21 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { ENTRESTATE_INVENTORY } from '@/data/entrestate-inventory';
+import { useEntitlements } from '@/hooks/use-entitlements';
 
 const PROJECTS_PER_PAGE = 12;
 
 export default function DiscoverPage() {
+  const { entitlements } = useEntitlements();
+  const inventoryLocked = entitlements?.features.inventoryAccess.allowed === false;
+  const inventoryReason =
+    entitlements?.features.inventoryAccess.reason ||
+    'Inventory access is reserved for enrolled plans.';
   const router = useRouter();
   const [projects, setProjects] = useState<ProjectData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCity, setSelectedCity] = useState("all");
@@ -45,46 +53,93 @@ export default function DiscoverPage() {
     { id: 'Appreciation', label: 'Value Growth', desc: 'Rising interest in Creek Harbour.', stat: 'Rising', trend: 'Trend' },
   ];
 
-  const fetchProjects = useCallback(async (
-    pageParam: number,
-    overrides?: { query?: string; city?: string; append?: boolean }
-  ) => {
-    setLoading(true);
-    try {
-      const url = new URL('/api/projects/search', window.location.origin);
-      const queryValue = overrides?.query ?? searchQuery;
-      const cityValue = overrides?.city ?? selectedCity;
-      const append = overrides?.append ?? false;
-      url.searchParams.set('query', queryValue);
-      url.searchParams.set('city', cityValue);
-      url.searchParams.set('page', String(pageParam));
-      url.searchParams.set('limit', String(PROJECTS_PER_PAGE));
-
-      const res = await fetch(url.toString(), { cache: 'no-store' });
-      if (!res.ok) throw new Error('Failed to fetch projects');
-      const json = await res.json();
-      
-      const total = json.pagination?.total || 0;
-      const shouldShowSample = total === 0 && !queryValue && cityValue === 'all';
-      if (shouldShowSample) {
-        setProjects(ENTRESTATE_INVENTORY.slice(0, pageParam * PROJECTS_PER_PAGE));
-        setTotalProjects(ENTRESTATE_INVENTORY.length);
-        setShowingSample(true);
-      } else {
-        setTotalProjects(total);
-        setProjects((prev) => (append ? [...prev, ...(json.data || [])] : json.data || []));
-        setShowingSample(false);
+  const fetchProjects = useCallback(
+    async ({
+      append = false,
+      cursor: cursorParam,
+    }: { append?: boolean; cursor?: string } = {}) => {
+      const cursorValue = cursorParam ?? null;
+      if (append && !cursorValue) {
+        return;
       }
-      setPage(pageParam);
-    } catch (error) {
-      console.error('Failed to load projects', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [searchQuery, selectedCity]);
+      if (append) {
+        setLoadingMore(true);
+      } else {
+        setLoading(true);
+      }
+      try {
+        const url = new URL('/api/projects/search', window.location.origin);
+        url.searchParams.set('pageSize', String(PROJECTS_PER_PAGE));
+        if (searchQuery) {
+          url.searchParams.set('query', searchQuery);
+        }
+        if (selectedCity && selectedCity !== 'all') {
+          url.searchParams.set('city', selectedCity);
+        }
+        if (cursorValue) {
+          url.searchParams.set('cursor', cursorValue);
+        }
+
+        const res = await fetch(url.toString(), { cache: 'no-store' });
+        if (!res.ok) {
+          throw new Error('Failed to fetch projects');
+        }
+
+        const json = await res.json();
+        const fetched: ProjectData[] =
+          Array.isArray(json.items) && json.items.length
+            ? json.items
+            : Array.isArray(json.data)
+            ? json.data
+            : [];
+        const nextCursorValue =
+          typeof json.nextCursor === 'string' ? json.nextCursor : null;
+        const totalApproxValue =
+          typeof json.totalApprox === 'number' ? json.totalApprox : undefined;
+
+        const shouldShowSample =
+          !append && fetched.length === 0 && searchQuery === '' && selectedCity === 'all';
+
+        if (shouldShowSample) {
+          setProjects(ENTRESTATE_INVENTORY.slice(0, PROJECTS_PER_PAGE));
+          setTotalProjects(ENTRESTATE_INVENTORY.length);
+          setShowingSample(true);
+          setNextCursor(null);
+          setPage(1);
+        } else {
+          if (append) {
+            setProjects((prev) => [...prev, ...fetched]);
+            setPage((prev) => prev + 1);
+          } else {
+            setProjects(fetched);
+            setPage(1);
+          }
+
+          setShowingSample(false);
+          setNextCursor(nextCursorValue);
+          if (typeof totalApproxValue === 'number') {
+            setTotalProjects(totalApproxValue);
+          } else if (append) {
+            setTotalProjects((prev) => prev + fetched.length);
+          } else {
+            setTotalProjects(fetched.length);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load projects', error);
+      } finally {
+        if (append) {
+          setLoadingMore(false);
+        } else {
+          setLoading(false);
+        }
+      }
+    },
+    [searchQuery, selectedCity]
+  );
 
   useEffect(() => {
-    fetchProjects(1);
+    fetchProjects();
   }, [fetchProjects]);
 
   const handleProjectClick = (projectId: string) => {
@@ -96,6 +151,9 @@ export default function DiscoverPage() {
     setTotalProjects(ENTRESTATE_INVENTORY.length);
     setShowingSample(true);
     setPage(1);
+    setNextCursor(null);
+    setLoading(false);
+    setLoadingMore(false);
   };
 
   const handleSearch = () => {
@@ -105,9 +163,7 @@ export default function DiscoverPage() {
 
   const totalPages = Math.max(1, Math.ceil(totalProjects / PROJECTS_PER_PAGE));
   const showingCount = projects.length;
-  const canLoadMore = showingSample
-    ? projects.length < ENTRESTATE_INVENTORY.length
-    : projects.length < totalProjects;
+  const canLoadMore = !showingSample && Boolean(nextCursor);
   const launchPackHref = '/start?intent=website';
 
   return (
@@ -195,6 +251,28 @@ export default function DiscoverPage() {
           </div>
       </section>
 
+      {inventoryLocked && (
+        <section className="max-w-6xl mx-auto px-5 sm:px-6 mt-8">
+          <div className="rounded-3xl border border-red-500/30 bg-red-500/10 p-5 text-sm text-white flex flex-col gap-3">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.4em] text-red-200 font-semibold">Inventory locked</p>
+                <p className="text-base font-bold text-white mt-1">
+                  {entitlements?.planName || 'Your current plan'} does not include this feed.
+                </p>
+              </div>
+              <Link
+                href="/start?intent=upgrade"
+                className="text-xs font-semibold uppercase tracking-[0.3em] text-red-100 border border-red-200/50 px-3 py-1 rounded-xl hover:bg-red-500/20 transition"
+              >
+                View plans
+              </Link>
+            </div>
+            <p className="text-xs text-red-100 leading-relaxed">{inventoryReason}</p>
+          </div>
+        </section>
+      )}
+
       {/* 2. DISCOVERY GRID */}
       <div className="flex-1 container mx-auto px-5 sm:px-6 max-w-[1600px] py-16 sm:py-20">
             <div className="flex flex-col md:flex-row justify-between items-end gap-6 mb-12 sm:mb-16 border-b border-white/5 pb-8 sm:pb-10">
@@ -250,14 +328,14 @@ export default function DiscoverPage() {
 
             {!loading && canLoadMore && (
                 <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <Button
-                        className="h-11 sm:h-12 px-6 rounded-full bg-white text-black font-bold"
-                        disabled={loading}
-                        onClick={() => fetchProjects(page + 1, { append: true })}
-                    >
-                        {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
-                        Load 12 More
-                    </Button>
+            <Button
+                className="h-11 sm:h-12 px-6 rounded-full bg-white text-black font-bold"
+                disabled={loading || loadingMore || !canLoadMore}
+                onClick={() => fetchProjects({ append: true, cursor: nextCursor ?? undefined })}
+            >
+                {loadingMore ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+                Load 12 More
+            </Button>
                     <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
                       Page {page} of {totalPages}
                     </span>

@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useEntitlements } from '@/hooks/use-entitlements';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useBrochure } from '@/context/BrochureContext';
 import { handleOnboarding } from '@/lib/onboarding-handler';
 import { availableTemplates, type SiteTemplate } from '@/lib/templates';
-import type { SitePage } from '@/lib/types';
+import type { ProjectData, SitePage } from '@/lib/types';
 import { PageBuilder } from '@/components/page-builder';
 import { TemplateLibrary } from '@/components/template-library';
 import { Button } from '@/components/ui/button';
@@ -63,6 +64,91 @@ const resolveTemplateSelection = (rawId: string) => {
   return { intent: template ? 'template' as const : null, template: template ?? null };
 };
 
+const buildProjectTemplate = (project: ProjectData): SiteTemplate => {
+  const heroImage =
+    (project.images?.length ? project.images[0] : undefined) ||
+    project.brochureUrl ||
+    project.publicUrl ||
+    undefined;
+  const page: SitePage = {
+    id: `project-${project.id}`,
+    title: project.name,
+    blocks: [
+      {
+        blockId: `hero-${project.id}`,
+        type: 'hero',
+        order: 0,
+        data: {
+          headline: project.name,
+          subtext:
+            project.description?.short ||
+            project.description?.full ||
+            'Explore this exclusive launching opportunity.',
+          ctaText: 'Download Brochure',
+          backgroundImage: heroImage,
+        },
+      },
+      {
+        blockId: `detail-${project.id}`,
+        type: 'project-detail',
+        order: 1,
+        data: {
+          projectName: project.name,
+          developer: project.developer,
+          description: project.description?.full || project.description?.short || '',
+          features: project.features?.slice(0, 6) || [],
+          brochureUrl: project.brochureUrl,
+          locationMapUrl:
+            project.location?.mapUrl ||
+            (project.location?.mapQuery ? `https://www.google.com/maps/search/${encodeURIComponent(project.location.mapQuery)}` : undefined),
+          imageUrl: heroImage,
+          stats: [
+            {
+              label: 'Starting Price',
+              value: project.price?.label || 'Price on request',
+            },
+            {
+              label: 'Handover',
+              value: project.handover && project.handover.quarter && project.handover.year
+                ? `Q${project.handover.quarter} ${project.handover.year}`
+                : 'TBD',
+            },
+            {
+              label: 'ROI',
+              value: project.performance?.roi ? `${project.performance.roi}% ROI` : 'Estimates vary',
+            },
+          ],
+        },
+      },
+    ],
+    canonicalListings: [project.id],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    seo: {
+      title: project.name,
+      description: project.description?.short || project.name,
+      keywords: project.tags || [],
+    },
+  };
+
+  return {
+    id: `project-template-${project.id}`,
+    name: project.name,
+    siteType: 'project',
+    pages: [page],
+  };
+};
+
+type ProjectDraft = {
+  id: string;
+  owner: string;
+  status: string;
+  title: string;
+  prompt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export default function BuilderPage() {
   const { brochureFile, setBrochureFile } = useBrochure();
   const router = useRouter();
@@ -72,11 +158,15 @@ export default function BuilderPage() {
 
   const templateParam = (searchParams?.get('template') ?? '').trim();
   const promptParam = (searchParams?.get('prompt') ?? '').trim();
+  const projectParam = (searchParams?.get('project') ?? '').trim();
+  const debugMode = searchParams?.get('debug') === '1';
 
-  const [status, setStatus] = useState<'idle' | 'processing' | 'ready'>('idle');
+  const [status, setStatus] = useState<'idle' | 'processing' | 'ready' | 'failed'>('idle');
   const [analysisResult, setAnalysisResult] = useState<any>(null);
   const [editableData, setEditableData] = useState<any>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<ProjectData | null>(null);
+  const [projectLoading, setProjectLoading] = useState(false);
 
   const [builderTemplate, setBuilderTemplate] = useState<SiteTemplate | null>(null);
   const [builderPage, setBuilderPage] = useState<SitePage | null>(null);
@@ -86,33 +176,155 @@ export default function BuilderPage() {
   const [builderError, setBuilderError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [showTemplates, setShowTemplates] = useState(false);
+  const [draft, setDraft] = useState<ProjectDraft | null>(null);
+  const [draftLoading, setDraftLoading] = useState(false);
+  const [draftError, setDraftError] = useState<string | null>(null);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const [analysisJobId, setAnalysisJobId] = useState<string | null>(null);
+  const activeJobRef = useRef<string | null>(null);
+  const { entitlements } = useEntitlements();
+  const builderPublishLocked = entitlements?.features.builderPublish.allowed === false;
+  const builderPublishReason =
+    entitlements?.features.builderPublish.reason ||
+    'Publishing drafts requires an eligible Builder or Ads plan.';
+  const debugPanel = debugMode ? (
+    <div className="pointer-events-none fixed bottom-4 right-4 z-[999] w-72 rounded-2xl border border-white/20 bg-black/70 p-4 text-[11px] text-white/70 backdrop-blur">
+      <div className="text-[10px] font-black uppercase tracking-[0.4em] text-white mb-2">Builder Debug</div>
+      <div className="space-y-1 text-[11px]">
+        <div>Project param: {projectParam || '—'}</div>
+        <div>Selected project: {selectedProject?.id ?? 'none'}</div>
+        <div>Template: {builderTemplate?.id ?? 'none'}</div>
+        <div>Blocks: {builderPage?.blocks?.length ?? 0}</div>
+        <div>Brochure: {brochureFile ? 'yes' : 'no'}</div>
+        <div>Prompt draft: {promptDraft ? 'yes' : 'no'}</div>
+        <div>Project loading: {projectLoading ? 'yes' : 'no'}</div>
+        <div>Generating: {isGenerating ? 'yes' : 'no'}</div>
+        <div>Templates open: {showTemplates ? 'yes' : 'no'}</div>
+      </div>
+    </div>
+  ) : null;
+
+  const createDraft = useCallback(async (title?: string) => {
+    setDraftLoading(true);
+    setDraftError(null);
+    try {
+      const response = await fetch('/api/projects/create-draft', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: title?.trim() || 'New project' }),
+      });
+      const payload = await response.json().catch(() => null);
+      const draftPayload = payload?.data?.draft || payload?.draft;
+      if (!response.ok || !draftPayload) {
+        throw new Error(
+          payload?.error || payload?.message || 'Draft creation failed'
+        );
+      }
+      setDraft(draftPayload);
+      setNotice('Draft ready. Choose how you want to build.');
+    } catch (error) {
+      console.error('[builder] draft creation failed', error);
+      setDraftError(
+        'Unable to start a new draft right now. Please retry in a moment.'
+      );
+    } finally {
+      setDraftLoading(false);
+    }
+  }, []);
 
   const runAnalysis = async () => {
     if (!brochureFile) return;
 
     setStatus('processing');
+    setAnalysisError(null);
+    setAnalysisJobId(null);
 
     try {
       const formData = new FormData();
       formData.append('file', brochureFile);
 
-      const response = await fetch('/api/upload', {
+      const response = await fetch('/api/upload/pdf', {
         method: 'POST',
         body: formData,
       });
 
-      if (!response.ok) {
-        throw new Error('Upload failed');
+      const payload = await response.json().catch(() => null);
+      if (!response.ok || !payload?.ok) {
+        throw new Error(payload?.message || payload?.error || 'Upload failed');
       }
 
-      const data = await response.json();
-      console.log('Analysis Result:', data);
-      setAnalysisResult(data);
-      setEditableData(data.analysis);
+      const jobId = (payload?.data?.jobId || payload?.jobId) as string | undefined;
+      if (!jobId) {
+        throw new Error('Upload succeeded but no jobId was returned.');
+      }
+
+      setAnalysisJobId(jobId);
+      activeJobRef.current = jobId;
+
+      const jobResult = await pollPdfJob(jobId);
+      if (!jobResult?.text) {
+        throw new Error('PDF analysis completed but no text was extracted.');
+      }
+
+      const derived = buildDraftFromText(jobResult.text);
+      setAnalysisResult({ jobId, text: jobResult.text });
+      setEditableData(derived);
       setStatus('ready');
     } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'PDF analysis failed. Please try again.';
       console.error('Error uploading file:', error);
+      setStatus('failed');
+      setAnalysisResult(null);
+      setEditableData(null);
+      setAnalysisError(message);
     }
+  };
+
+  const pollPdfJob = async (jobId: string) => {
+    const maxAttempts = 30;
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      if (activeJobRef.current !== jobId) {
+        return null;
+      }
+      const response = await fetch(`/api/upload/pdf/status?jobId=${encodeURIComponent(jobId)}`, {
+        cache: 'no-store',
+      });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok || !payload?.ok) {
+        throw new Error(payload?.message || payload?.error || 'Failed to read analysis status.');
+      }
+      const jobData = payload?.data || payload;
+      if (jobData.status === 'done') {
+        return jobData;
+      }
+      if (jobData.status === 'failed') {
+        throw new Error(jobData.error || 'PDF analysis failed.');
+      }
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+    }
+    throw new Error('PDF analysis timed out. Please retry.');
+  };
+
+  const buildDraftFromText = (text: string) => {
+    const lines = text
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean);
+    const headline = lines[0]?.slice(0, 120) || 'Untitled Project';
+    const description = lines.slice(1, 6).join(' ').slice(0, 600);
+    const features = lines
+      .slice(6, 16)
+      .map((line) => line.replace(/^[-•\\s]+/, '').trim())
+      .filter(Boolean)
+      .slice(0, 7);
+    return {
+      headline,
+      description: description || 'Description pending. Add key highlights or amenities.',
+      features,
+    };
   };
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -121,6 +333,9 @@ export default function BuilderPage() {
     setStatus('idle');
     setAnalysisResult(null);
     setEditableData(null);
+    setAnalysisError(null);
+    setAnalysisJobId(null);
+    activeJobRef.current = null;
   }, [brochureFile]);
 
   useEffect(() => {
@@ -131,7 +346,35 @@ export default function BuilderPage() {
   }, [brochureFile, status]);
 
   useEffect(() => {
-    if (brochureFile) return;
+    if (
+      builderTemplate ||
+      builderPage ||
+      brochureFile ||
+      projectParam ||
+      templateParam ||
+      promptParam ||
+      draft ||
+      draftLoading ||
+      draftError
+    ) {
+      return;
+    }
+    void createDraft(promptParam || 'New project');
+  }, [
+    builderTemplate,
+    builderPage,
+    brochureFile,
+    projectParam,
+    templateParam,
+    promptParam,
+    draft,
+    draftLoading,
+    draftError,
+    createDraft,
+  ]);
+
+  useEffect(() => {
+    if (brochureFile || projectParam) return;
 
     if (promptParam) {
       setPromptDraft(promptParam);
@@ -164,7 +407,54 @@ export default function BuilderPage() {
     }
 
     setNotice(null);
-  }, [brochureFile, promptParam, templateParam]);
+  }, [brochureFile, promptParam, templateParam, projectParam]);
+
+  useEffect(() => {
+    if (!projectParam || brochureFile) {
+      if (!projectParam) {
+        setSelectedProject(null);
+      }
+      return;
+    }
+
+    let cancelled = false;
+    setProjectLoading(true);
+    setNotice('Loading project details...');
+
+    fetch(`/api/projects/${encodeURIComponent(projectParam)}`, { cache: 'no-store' })
+      .then(async (res) => {
+        if (!res.ok) throw new Error('Project not found');
+        const json = await res.json();
+        return json?.data ?? null;
+      })
+      .then((project) => {
+        if (cancelled || !project) return;
+        const template = buildProjectTemplate(project);
+        setBuilderTemplate(template);
+        setBuilderPage(clonePage(template.pages[0]));
+        setBuilderError(null);
+        setSelectedBlockId(null);
+        setShowTemplates(false);
+        setNotice(`Loaded ${project.name} from inventory.`);
+        setSelectedProject(project);
+        router.replace(`/builder?project=${project.id}`, { scroll: false });
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        console.error('Failed to load project', error);
+        setNotice('Could not load the selected project. Choose another listing or offer feedback.');
+        setSelectedProject(null);
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setProjectLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [projectParam, brochureFile, router]);
 
   const handleBrochureSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -212,6 +502,7 @@ export default function BuilderPage() {
     setBuilderError(null);
     setNotice(null);
     setShowTemplates(false);
+    setSelectedProject(null);
     router.replace(`/builder?template=${template.id}`);
   };
 
@@ -221,9 +512,14 @@ export default function BuilderPage() {
     setSelectedBlockId(null);
     setPromptDraft('');
     setBuilderError(null);
-    setNotice(null);
+    setNotice('Starting a fresh draft...');
     setShowTemplates(false);
+    setSelectedProject(null);
+    setProjectLoading(false);
     router.replace('/builder');
+    setDraft(null);
+    setDraftError(null);
+    void createDraft();
   };
 
   const handleSaveProject = async () => {
@@ -278,6 +574,20 @@ export default function BuilderPage() {
               <div className="flex flex-col items-center justify-center py-12 space-y-4 bg-black/20 rounded-2xl border border-white/5">
                 <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
                 <p className="text-zinc-400 animate-pulse">Analyzing brochure content...</p>
+              </div>
+            )}
+
+            {status === 'failed' && (
+              <div className="flex flex-col items-center justify-center py-10 space-y-3 bg-red-900/60 rounded-2xl border border-red-500/30">
+                <p className="text-sm text-red-100 text-center">
+                  {analysisError || 'Analysis could not be completed.'}
+                </p>
+                <Button
+                  onClick={runAnalysis}
+                  className="bg-red-500 text-white hover:bg-red-400"
+                >
+                  Retry analysis
+                </Button>
               </div>
             )}
 
@@ -378,11 +688,12 @@ export default function BuilderPage() {
                 </div>
               </div>
             )}
-          </div>
         </div>
       </div>
-    );
-  }
+      {debugPanel}
+    </div>
+  );
+}
 
   if (builderPage) {
     return (
@@ -424,6 +735,7 @@ export default function BuilderPage() {
             onSelectBlock={(block) => setSelectedBlockId(block?.blockId ?? null)}
           />
         </div>
+        {debugPanel}
       </div>
     );
   }
@@ -431,19 +743,20 @@ export default function BuilderPage() {
   if (showTemplates) {
     return (
       <div className="min-h-screen bg-zinc-950 text-white relative">
-        <div className="absolute left-6 top-6 z-20">
-          <Button
-            variant="ghost"
-            className="border border-white/10"
-            onClick={() => setShowTemplates(false)}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Start
-          </Button>
-        </div>
-        <TemplateLibrary onTemplateSelect={handleTemplateSelect} />
+      <div className="absolute left-6 top-6 z-20">
+        <Button
+          variant="ghost"
+          className="border border-white/10"
+          onClick={() => setShowTemplates(false)}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Start
+        </Button>
       </div>
-    );
-  }
+      <TemplateLibrary onTemplateSelect={handleTemplateSelect} />
+      {debugPanel}
+    </div>
+  );
+}
 
   return (
     <div className="min-h-screen bg-black text-white p-6 pt-24">
@@ -468,6 +781,24 @@ export default function BuilderPage() {
           </div>
         )}
 
+        {builderPublishLocked && (
+          <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-50 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.4em] text-amber-200 font-semibold">Publishing locked</p>
+              <p className="text-base font-semibold text-white mt-1">
+                {entitlements?.planName || 'Your plan'} cannot publish pages yet.
+              </p>
+              <p className="text-xs text-amber-100 leading-relaxed">{builderPublishReason}</p>
+            </div>
+            <Link
+              href="/start?intent=upgrade"
+              className="text-xs font-semibold uppercase tracking-[0.3em] text-amber-100 border border-amber-200/60 px-3 py-1 rounded-xl hover:bg-amber-500/20 transition"
+            >
+              View plans
+            </Link>
+          </div>
+        )}
+
         <input
           ref={fileInputRef}
           type="file"
@@ -476,88 +807,114 @@ export default function BuilderPage() {
           onChange={handleBrochureSelect}
         />
 
-        <div className="grid lg:grid-cols-2 gap-6">
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-6 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-2xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center">
-                <UploadCloud className="h-5 w-5 text-blue-400" />
+        {draft && !draftLoading ? (
+          <div className="grid lg:grid-cols-2 gap-6">
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-6 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-2xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center">
+                  <UploadCloud className="h-5 w-5 text-blue-400" />
+                </div>
+                <h3 className="text-xl font-bold">Upload a brochure</h3>
               </div>
-              <h3 className="text-xl font-bold">Upload a brochure</h3>
+              <p className="text-sm text-zinc-400">
+                Drop a PDF and we will extract the key details to draft your page.
+              </p>
+              <div className="flex items-center gap-3">
+                <Button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold"
+                >
+                  Select PDF
+                </Button>
+                <span className="text-xs text-zinc-500">PDF only</span>
+              </div>
             </div>
-            <p className="text-sm text-zinc-400">
-              Drop a PDF and we will extract the key details to draft your page.
-            </p>
-            <div className="flex items-center gap-3">
-              <Button onClick={() => fileInputRef.current?.click()} className="bg-blue-600 hover:bg-blue-700 text-white font-bold">
-                Select PDF
+
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-6 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-2xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center">
+                  <Sparkles className="h-5 w-5 text-purple-400" />
+                </div>
+                <h3 className="text-xl font-bold">Write what you want</h3>
+              </div>
+              <p className="text-sm text-zinc-400">
+                Describe the project or the style you want. We will draft a page from your prompt.
+              </p>
+              <Textarea
+                value={promptDraft}
+                onChange={(event) => setPromptDraft(event.target.value)}
+                placeholder="e.g., A luxury off-plan landing page for a Dubai Marina launch with WhatsApp lead capture."
+                className="min-h-[120px] bg-black/30 border-white/10 text-white placeholder:text-zinc-600 focus-visible:ring-blue-500/40"
+              />
+              <Button
+                onClick={() => startFromPrompt(promptDraft)}
+                disabled={!promptDraft.trim() || isGenerating}
+                className="bg-white text-black font-bold hover:bg-zinc-200"
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating draft...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="mr-2 h-4 w-4" /> Generate draft
+                  </>
+                )}
               </Button>
-              <span className="text-xs text-zinc-500">PDF only</span>
             </div>
-          </div>
 
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-6 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-2xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center">
-                <Sparkles className="h-5 w-5 text-purple-400" />
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-6 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
+                  <Library className="h-5 w-5 text-emerald-400" />
+                </div>
+                <h3 className="text-xl font-bold">Pick from inventory</h3>
               </div>
-              <h3 className="text-xl font-bold">Write what you want</h3>
+              <p className="text-sm text-zinc-400">
+                Choose a project from the market feed and we will prefill the page for you.
+              </p>
+              <Button asChild className="bg-emerald-500 text-black font-bold hover:bg-emerald-400">
+                <Link href="/discover">Browse inventory</Link>
+              </Button>
             </div>
-            <p className="text-sm text-zinc-400">
-              Describe the project or the style you want. We will draft a page from your prompt.
-            </p>
-            <Textarea
-              value={promptDraft}
-              onChange={(event) => setPromptDraft(event.target.value)}
-              placeholder="e.g., A luxury off-plan landing page for a Dubai Marina launch with WhatsApp lead capture."
-              className="min-h-[120px] bg-black/30 border-white/10 text-white placeholder:text-zinc-600 focus-visible:ring-blue-500/40"
-            />
-            <Button
-              onClick={() => startFromPrompt(promptDraft)}
-              disabled={!promptDraft.trim() || isGenerating}
-              className="bg-white text-black font-bold hover:bg-zinc-200"
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating draft...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="mr-2 h-4 w-4" /> Generate draft
-                </>
-              )}
-            </Button>
-          </div>
 
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-6 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
-                <Library className="h-5 w-5 text-emerald-400" />
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-6 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-2xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-center">
+                  <LayoutTemplate className="h-5 w-5 text-orange-400" />
+                </div>
+                <h3 className="text-xl font-bold">Start from a template</h3>
               </div>
-              <h3 className="text-xl font-bold">Pick from inventory</h3>
+              <p className="text-sm text-zinc-400">
+                Browse curated layouts designed for off-plan launches, brokerages, and investor funnels.
+              </p>
+              <Button variant="outline" className="border-white/10 text-white" onClick={() => setShowTemplates(true)}>
+                Browse templates
+              </Button>
             </div>
-            <p className="text-sm text-zinc-400">
-              Choose a project from the market feed and we will prefill the page for you.
-            </p>
-            <Button asChild className="bg-emerald-500 text-black font-bold hover:bg-emerald-400">
-              <Link href="/discover">Browse inventory</Link>
-            </Button>
           </div>
-
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-6 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-2xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-center">
-                <LayoutTemplate className="h-5 w-5 text-orange-400" />
+        ) : (
+          <div className="rounded-3xl border border-white/10 bg-white/5 p-6 text-center text-sm text-zinc-400 space-y-3">
+            {draftError ? (
+              <>
+                <p>{draftError}</p>
+                <Button
+                  variant="outline"
+                  className="border-white/20 text-white"
+                  onClick={() => createDraft(promptDraft || 'New project')}
+                >
+                  Retry Draft
+                </Button>
+              </>
+            ) : (
+              <div className="flex items-center justify-center gap-3">
+                <Loader2 className="h-5 w-5 text-blue-400 animate-spin" />
+                <span>Preparing your draft…</span>
               </div>
-              <h3 className="text-xl font-bold">Start from a template</h3>
-            </div>
-            <p className="text-sm text-zinc-400">
-              Browse curated layouts designed for off-plan launches, brokerages, and investor funnels.
-            </p>
-            <Button variant="outline" className="border-white/10 text-white" onClick={() => setShowTemplates(true)}>
-              Browse templates
-            </Button>
+            )}
           </div>
-        </div>
+        )}
+        {debugPanel}
       </div>
     </div>
   );

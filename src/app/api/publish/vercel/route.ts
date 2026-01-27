@@ -1,5 +1,5 @@
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { FieldValue } from 'firebase-admin/firestore';
 import { getAdminDb } from '@/server/firebase-admin';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
@@ -10,6 +10,13 @@ import {
   planLimitErrorResponse,
   recordTrialEvent,
 } from '@/lib/server/billing';
+import { resolveEntitlementsForTenant } from '@/lib/server/entitlements';
+import { logError } from '@/lib/server/log';
+import {
+  createRequestId,
+  errorResponse,
+  jsonWithRequestId,
+} from '@/lib/server/request-id';
 
 const slugify = (value: string) =>
   value
@@ -22,29 +29,47 @@ const slugify = (value: string) =>
 const normalizeDomain = (domain: string) => domain.replace(/^https?:\/\//, '').replace(/\/+$/, '');
 
 export async function POST(request: NextRequest) {
+  const scope = 'api/publish/vercel';
+  const requestId = createRequestId();
+  const respond = (body: unknown, init?: ResponseInit) =>
+    jsonWithRequestId(requestId, body, init);
+
   try {
     const { siteId } = await request.json();
     if (!siteId) {
-      return NextResponse.json({ message: 'Site ID is required' }, { status: 400 });
+      return respond({ ok: false, error: 'Site ID is required', requestId }, { status: 400 });
     }
 
     const { tenantId, uid } = await requireRole(request, ALL_ROLES);
     const db = getAdminDb();
+    const entitlements = await resolveEntitlementsForTenant(db, tenantId);
+    if (!entitlements.features.builderPublish.allowed) {
+      return respond(
+        {
+          ok: false,
+          error:
+            entitlements.features.builderPublish.reason ||
+            'Publishing requires an active Builder plan.',
+          requestId,
+        },
+        { status: 403 }
+      );
+    }
     const siteRef = db.collection('sites').doc(siteId);
     const siteSnap = await siteRef.get();
 
     if (!siteSnap.exists) {
-      return NextResponse.json({ message: 'Site not found' }, { status: 404 });
+      return respond({ ok: false, error: 'Site not found', requestId }, { status: 404 });
     }
 
     const siteData = siteSnap.data() || {};
     const ownerUid = siteData.ownerUid as string | undefined;
     const siteTenantId = siteData.tenantId as string | undefined;
     if (siteTenantId && siteTenantId !== tenantId) {
-      return NextResponse.json({ message: 'Forbidden' }, { status: 403 });
+      return respond({ ok: false, error: 'Forbidden', requestId }, { status: 403 });
     }
     if (!siteTenantId && ownerUid && ownerUid !== uid) {
-      return NextResponse.json({ message: 'Forbidden' }, { status: 403 });
+      return respond({ ok: false, error: 'Forbidden', requestId }, { status: 403 });
     }
 
     const rootDomain = normalizeDomain(process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'entrestate.com');
@@ -70,22 +95,29 @@ export async function POST(request: NextRequest) {
 
     await recordTrialEvent(db, tenantId, 'landing_page_published');
 
-    return NextResponse.json({
-      siteId,
-      publishedUrl,
-      subdomain,
+    return respond({
+      ok: true,
+      data: {
+        siteId,
+        publishedUrl,
+        subdomain,
+      },
+      requestId,
     });
   } catch (error) {
-    console.error('[publish/vercel] error', error);
+    logError(scope, error, { requestId, path: request.url });
     if (error instanceof PlanLimitError) {
-      return NextResponse.json(planLimitErrorResponse(error), { status: 402 });
+      return respond(
+        { ok: false, requestId, ...planLimitErrorResponse(error) },
+        { status: 402 }
+      );
     }
     if (error instanceof UnauthorizedError) {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+      return respond({ ok: false, error: 'Unauthorized', requestId }, { status: 401 });
     }
     if (error instanceof ForbiddenError) {
-      return NextResponse.json({ message: 'Forbidden' }, { status: 403 });
+      return respond({ ok: false, error: 'Forbidden', requestId }, { status: 403 });
     }
-    return NextResponse.json({ message: 'An unexpected error occurred during publishing.' }, { status: 500 });
+    return errorResponse(requestId, scope);
   }
 }

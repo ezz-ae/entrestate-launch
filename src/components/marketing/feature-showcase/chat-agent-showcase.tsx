@@ -30,7 +30,7 @@ export function ChatAgentShowcase() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/bot/preview/chat', {
+      const response = await fetch('/api/agent/demo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -44,11 +44,25 @@ export function ChatAgentShowcase() {
         }),
       });
       const data = await response.json();
+      const fallback =
+        data?.error ||
+        data?.message ||
+        'I can share options and help schedule a viewing. What area and budget should I focus on?';
+      if (!response.ok || !data?.ok) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: 'agent',
+            text: fallback,
+          },
+        ]);
+        return;
+      }
       setMessages((prev) => [
         ...prev,
         {
           role: 'agent',
-          text: data.reply || 'I can share options and help schedule a viewing. What area and budget should I focus on?',
+          text: data.data?.reply || fallback,
         },
       ]);
     } catch (error) {

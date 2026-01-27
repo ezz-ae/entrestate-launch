@@ -11,6 +11,8 @@ export default function ChatAgentLearningDashboard({ agentId }: { agentId?: stri
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [selectedJob, setSelectedJob] = useState<any | null>(null);
   const jobPollRef = React.useRef<number | null>(null);
+  const [conversations, setConversations] = useState<any[]>([]);
+  const [conversationsLoading, setConversationsLoading] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -125,6 +127,29 @@ export default function ChatAgentLearningDashboard({ agentId }: { agentId?: stri
     return () => { try { es?.close(); } catch (e) {} };
   }, [selectedJobId]);
 
+  useEffect(() => {
+    let mounted = true;
+    async function loadConversations() {
+      setConversationsLoading(true);
+      try {
+        const res = await fetch('/api/bot/main/history');
+        if (!res.ok) return;
+        const json = await res.json();
+        if (mounted && json?.ok) {
+          setConversations(json?.data?.threads || []);
+        }
+      } catch (error) {
+        console.error('[bot/main/history] failed', error);
+      } finally {
+        if (mounted) setConversationsLoading(false);
+      }
+    }
+    loadConversations();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   function onUploadSuccess(fileName: string) {
     // add a lightweight training job entry for UI feedback
     const localJob = { id: `job-${Date.now()}`, name: fileName, status: 'queued', ts: new Date().toISOString() };
@@ -184,10 +209,36 @@ export default function ChatAgentLearningDashboard({ agentId }: { agentId?: stri
                 <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{job.status} • {new Date(job.ts).toLocaleString()}</div>
               </div>
             ))}
-          </div>
+        </div>
 
-          <div style={{ padding: 12, borderRadius: 12, background: 'var(--bg-primary)', border: '1px solid var(--border-color)' }}>
-            <h4 style={{ margin: 0 }}>Recent Dev Activity</h4>
+        <div style={{ padding: 12, borderRadius: 12, background: 'var(--bg-primary)', border: '1px solid var(--border-color)' }}>
+          <h4 style={{ margin: 0 }}>Recent Agent Conversations</h4>
+          {conversationsLoading && <div style={{ marginTop: 8 }}>Loading…</div>}
+          {!conversationsLoading && conversations.length === 0 && (
+            <div style={{ marginTop: 8, color: 'var(--text-secondary)' }}>No chat sessions recorded yet.</div>
+          )}
+          {conversations.map((thread) => {
+            const lastAgentMessage = Array.isArray(thread.messages)
+              ? [...thread.messages].reverse().find((entry: any) => entry.role === 'agent')
+              : null;
+            return (
+              <div key={thread.id} style={{ marginTop: 8, padding: 10, borderRadius: 10, background: 'var(--bg-secondary)' }}>
+                <div style={{ fontWeight: 700, fontSize: 13 }}>{thread.lastUserMessage || 'New conversation'}</div>
+                {lastAgentMessage && (
+                  <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 4 }}>
+                    AI reply: {String(lastAgentMessage.text).slice(0, 80)}{String(lastAgentMessage.text).length > 80 ? '…' : ''}
+                  </div>
+                )}
+                <div style={{ fontSize: 10, color: 'var(--text-secondary)', marginTop: 4 }}>
+                  {thread.updatedAt ? new Date(thread.updatedAt).toLocaleString() : 'No timestamp'}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div style={{ padding: 12, borderRadius: 12, background: 'var(--bg-primary)', border: '1px solid var(--border-color)' }}>
+          <h4 style={{ margin: 0 }}>Recent Dev Activity</h4>
             {recentSends.length === 0 && <div style={{ marginTop: 8, color: 'var(--text-secondary)' }}>No dev activity yet.</div>}
             {recentSends.map(s => (
               <div key={s.id} style={{ marginTop: 8, padding: 8, borderRadius: 8, background: 'var(--bg-secondary)' }}>

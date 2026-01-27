@@ -75,8 +75,8 @@ else
   echo "SKIP project detail (PROJECT_ID not set)"
 fi
 
-# Public chat preview
-request_public "POST" "$BASE_URL/api/bot/preview/chat" "{\"message\":\"$CHAT_MESSAGE\"}"
+# Public chat demo
+request_public "POST" "$BASE_URL/api/agent/demo" "{\"message\":\"$CHAT_MESSAGE\"}"
 
 # Rate limit test (public endpoint)
 if [ "$RATE_LIMIT_TEST" = "true" ]; then

@@ -1,18 +1,46 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { getAdminDb } from '@/server/firebase-admin';
 import { requireRole } from '@/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
+import { resolveEntitlementsForTenant } from '@/lib/server/entitlements';
+import { logError } from '@/lib/server/log';
+import {
+  createRequestId,
+  errorResponse,
+  jsonWithRequestId,
+} from '@/lib/server/request-id';
 
 // Placeholder: Integrate with Vercel or deployment provider
 export async function POST(request: NextRequest) {
+  const scope = 'api/publish';
+  const requestId = createRequestId();
+  const respond = (body: unknown, init?: ResponseInit) =>
+    jsonWithRequestId(requestId, body, init);
+
   try {
     const { tenantId } = await requireRole(request, ALL_ROLES);
+    const db = getAdminDb();
+    const entitlements = await resolveEntitlementsForTenant(db, tenantId);
+    if (!entitlements.features.builderPublish.allowed) {
+      return respond(
+        {
+          ok: false,
+          error:
+            entitlements.features.builderPublish.reason ||
+            'Publishing requires an active Builder plan.',
+          requestId,
+        },
+        { status: 403 }
+      );
+    }
     const { siteId, action } = await request.json();
     if (!siteId || !['publish', 'unpublish'].includes(action)) {
-      return NextResponse.json({ error: 'Missing or invalid parameters' }, { status: 400 });
+      return respond(
+        { ok: false, error: 'Missing or invalid parameters', requestId },
+        { status: 400 }
+      );
     }
     // Simulate publish/unpublish
-    const db = getAdminDb();
     const siteRef = db.collection('sites').doc(siteId);
     await siteRef.set({
       status: action === 'publish' ? 'published' : 'draft',
@@ -20,8 +48,13 @@ export async function POST(request: NextRequest) {
       updatedAt: new Date(),
     }, { merge: true });
     // TODO: Call Vercel API to trigger deployment
-    return NextResponse.json({ success: true, status: action === 'publish' ? 'published' : 'draft' });
+    return respond({
+      ok: true,
+      data: { status: action === 'publish' ? 'published' : 'draft' },
+      requestId,
+    });
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to update publish status' }, { status: 500 });
+    logError(scope, error, { requestId, path: request.url });
+    return errorResponse(requestId, scope);
   }
 }

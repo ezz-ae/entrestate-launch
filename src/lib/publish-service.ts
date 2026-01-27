@@ -34,12 +34,16 @@ export const publishSite = async (page: SitePage, agentId?: string): Promise<Ver
       body: JSON.stringify({ siteId: page.id, agentId }), // Pass agentId in the body
     });
 
-    if (!response.ok) {
-      const errorBody = await response.json().catch(() => ({ message: 'An unknown error occurred during publishing.' }));
-      throw new Error(errorBody.message || 'Failed to publish site.');
+    const payload = await response.json().catch(() => null);
+    if (!response.ok || !payload?.ok) {
+      const message =
+        payload?.error ||
+        payload?.message ||
+        'An unknown error occurred during publishing.';
+      throw new Error(message);
     }
 
-    return await response.json();
+    return payload.data as VercelPublishResult;
 
   } catch (error) {
     console.error("Publishing Error:", error);

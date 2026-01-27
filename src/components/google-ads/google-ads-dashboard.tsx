@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,7 +43,22 @@ type CampaignPlan = {
   expectations?: Expectations;
 };
 
+type CheckoutSummary = {
+  budget: number;
+  duration: number;
+  totalSpend: number;
+  serviceFee: number;
+  platformFee: number;
+  totalDue: number;
+  perLead: number;
+};
+
 const DEFAULT_DURATION_DAYS = 30;
+const SLIDER_MIN = 80;
+const SLIDER_MAX = 600;
+const SLIDER_STEP = 10;
+
+const clampBudgetValue = (value: number) => Math.max(SLIDER_MIN, Math.min(SLIDER_MAX, value));
 
 export function GoogleAdsDashboard() {
   const { toast } = useToast();
@@ -58,13 +73,60 @@ export function GoogleAdsDashboard() {
   const [planLoading, setPlanLoading] = useState(false);
   const [launching, setLaunching] = useState(false);
   const [plan, setPlan] = useState<CampaignPlan | null>(null);
+  const [sliderBudget, setSliderBudget] = useState(() =>
+    clampBudgetValue(Number(budget) || 150)
+  );
+  const [checkoutSummary, setCheckoutSummary] = useState<CheckoutSummary | null>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   const numericBudget = Number(budget);
   const numericDuration = Number(duration);
 
+  useEffect(() => {
+    const parsed = Number(budget);
+    if (!Number.isFinite(parsed)) return;
+    const clamped = clampBudgetValue(parsed);
+    if (clamped !== sliderBudget) {
+      setSliderBudget(clamped);
+    }
+  }, [budget, sliderBudget]);
+
   const campaignName = useMemo(() => {
     return `${goal} - ${location}`.trim();
   }, [goal, location]);
+
+  const skeletonDuration = numericDuration || DEFAULT_DURATION_DAYS;
+  const {
+    skeletonNarrative,
+    leadsEstimate,
+    totalSpend: previewSpend,
+    estimatedCpl,
+  } = useMemo(() => {
+    const leadsEstimate = Math.max(
+      2,
+      Math.round((sliderBudget * skeletonDuration) / 1100)
+    );
+    const audience =
+      goal === 'Brand Awareness'
+        ? 'general interest'
+        : goal === 'Website Visits'
+        ? 'site visitors'
+        : 'ready buyers';
+    const totalSpend = sliderBudget * skeletonDuration;
+    const estimatedCpl = Math.max(1, Math.round(totalSpend / leadsEstimate));
+    const skeletonNarrative = `AED ${sliderBudget} per day for ${skeletonDuration} days locks in approximately ${leadsEstimate} ${audience} across ${location}.`;
+    return { skeletonNarrative, leadsEstimate, totalSpend, estimatedCpl };
+  }, [sliderBudget, skeletonDuration, location, goal]);
+
+  const hasCustomDuration = numericDuration > 0;
+  const durationRequiresAdjustment =
+    hasCustomDuration && (numericDuration < 7 || numericDuration > 90);
+  const checkoutDuration = Math.max(
+    7,
+    Math.min(90, hasCustomDuration ? numericDuration : DEFAULT_DURATION_DAYS)
+  );
+  const canEstimatePricing = !durationRequiresAdjustment;
 
   const loadCampaigns = async () => {
     try {
@@ -80,9 +142,64 @@ export function GoogleAdsDashboard() {
     }
   };
 
+  const handleSliderChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Number(event.target.value);
+    if (!Number.isFinite(value)) return;
+    const clamped = clampBudgetValue(value);
+    setSliderBudget(clamped);
+    setBudget(String(clamped));
+  };
+
   useEffect(() => {
     loadCampaigns();
   }, []);
+
+  const fetchCheckoutSummary = useCallback(async () => {
+    if (!canEstimatePricing) return;
+    setCheckoutLoading(true);
+    setCheckoutError(null);
+    try {
+      const response = await authorizedFetch('/api/ads/google/plan/checkout', {
+        method: 'POST',
+        body: JSON.stringify({
+          budget: sliderBudget,
+          duration: checkoutDuration,
+        }),
+      });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok || !payload?.ok) {
+        throw new Error(
+          payload?.error ||
+            payload?.message ||
+            'Pricing preview unavailable. Please adjust the budget or duration.'
+        );
+      }
+      setCheckoutSummary(payload.data ?? null);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Pricing preview unavailable. Please try again shortly.';
+      setCheckoutSummary(null);
+      setCheckoutError(message);
+    } finally {
+      setCheckoutLoading(false);
+    }
+  }, [canEstimatePricing, checkoutDuration, sliderBudget]);
+
+  useEffect(() => {
+    if (!canEstimatePricing) {
+      setCheckoutLoading(false);
+      setCheckoutSummary(null);
+      if (durationRequiresAdjustment) {
+        setCheckoutError('Campaign duration must be between 7 and 90 days to show pricing.');
+      } else {
+        setCheckoutError(null);
+      }
+      return;
+    }
+    void fetchCheckoutSummary();
+  }, [fetchCheckoutSummary, canEstimatePricing, durationRequiresAdjustment]);
 
   const validateInputs = () => {
     if (!location.trim() || Number.isNaN(numericBudget) || numericBudget <= 0) {
@@ -113,15 +230,18 @@ export function GoogleAdsDashboard() {
           notes: notes || undefined,
         }),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data?.error || 'Plan generation failed');
+      const payload = await res.json().catch(() => null);
+      if (!res.ok || !payload?.ok) {
+        throw new Error(
+          payload?.error || payload?.message || 'Plan generation failed'
+        );
       }
+      const planPayload = payload.data ?? {};
       setPlan({
-        keywords: data.keywords || [],
-        headlines: data.headlines || [],
-        descriptions: data.descriptions || [],
-        expectations: data.expectations,
+        keywords: planPayload.keywords || [],
+        headlines: planPayload.headlines || [],
+        descriptions: planPayload.descriptions || [],
+        expectations: planPayload.expectations,
       });
       toast({ title: 'AI plan ready', description: 'Review the keywords and ad copy below.' });
     } catch (error: any) {
@@ -183,8 +303,8 @@ export function GoogleAdsDashboard() {
     }
   };
 
-  return (
-    <div className="space-y-10 animate-in fade-in duration-700">
+    return (
+      <div className="space-y-10 animate-in fade-in duration-700">
       <div className="flex flex-col lg:flex-row justify-between items-start gap-6 border-b border-white/5 pb-10">
         <div>
           <h1 className="text-4xl font-black tracking-tight text-white uppercase">Google Ads</h1>
@@ -304,6 +424,90 @@ export function GoogleAdsDashboard() {
                 {plan.descriptions.length} descriptions.
               </div>
             )}
+
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-5 space-y-4 text-white">
+              <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-zinc-400">
+                <span>Plan preview</span>
+                <span>Duration {skeletonDuration} days</span>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-[10px] text-zinc-500">
+                  <span>Daily budget</span>
+                  <span className="text-sm font-semibold text-white">AED {sliderBudget}</span>
+                </div>
+                <input
+                  type="range"
+                  min={SLIDER_MIN}
+                  max={SLIDER_MAX}
+                  step={SLIDER_STEP}
+                  value={sliderBudget}
+                  onChange={handleSliderChange}
+                  className="w-full h-2 rounded-full appearance-none bg-white/10 accent-blue-500"
+                  aria-label="Adjust daily budget preview"
+                />
+                <div className="flex justify-between text-[10px] text-zinc-500">
+                  <span>Min AED {SLIDER_MIN}</span>
+                  <span>Max AED {SLIDER_MAX}</span>
+                </div>
+              </div>
+              <p className="text-sm text-zinc-300">{skeletonNarrative}</p>
+              <div className="grid grid-cols-3 gap-3 text-[11px] text-zinc-400">
+                <div className="rounded-2xl border border-white/5 bg-black/30 p-3 text-center">
+                  <p className="text-[10px] uppercase tracking-[0.3em] text-zinc-500">Est. leads</p>
+                  <p className="text-sm font-semibold text-white">{leadsEstimate}</p>
+                </div>
+                <div className="rounded-2xl border border-white/5 bg-black/30 p-3 text-center">
+                  <p className="text-[10px] uppercase tracking-[0.3em] text-zinc-500">Campaign spend</p>
+                  <p className="text-sm font-semibold text-white">AED {formatNumber(previewSpend)}</p>
+                </div>
+                <div className="rounded-2xl border border-white/5 bg-black/30 p-3 text-center">
+                  <p className="text-[10px] uppercase tracking-[0.3em] text-zinc-500">Est. CPL</p>
+                  <p className="text-sm font-semibold text-white">AED {estimatedCpl}</p>
+                </div>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-black/40 p-4 text-sm text-zinc-300 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase tracking-[0.3em] text-zinc-400">Pricing preview</span>
+                  {checkoutLoading && <Loader2 className="h-4 w-4 text-blue-400 animate-spin" />}
+                </div>
+                {checkoutSummary ? (
+                  <>
+                    <div className="flex justify-between">
+                      <span>Total spend</span>
+                      <span className="font-semibold text-white">
+                        AED {formatNumber(checkoutSummary.totalSpend)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Service fee</span>
+                      <span className="font-semibold text-white">
+                        AED {formatNumber(checkoutSummary.serviceFee)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Platform fee</span>
+                      <span className="font-semibold text-white">
+                        AED {formatNumber(checkoutSummary.platformFee)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-[10px] text-zinc-500">
+                      <span>Total due ({checkoutDuration} days)</span>
+                      <span className="font-semibold text-white">
+                        AED {formatNumber(checkoutSummary.totalDue)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-[10px] text-zinc-400">
+                      <span>Per lead</span>
+                      <span className="font-semibold text-white">AED {checkoutSummary.perLead.toFixed(2)}</span>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-xs text-red-300">
+                    {checkoutError || 'Adjust budget or duration above to preview our pricing.'}
+                  </p>
+                )}
+              </div>
+            </div>
           </CardContent>
         </Card>
 

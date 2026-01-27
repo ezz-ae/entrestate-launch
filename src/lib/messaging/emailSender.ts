@@ -15,9 +15,9 @@ export async function sendEmail(payload: EmailSendPayload) {
   });
 
   const data = await response.json();
-  if (!response.ok) {
+  if (!response.ok || !data?.ok) {
     throw new Error(data?.error || 'Email send failed');
   }
 
-  return data;
+  return data.data ?? data;
 }

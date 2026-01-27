@@ -13,6 +13,7 @@ const defaultEnableFirebaseAuth =
 const publicEnableFirebaseAuth = process.env.NEXT_PUBLIC_ENABLE_FIREBASE_AUTH ?? defaultEnableFirebaseAuth;
 const isVercelPreview = process.env.VERCEL_ENV === 'preview';
 const vercelLiveSources = isVercelPreview ? ['https://vercel.live', 'https://*.vercel.live'] : [];
+const vercelLiveConnectSources = isVercelPreview ? ['wss://*.vercel.live', ...vercelLiveSources] : [];
 
 const securityHeaders = [
     {
@@ -60,7 +61,10 @@ const securityHeaders = [
                 ].join(' '),
             ].join(' '),
             "style-src 'self' 'unsafe-inline'",
-            "connect-src 'self' https:",
+            [
+                'connect-src',
+                ["'self'", 'https:', ...vercelLiveConnectSources].join(' '),
+            ].join(' '),
             "frame-ancestors 'self'",
         ].join('; '),
     },

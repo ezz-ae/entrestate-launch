@@ -21,8 +21,10 @@ export default function PublishControls({ siteId, initialStatus = 'draft' }: Pro
         body: JSON.stringify({ siteId, action }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to update status');
-      setStatus(data.status);
+      if (!res.ok || !data?.ok) {
+        throw new Error(data?.error || data?.message || 'Failed to update status');
+      }
+      setStatus(data?.data?.status || status);
     } catch (e: any) {
       setError(e.message);
     } finally {

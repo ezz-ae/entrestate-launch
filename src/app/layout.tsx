@@ -53,6 +53,19 @@ export default function RootLayout({
           </BrochureProvider>
           <Toaster />
         </ThemeProvider>
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-CJB38JEN7J"
+          strategy="afterInteractive"
+        />
+        <Script id="gtag-init" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'G-CJB38JEN7J');
+          `}
+        </Script>
         {facebookAppId && (
           <Script id="fb-sdk" strategy="afterInteractive">
           {`

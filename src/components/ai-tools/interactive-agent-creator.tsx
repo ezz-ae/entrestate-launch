@@ -60,6 +60,8 @@ export function InteractiveAgentCreator() {
     ]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [aiConfigured, setAiConfigured] = useState(true);
+    const [aiError, setAiError] = useState<string | null>(null);
     const [isConnecting, setIsConnecting] = useState(false);
     const [instagramHandle, setInstagramHandle] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -81,7 +83,7 @@ export function InteractiveAgentCreator() {
 
         const history = messages.slice(-6);
         try {
-            const response = await fetch(`/api/bot/preview/chat`, {
+            const response = await fetch(`/api/agent/demo`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -91,7 +93,27 @@ export function InteractiveAgentCreator() {
                 })
             });
             const data = await response.json();
-            setMessages(prev => [...prev, { role: 'agent', text: data.reply || "I'm processing that market data now. How can I help with your property search?" }]);
+            const fallback =
+                data?.error ||
+                data?.message ||
+                "I can help with pricing, projects, or areas. What would you like to know?";
+            if (!response.ok || !data?.ok) {
+                if (Array.isArray(data?.missing) && data.missing.includes('GEMINI_API_KEY')) {
+                    setAiConfigured(false);
+                    setAiError('AI key missing. Contact your admin to enable Gemini.');
+                }
+                setMessages(prev => [
+                    ...prev,
+                    { role: 'agent', text: fallback },
+                ]);
+                return;
+            }
+            setAiConfigured(true);
+            setAiError(null);
+            setMessages(prev => [
+                ...prev,
+                { role: 'agent', text: data.data?.reply || "I'm processing that market data now. How can I help with your property search?" },
+            ]);
         } catch (error) {
             console.error("Chat error:", error);
             setMessages(prev => [...prev, { role: 'agent', text: "I can help with pricing, projects, or areas. What would you like to know?" }]);
@@ -295,6 +317,11 @@ export function InteractiveAgentCreator() {
                     ref={scrollRef}
                     className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar scroll-smooth"
                 >
+                    {!aiConfigured && (
+                        <div className="rounded-2xl border border-red-500/30 bg-red-500/5 px-4 py-2 text-[10px] font-black uppercase tracking-[0.3em] text-red-200">
+                            {aiError || 'AI is not configured. Ask your admin to enable Gemini.'}
+                        </div>
+                    )}
                     {messages.map((msg, i) => (
                         <div key={i} className={cn(
                             "flex animate-in fade-in slide-in-from-bottom-2 duration-500",
@@ -335,16 +362,17 @@ export function InteractiveAgentCreator() {
                         <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000" />
                         <div className="relative flex items-center bg-zinc-950 border border-white/10 rounded-2xl p-2 gap-2 pr-4 shadow-2xl">
                             <input 
-                                className="flex-1 bg-transparent border-none text-white px-6 h-14 focus:outline-none font-medium placeholder:text-zinc-600"
+                                className="flex-1 bg-transparent border-none text-white px-6 h-14 focus:outline-none font-medium placeholder:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-50"
                                 placeholder={`Ask ${agentName} anything about UAE property...`}
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                                disabled={!aiConfigured || isLoading}
                             />
                             <Button 
                                 onClick={handleSendMessage}
-                                disabled={isLoading || !input.trim()}
-                                className="w-12 h-12 rounded-xl bg-blue-600 hover:bg-blue-700 text-white p-0 shadow-lg shadow-blue-600/20"
+                                disabled={isLoading || !input.trim() || !aiConfigured}
+                                className="w-12 h-12 rounded-xl bg-blue-600 hover:bg-blue-700 text-white p-0 shadow-lg shadow-blue-600/20 disabled:opacity-40 disabled:cursor-not-allowed"
                             >
                                 <Send className="h-5 w-5" />
                             </Button>

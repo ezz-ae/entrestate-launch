@@ -4,9 +4,14 @@ import { useState } from 'react';
 import { Download, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getLeadsForExport } from '@/app/actions/leads';
+import { useEntitlements } from '@/hooks/use-entitlements';
 
 export function ExportLeadsButton({ query }: { query?: string }) {
   const [loading, setLoading] = useState(false);
+  const { entitlements } = useEntitlements();
+  const leadExportsLocked = entitlements?.features.leadExports.allowed === false;
+  const exportsReason =
+    entitlements?.features.leadExports.reason || 'Upgrade to unlock lead exports.';
 
   const handleExport = async () => {
     setLoading(true);
@@ -52,13 +57,22 @@ export function ExportLeadsButton({ query }: { query?: string }) {
   };
 
   return (
-    <Button 
-      onClick={handleExport} 
-      disabled={loading}
-      className="bg-white text-black hover:bg-zinc-200"
-    >
-      {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
-      Export CSV
-    </Button>
+    <div className="flex flex-col items-start gap-1">
+      <Button
+        onClick={handleExport}
+        disabled={loading || leadExportsLocked}
+        className="bg-white text-black hover:bg-zinc-200"
+      >
+        {loading ? (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        ) : (
+          <Download className="mr-2 h-4 w-4" />
+        )}
+        Export CSV
+      </Button>
+      {leadExportsLocked && (
+        <p className="text-[10px] text-red-300">{exportsReason}</p>
+      )}
+    </div>
   );
 }

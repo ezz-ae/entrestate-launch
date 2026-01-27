@@ -22,6 +22,8 @@ export function ChatAgentBlock({
 }: ChatAgentBlockProps) {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [aiConfigured, setAiConfigured] = useState(true);
+  const [aiError, setAiError] = useState<string | null>(null);
   const [messages, setMessages] = useState([
     { role: 'agent', text: "Hello! I'm your market advisor. Ask me about pricing, availability, or upcoming launches." },
   ]);
@@ -34,7 +36,7 @@ export function ChatAgentBlock({
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/bot/preview/chat', {
+      const response = await fetch('/api/agent/demo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -44,9 +46,23 @@ export function ChatAgentBlock({
         }),
       });
       const data = await response.json();
+      if (!response.ok || !data?.ok) {
+        if (Array.isArray(data?.missing) && data.missing.includes('GEMINI_API_KEY')) {
+          setAiConfigured(false);
+          setAiError('AI key missing. Contact your admin to enable Gemini.');
+        }
+        const fallback = data?.error || data?.message || "I'm having trouble right now. Share your preferred area and budget and I'll follow up.";
+        setMessages((prev) => [
+          ...prev,
+          { role: 'agent', text: fallback },
+        ]);
+        return;
+      }
+      setAiConfigured(true);
+      setAiError(null);
       setMessages((prev) => [
         ...prev,
-        { role: 'agent', text: data.reply || "I'm reviewing the latest listings. What area should I focus on?" },
+        { role: 'agent', text: data.data?.reply || "I'm reviewing the latest listings. What area should I focus on?" },
       ]);
     } catch (error) {
       console.error('Chat agent error', error);
@@ -114,6 +130,11 @@ export function ChatAgentBlock({
 
                         {/* Messages Area */}
                         <div className="flex-1 p-6 space-y-4 overflow-y-auto custom-scrollbar">
+                            {!aiConfigured && (
+                              <div className="rounded-2xl border border-red-500/40 bg-red-500/5 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.2em] text-red-200">
+                                {aiError || 'AI is not configured. Contact your admin to enable Gemini.'}
+                              </div>
+                            )}
                             {messages.map((message, index) => (
                                 <div key={`${message.role}-${index}`} className={cn("flex", message.role === 'user' ? "justify-end" : "justify-start")}>
                                     <div className={cn(
@@ -140,16 +161,17 @@ export function ChatAgentBlock({
                             <div className="relative group">
                                 <input 
                                     type="text" 
-                                    className="w-full h-14 bg-zinc-950/50 border border-white/10 rounded-2xl px-6 pr-14 text-sm text-white focus:outline-none focus:border-blue-500/50 transition-all placeholder:text-zinc-600"
+                                    className="w-full h-14 bg-zinc-950/50 border border-white/10 rounded-2xl px-6 pr-14 text-sm text-white focus:outline-none focus:border-blue-500/50 transition-all placeholder:text-zinc-600 disabled:opacity-50 disabled:cursor-not-allowed"
                                     placeholder={placeholder}
                                     value={input}
                                     onChange={(e) => setInput(e.target.value)}
                                     onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                                    disabled={!aiConfigured}
                                 />
                                 <button
-                                  className="absolute right-2 top-2 w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white hover:bg-blue-700 transition-all group-hover:scale-105 active:scale-95 shadow-lg shadow-blue-900/20"
+                                  className="absolute right-2 top-2 w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white hover:bg-blue-700 transition-all group-hover:scale-105 active:scale-95 shadow-lg shadow-blue-900/20 disabled:opacity-40 disabled:cursor-not-allowed"
                                   onClick={handleSend}
-                                  disabled={isLoading}
+                                  disabled={isLoading || !aiConfigured}
                                 >
                                     <Send className="h-4 w-4" />
                                 </button>

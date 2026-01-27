@@ -1,5 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import {
+  createRequestId,
+  errorResponse,
+  jsonWithRequestId,
+} from '@/lib/server/request-id';
+import { logError } from '@/lib/server/log';
 // We must not construct the OpenAI client at module import time because
 // that can throw during a build when environment variables are not set.
 // Instead, lazily import and construct the client inside the request handler.
@@ -13,6 +19,11 @@ const s3Client = new S3Client({
 });
 
 export async function POST(request: NextRequest) {
+  const scope = 'api/upload';
+  const requestId = createRequestId();
+  const respond = (body: unknown, init?: ResponseInit) =>
+    jsonWithRequestId(requestId, body, init);
+
   try {
     // dynamic import to handle CJS/ESM differences for pdf-parse
   const pdfModule = await import('pdf-parse');
@@ -23,8 +34,8 @@ export async function POST(request: NextRequest) {
     const file = formData.get('file') as File | null;
 
     if (!file) {
-      return NextResponse.json(
-        { error: 'No file received.' },
+      return respond(
+        { ok: false, error: 'No file received.', requestId },
         { status: 400 }
       );
     }
@@ -73,17 +84,20 @@ export async function POST(request: NextRequest) {
       ContentType: file.type,
     }));
     
-    return NextResponse.json({ 
-      success: true, 
-      name: file.name,
-      size: file.size,
-      text: data.text,
-      s3Key: fileKey,
-      analysis
+    return respond({ 
+      ok: true,
+      data: {
+        name: file.name,
+        size: file.size,
+        text: data.text,
+        s3Key: fileKey,
+        analysis,
+      },
+      requestId,
     });
 
   } catch (error) {
-    console.error('Error processing upload:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    logError(scope, error, { requestId });
+    return errorResponse(requestId, scope);
   }
 }

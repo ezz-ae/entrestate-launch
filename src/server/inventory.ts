@@ -136,7 +136,7 @@ function decodeFirestoreValue(value: FirestoreValue): any {
   return undefined;
 }
 
-function decodeFirestoreFields(fields: Record<string, FirestoreValue>) {
+export function decodeFirestoreFields(fields: Record<string, FirestoreValue>) {
   const result: Record<string, any> = {};
   Object.entries(fields).forEach(([key, value]) => {
     result[key] = decodeFirestoreValue(value);
@@ -144,7 +144,7 @@ function decodeFirestoreFields(fields: Record<string, FirestoreValue>) {
   return result;
 }
 
-function normalizeProjectData(raw: any, id: string): ProjectData {
+export function normalizeProjectData(raw: any, id: string): ProjectData {
   const locationRaw = raw.location || {};
   const cityRaw = normalizeString(locationRaw.city || raw.city || raw.market, 'UAE');
   const city = normalizeCityLabel(cityRaw, 'UAE');
