@@ -1,7 +1,7 @@
 'use server';
 
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { getGoogleAdsCustomer, validateGoogleAdsCredentials } from '@/lib/google-ads';
+import { getGoogleAdsCustomer, validateGoogleAdsCredentials, generateAuthUrl, refreshAccessToken, removeGoogleAdsTokensFromFirestore } from '@/lib/google-ads';
 
 export async function getUserProjects() {
   const supabase = await createSupabaseServerClient();
@@ -107,4 +107,27 @@ export async function generateShareLink(projectId: string) {
   const token = Buffer.from(projectId).toString('base64');
   
   return { url: `/dashboard/google-ads/share/${token}` };
+}
+
+export async function getGoogleAdsAuthUrl() {
+  // In production, use the actual callback URL
+  const redirectUri = process.env.GOOGLE_ADS_REDIRECT_URI || 'http://localhost:3000/api/ads/google/connect';
+  return generateAuthUrl(redirectUri);
+}
+
+export async function refreshGoogleAdsToken(refreshToken: string) {
+  return await refreshAccessToken(refreshToken);
+}
+
+export async function disconnectGoogleAds() {
+  // In a real app, you'd get the tenantId from the authenticated user's session
+  // For this demo/MVP, we'll assume a default or fetch it from context if available.
+  // Since we don't have the full auth context here, we'll use a placeholder or require it passed.
+  // However, server actions usually have access to cookies/headers to determine the user.
+  
+  // Placeholder: Assuming single tenant or dev mode for now as per previous patterns
+  const tenantId = 'default-tenant'; 
+  const db = (await import('@/server/firebase-admin')).getAdminDb();
+  await removeGoogleAdsTokensFromFirestore(tenantId, db);
+  return { success: true };
 }

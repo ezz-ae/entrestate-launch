@@ -8,10 +8,11 @@ interface PaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => Promise<void>;
-  amount: number;
+  dailyBudget: number;
+  duration: number;
 }
 
-export function PaymentModal({ isOpen, onClose, onConfirm, amount }: PaymentModalProps) {
+export function PaymentModal({ isOpen, onClose, onConfirm, dailyBudget, duration }: PaymentModalProps) {
   const [isProcessing, setIsProcessing] = useState(false);
 
   if (!isOpen) return null;
@@ -27,6 +28,8 @@ export function PaymentModal({ isOpen, onClose, onConfirm, amount }: PaymentModa
     }
   };
 
+  const totalAmount = dailyBudget * duration;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
       <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6 max-w-md w-full space-y-6 shadow-2xl scale-100 animate-in zoom-in-95 duration-200 relative">
@@ -41,7 +44,8 @@ export function PaymentModal({ isOpen, onClose, onConfirm, amount }: PaymentModa
         <div>
           <h3 className="text-xl font-bold text-white">Confirm Payment</h3>
           <p className="text-zinc-400 text-sm mt-1">
-            You are about to launch a campaign with a daily budget of <span className="text-white font-bold">{amount} AED</span>.
+            You are launching a campaign with a daily budget of <span className="text-white font-bold">{dailyBudget} AED</span> for {duration} days.
+            The total amount is <span className="text-white font-bold">{totalAmount.toLocaleString()} AED</span>.
           </p>
         </div>
 
@@ -70,7 +74,7 @@ export function PaymentModal({ isOpen, onClose, onConfirm, amount }: PaymentModa
             disabled={isProcessing}
             className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg"
           >
-            {isProcessing ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : `Pay & Launch`}
+            {isProcessing ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : `Pay ${totalAmount.toLocaleString()} AED & Launch`}
           </Button>
         </div>
       </div>
