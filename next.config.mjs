@@ -11,6 +11,8 @@ const rawEnableFirebaseAuth = process.env.ENABLE_FIREBASE_AUTH;
 const defaultEnableFirebaseAuth =
   rawEnableFirebaseAuth === undefined ? (process.env.NODE_ENV === 'production' ? 'true' : 'false') : rawEnableFirebaseAuth;
 const publicEnableFirebaseAuth = process.env.NEXT_PUBLIC_ENABLE_FIREBASE_AUTH ?? defaultEnableFirebaseAuth;
+const isVercelPreview = process.env.VERCEL_ENV === 'preview';
+const vercelLiveSources = isVercelPreview ? ['https://vercel.live', 'https://*.vercel.live'] : [];
 
 const securityHeaders = [
     {
@@ -39,7 +41,24 @@ const securityHeaders = [
             "default-src 'self'",
             "img-src 'self' https: data:",
             "font-src 'self' data:",
-            "script-src 'self' 'unsafe-inline' https://connect.facebook.net",
+            [
+                'script-src',
+                [
+                    "'self'",
+                    "'unsafe-inline'",
+                    'https://connect.facebook.net',
+                    ...vercelLiveSources,
+                ].join(' '),
+            ].join(' '),
+            [
+                'script-src-elem',
+                [
+                    "'self'",
+                    "'unsafe-inline'",
+                    'https://connect.facebook.net',
+                    ...vercelLiveSources,
+                ].join(' '),
+            ].join(' '),
             "style-src 'self' 'unsafe-inline'",
             "connect-src 'self' https:",
             "frame-ancestors 'self'",

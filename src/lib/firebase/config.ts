@@ -1,10 +1,33 @@
-import { env } from '@/lib/env';
+import { env, envBool } from '@/lib/env';
+import type { FirebaseOptions } from 'firebase/app';
 
-export const firebaseConfig = {
-  apiKey: env('NEXT_PUBLIC_FIREBASE_API_KEY'),
-  authDomain: env('NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN'),
-  projectId: env('NEXT_PUBLIC_FIREBASE_PROJECT_ID'),
-  appId: env('NEXT_PUBLIC_FIREBASE_APP_ID'),
-  storageBucket: env('NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET'),
-  messagingSenderId: env('NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID'),
+const trimValue = (value?: string) => value?.trim() ?? '';
+
+export const FIREBASE_AUTH_ENABLED = envBool(
+  'NEXT_PUBLIC_ENABLE_FIREBASE_AUTH',
+  process.env.NODE_ENV === 'production'
+);
+
+// Trimmed copy of the public Firebase config so server helpers can read the strings without forcing ENV resolution.
+export const firebaseConfig: FirebaseOptions = {
+  apiKey: trimValue(process.env.NEXT_PUBLIC_FIREBASE_API_KEY),
+  authDomain: trimValue(process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN),
+  projectId: trimValue(process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID),
+  appId: trimValue(process.env.NEXT_PUBLIC_FIREBASE_APP_ID),
+  storageBucket: trimValue(process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET),
+  messagingSenderId: trimValue(process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID),
 };
+
+export function getFirebaseConfig(): FirebaseOptions {
+  if (!FIREBASE_AUTH_ENABLED) {
+    throw new Error('Cannot resolve Firebase config when auth is disabled.');
+  }
+  return {
+    apiKey: env('NEXT_PUBLIC_FIREBASE_API_KEY'),
+    authDomain: env('NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN'),
+    projectId: env('NEXT_PUBLIC_FIREBASE_PROJECT_ID'),
+    appId: env('NEXT_PUBLIC_FIREBASE_APP_ID'),
+    storageBucket: env('NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET'),
+    messagingSenderId: env('NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID'),
+  };
+}

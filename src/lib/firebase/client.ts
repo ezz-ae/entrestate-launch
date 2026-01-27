@@ -1,16 +1,22 @@
 'use client';
 
-import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
+import {
+  initializeApp,
+  getApps,
+  getApp,
+  type FirebaseApp,
+  type FirebaseOptions,
+} from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
 import { getFirestore, type Firestore } from 'firebase/firestore';
 
-import { firebaseConfig } from '@/lib/firebase/config';
-import { envBool } from '@/lib/env';
+import {
+  FIREBASE_AUTH_ENABLED,
+  firebaseConfig,
+  getFirebaseConfig,
+} from '@/lib/firebase/config';
 
-const enableFirebaseAuth = envBool(
-  'NEXT_PUBLIC_ENABLE_FIREBASE_AUTH',
-  process.env.NODE_ENV === 'production'
-);
+const enableFirebaseAuth = FIREBASE_AUTH_ENABLED;
 const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY?.trim() || '';
 const apiKeyLooksValid = /^AIza[0-9A-Za-z_-]{35}$/.test(apiKey);
 
@@ -32,9 +38,15 @@ if (enableFirebaseAuth && !hasFirebaseConfig && process.env.NODE_ENV !== 'produc
 }
 
 let firebaseApp: FirebaseApp | undefined;
-if (hasFirebaseConfig) {
+const firebaseInitConfig: FirebaseOptions | null = hasFirebaseConfig
+  ? enableFirebaseAuth
+    ? getFirebaseConfig()
+    : firebaseConfig
+  : null;
+
+if (firebaseInitConfig) {
   try {
-    firebaseApp = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+    firebaseApp = !getApps().length ? initializeApp(firebaseInitConfig) : getApp();
   } catch (error) {
     console.warn('[firebase] Failed to initialize Firebase client.', error);
     firebaseApp = undefined;

@@ -8,9 +8,8 @@
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "NEXT_DISABLE_TURBOPACK=1 NEXT_TURBOPACK=0 TURBOPACK=0 next build",
-    "postbuild": "node scripts/vercel-artifact-audit.mjs && node scripts/postbuild-safe.mjs && node scripts/ensure-middleware-artifacts.mjs",
+    "postbuild": "node scripts/vercel-artifact-audit.mjs && node scripts/postbuild-safe.mjs",
     "start": "next start",
-    "check-middleware-artifacts": "node scripts/check-middleware-artifacts.mjs",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx --ignore-pattern gemini-app/",
     "test:dev": "tsx scripts/test/dev-sends-smoke.ts",
     "test:dev-jobs": "tsx scripts/test/dev-jobs-retry-smoke.ts",
