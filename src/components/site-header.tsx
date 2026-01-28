@@ -22,6 +22,7 @@ import {
   LifeBuoy,
   Search,
   Users,
+  Building,
   UploadCloud
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
