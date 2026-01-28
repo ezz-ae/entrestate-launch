@@ -176,18 +176,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         clearInterval(intervalId);
       }
     };
-  }, [firebaseUser, FIREBASE_AUTH_DISABLED]);
+  }, [firebaseUser]);
 
   return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;
 }
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context !== undefined) {
-    return context;
-  }
-
-  const activeAuth = getActiveAuth();
+  const hasContext = context !== undefined;
+  const activeAuth = hasContext ? null : getActiveAuth();
   const { user: firebaseUser, loading } = useFirebaseAuthState(activeAuth);
   const actions = useMemo(() => createAuthActions(activeAuth), [activeAuth]);
   const [devUser, setDevUser] = useState<AppUser | null>(null);
@@ -195,6 +192,7 @@ export const useAuth = () => {
   const fallbackError: AuthContextType['error'] = FIREBASE_AUTH_DISABLED ? 'FIREBASE_NOT_CONFIGURED' : undefined;
 
   useEffect(() => {
+    if (hasContext) return;
     if (FIREBASE_AUTH_DISABLED) return;
     let mounted = true;
     async function fetchDev() {
@@ -229,9 +227,13 @@ export const useAuth = () => {
     return () => {
       mounted = false;
     };
-  }, [loading, firebaseUser]);
+  }, [loading, firebaseUser, hasContext]);
 
   const mappedFirebaseUser = firebaseUser ? mapFirebaseUser(firebaseUser) : null;
+
+  if (context !== undefined) {
+    return context;
+  }
 
   return {
     user: mappedFirebaseUser || devUser,

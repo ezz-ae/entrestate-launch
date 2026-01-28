@@ -22,6 +22,18 @@ interface BudgetChartPoint {
   clicks: number;
 }
 
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-zinc-900/80 backdrop-blur-sm border border-white/10 p-3 rounded-lg shadow-lg">
+        <p className="text-xs text-zinc-400">{`Budget: ${label} AED`}</p>
+        <p className="text-sm font-bold text-white">{`Est. Clicks: ${payload[0].value}`}</p>
+      </div>
+    );
+  }
+  return null;
+};
+
 export function BudgetChart({ budget, baseCpc }: BudgetChartProps) {
   const data = useMemo(() => {
     const points: BudgetChartPoint[] = [];
@@ -32,18 +44,6 @@ export function BudgetChart({ budget, baseCpc }: BudgetChartProps) {
     }
     return points;
   }, [baseCpc]);
-
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-zinc-900/80 backdrop-blur-sm border border-white/10 p-3 rounded-lg shadow-lg">
-          <p className="text-xs text-zinc-400">{`Budget: ${label} AED`}</p>
-          <p className="text-sm font-bold text-white">{`Est. Clicks: ${payload[0].value}`}</p>
-        </div>
-      );
-    }
-    return null;
-  };
 
   return (
     <div style={{ width: '100%', height: 250 }}>

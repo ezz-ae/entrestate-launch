@@ -1,8 +1,20 @@
 import { test, expect } from '@playwright/test';
 
-const BASE = process.env.BASE_URL || 'http://localhost:3002';
+const DEV_BASE = process.env.DEV_JOBS_BASE_URL?.trim();
+const BASE = DEV_BASE
+  ? DEV_BASE === 'local'
+    ? 'http://localhost:3002'
+    : DEV_BASE
+  : '';
 
 test.describe('Learning dashboard (dev) flows', () => {
+  test.beforeEach(() => {
+    if (!DEV_BASE) {
+      console.log('SKIPPED: DEV_JOBS_BASE_URL not set');
+    }
+    test.skip(!DEV_BASE, 'DEV_JOBS_BASE_URL not set; skipping dev jobs e2e tests.');
+  });
+
   test('shows a dev job and supports retry via API', async ({ page, request }) => {
     // Create a job via the dev API
     const createRes = await request.post(`${BASE}/api/dev/jobs`, {

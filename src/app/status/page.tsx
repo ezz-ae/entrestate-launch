@@ -1,4 +1,5 @@
 import { Badge } from '@/components/ui/badge';
+import Link from 'next/link';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -27,16 +28,16 @@ export default function StatusPage() {
         </p>
         <div className="flex flex-wrap justify-center gap-3 pt-4">
           <Badge className="bg-green-600/10 border-green-600/20 text-green-400">
-            <a href="/dashboard/sites" className="hover:underline">Website Builder: Live</a>
+            <Link href="/dashboard/sites" className="hover:underline">Website Builder: Live</Link>
           </Badge>
           <Badge className="bg-blue-600/10 border-blue-600/20 text-blue-400">
-            <a href="/dashboard/inventory" className="hover:underline">Inventory: Manage</a>
+            <Link href="/dashboard/inventory" className="hover:underline">Inventory: Manage</Link>
           </Badge>
           <Badge className="bg-yellow-500/10 border-yellow-500/20 text-yellow-400">
-            <a href="/dashboard/ads" className="hover:underline">Ads: Ready</a>
+            <Link href="/dashboard/ads" className="hover:underline">Ads: Ready</Link>
           </Badge>
           <Badge className="bg-purple-600/10 border-purple-600/20 text-purple-400">
-            <a href="/dashboard/messaging" className="hover:underline">Messaging: Configure</a>
+            <Link href="/dashboard/messaging" className="hover:underline">Messaging: Configure</Link>
           </Badge>
         </div>
       </div>

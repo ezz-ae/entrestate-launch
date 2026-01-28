@@ -73,6 +73,7 @@ const buildProjectTemplate = (project: ProjectData): SiteTemplate => {
   const page: SitePage = {
     id: `project-${project.id}`,
     title: project.name,
+    brochureUrl: project.brochureUrl || '',
     blocks: [
       {
         blockId: `hero-${project.id}`,
@@ -98,9 +99,9 @@ const buildProjectTemplate = (project: ProjectData): SiteTemplate => {
           description: project.description?.full || project.description?.short || '',
           features: project.features?.slice(0, 6) || [],
           brochureUrl: project.brochureUrl,
-          locationMapUrl:
-            project.location?.mapUrl ||
-            (project.location?.mapQuery ? `https://www.google.com/maps/search/${encodeURIComponent(project.location.mapQuery)}` : undefined),
+          locationMapUrl: project.location?.mapQuery
+            ? `https://www.google.com/maps/search/${encodeURIComponent(project.location.mapQuery)}`
+            : undefined,
           imageUrl: heroImage,
           stats: [
             {
@@ -134,7 +135,7 @@ const buildProjectTemplate = (project: ProjectData): SiteTemplate => {
   return {
     id: `project-template-${project.id}`,
     name: project.name,
-    siteType: 'project',
+    siteType: 'custom',
     pages: [page],
   };
 };
@@ -355,7 +356,6 @@ export default function BuilderPage() {
     };
   };
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!brochureFile) return;
     setStatus('idle');

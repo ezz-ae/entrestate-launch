@@ -15,7 +15,6 @@ export function LeadNotesButton({ leadId, initialNotes }: Props) {
       onClick={() => {
         // noop stub — a real implementation would open an editor/modal
         // kept intentionally minimal so builds succeed.
-        // eslint-disable-next-line no-console
         console.log('Open lead notes for', leadId);
       }}
     >
