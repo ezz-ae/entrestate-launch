@@ -92,6 +92,35 @@ export function LeadValidator() {
     }
   };
 
+  const handleDecision = async (
+    lead: LeadPipeRecord,
+    decision: 'accept' | 'reject'
+  ) => {
+    try {
+      const res = await authorizedFetch('/api/lead-pipe/decision', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ leadId: lead.id, decision }),
+      });
+      const payload = await res.json().catch(() => null);
+      if (!res.ok || !payload?.ok) {
+        throw new Error(payload?.error?.message || payload?.error || 'Update failed.');
+      }
+      setLeads((prev) => prev.filter((item) => item.id !== lead.id));
+      toast({
+        title: decision === 'accept' ? 'Lead accepted' : 'Lead rejected',
+        description:
+          decision === 'accept'
+            ? 'Lead will remain active in your pipeline.'
+            : 'Lead will be ignored in the pipeline.',
+      });
+    } catch (decisionError) {
+      const message =
+        decisionError instanceof Error ? decisionError.message : 'Update failed.';
+      toast({ title: 'Decision failed', description: message, variant: 'destructive' });
+    }
+  };
+
   return (
     <div className="rounded-2xl border border-white/10 bg-zinc-900/60 p-5 space-y-4">
       <div className="flex items-center justify-between">
@@ -169,6 +198,22 @@ export function LeadValidator() {
                 onClick={() => handleAction(lead, 'sms')}
               >
                 SMS
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                className="flex-1 min-w-[120px] border-white/20 text-white"
+                onClick={() => handleDecision(lead, 'accept')}
+              >
+                Accept
+              </Button>
+              <Button
+                variant="outline"
+                className="flex-1 min-w-[120px] border-red-500/40 text-red-200 hover:bg-red-500/10"
+                onClick={() => handleDecision(lead, 'reject')}
+              >
+                Reject
               </Button>
             </div>
             {!providers.email.enabled && (

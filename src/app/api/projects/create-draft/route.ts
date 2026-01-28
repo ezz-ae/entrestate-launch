@@ -33,6 +33,7 @@ export async function POST(req: NextRequest) {
       updatedAt: now,
       title: CLAMP(body?.title || body?.prompt),
       prompt: body?.prompt || null,
+      source: body?.source || null,
     };
 
     await draftRef.set(draft);

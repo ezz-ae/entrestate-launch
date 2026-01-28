@@ -127,7 +127,11 @@ export async function collectLeadPipeCandidates(db: Firestore, tenantId: string)
   const candidates: LeadPipeCandidate[] = [];
   leadSnap.docs.forEach((doc) => {
     const data = doc.data();
-    if (data.pipelineDecision === 'rejected' || data.status === 'ignored') {
+    if (
+      data.pipelineDecision === 'reject' ||
+      data.pipelineDecision === 'rejected' ||
+      data.status === 'ignored'
+    ) {
       return;
     }
     const createdAt = toIsoString(

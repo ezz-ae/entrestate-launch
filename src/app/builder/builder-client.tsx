@@ -204,20 +204,28 @@ export default function BuilderPage() {
     </div>
   ) : null;
 
-  const createDraft = useCallback(async (title?: string) => {
+  const createDraft = useCallback(
+    async (title?: string, source?: string, prompt?: string) => {
     setDraftLoading(true);
     setDraftError(null);
     try {
       const response = await fetch('/api/projects/create-draft', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: title?.trim() || 'New project' }),
+        body: JSON.stringify({
+          title: title?.trim() || 'New project',
+          source,
+          prompt: prompt?.trim() || null,
+        }),
       });
       const payload = await response.json().catch(() => null);
       const draftPayload = payload?.data?.draft || payload?.draft;
       if (!response.ok || !draftPayload) {
         throw new Error(
-          payload?.error || payload?.message || 'Draft creation failed'
+          payload?.error?.message ||
+            payload?.error ||
+            payload?.message ||
+            'Draft creation failed'
         );
       }
       setDraft(draftPayload);
@@ -230,7 +238,17 @@ export default function BuilderPage() {
     } finally {
       setDraftLoading(false);
     }
-  }, []);
+    },
+    []
+  );
+
+  const ensureDraft = useCallback(
+    async (source: string, title?: string, prompt?: string) => {
+      if (draft || draftLoading) return;
+      await createDraft(title, source, prompt);
+    },
+    [draft, draftLoading, createDraft]
+  );
 
   const runAnalysis = async () => {
     if (!brochureFile) return;
@@ -250,7 +268,12 @@ export default function BuilderPage() {
 
       const payload = await response.json().catch(() => null);
       if (!response.ok || !payload?.ok) {
-        throw new Error(payload?.message || payload?.error || 'Upload failed');
+        throw new Error(
+          payload?.error?.message ||
+            payload?.error ||
+            payload?.message ||
+            'Upload failed'
+        );
       }
 
       const jobId = (payload?.data?.jobId || payload?.jobId) as string | undefined;
@@ -294,7 +317,12 @@ export default function BuilderPage() {
       });
       const payload = await response.json().catch(() => null);
       if (!response.ok || !payload?.ok) {
-        throw new Error(payload?.message || payload?.error || 'Failed to read analysis status.');
+        throw new Error(
+          payload?.error?.message ||
+            payload?.error ||
+            payload?.message ||
+            'Failed to read analysis status.'
+        );
       }
       const jobData = payload?.data || payload;
       if (jobData.status === 'done') {
@@ -359,7 +387,7 @@ export default function BuilderPage() {
     ) {
       return;
     }
-    void createDraft(promptParam || 'New project');
+    void createDraft(promptParam || 'New project', 'empty', promptParam);
   }, [
     builderTemplate,
     builderPage,
@@ -380,6 +408,7 @@ export default function BuilderPage() {
       setPromptDraft(promptParam);
       if (lastPromptRef.current !== promptParam) {
         lastPromptRef.current = promptParam;
+        void ensureDraft('prompt', 'Prompt draft', promptParam);
         void startFromPrompt(promptParam);
       }
       return;
@@ -393,6 +422,7 @@ export default function BuilderPage() {
         return;
       }
       if (resolution.template?.pages?.length) {
+        void ensureDraft('template', resolution.template.name);
         setBuilderTemplate(resolution.template);
         setBuilderPage(clonePage(resolution.template.pages[0]));
         setBuilderError(null);
@@ -429,6 +459,7 @@ export default function BuilderPage() {
       })
       .then((project) => {
         if (cancelled || !project) return;
+        void ensureDraft('inventory', project.name);
         const template = buildProjectTemplate(project);
         setBuilderTemplate(template);
         setBuilderPage(clonePage(template.pages[0]));
@@ -459,6 +490,7 @@ export default function BuilderPage() {
   const handleBrochureSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+    void ensureDraft('brochure', file.name);
     setBrochureFile(file);
   };
 
@@ -472,6 +504,7 @@ export default function BuilderPage() {
     setShowTemplates(false);
 
     try {
+      await ensureDraft('prompt', 'Prompt draft', trimmedPrompt);
       const template = await handleOnboarding(
         { method: 'prompt', 'user-prompt': trimmedPrompt },
         () => {}
@@ -497,6 +530,7 @@ export default function BuilderPage() {
       setBuilderError('This template has no pages to edit.');
       return;
     }
+    void ensureDraft('template', template.name);
     setBuilderTemplate(template);
     setBuilderPage(clonePage(template.pages[0]));
     setBuilderError(null);
