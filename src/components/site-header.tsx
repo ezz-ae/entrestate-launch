@@ -4,26 +4,18 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from "@/lib/utils";
-import { 
-  Sparkles, 
-  User, 
-  Menu, 
-  X, 
-  ArrowRight, 
-  Layout, 
-  Globe, 
-  Bot, 
+import {
+  Sparkles,
+  User,
+  Menu,
+  X,
+  ArrowRight,
   Target,
-  Home,
-  Layers,
-  ChevronRight,
-  Zap,
   Library,
   LifeBuoy,
-  Search,
-  Users,
-  Building,
-  UploadCloud
+  UploadCloud,
+  Briefcase,
+  TrendingUp
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EntrestateLogo } from './icons';
@@ -31,24 +23,77 @@ import { Button } from './ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useBrochure } from '@/context/BrochureContext';
 
-const NAV_LINKS = [
-    { href: "/chat-agent-public", label: "Chat Agent", icon: Bot, description: "Live lead capture chat demo" },
-    { href: "/instagram-assistant-public", label: "Instagram Assistant", icon: Zap, description: "Reply faster to buyer inquiries" },
-    { href: "/site-builder-landing", label: "Site Builder", icon: Layout, description: "Build a lead capture page" },
-    { href: "/discover", label: "Inventory", icon: Building, description: "Browse live projects" },
-    { href: "/lead-pipeline-overview", label: "Lead Pipeline", icon: Users, description: "Qualify and route leads" },
-    { href: "/google-ads-public", label: "Google Ads", icon: Search, description: "Plan ads without the headache" },
-    { href: "/support", label: "Support", icon: LifeBuoy, description: "Message our support team" },
+const PRODUCT_GROUPS = [
+  {
+    title: 'SiteBuilder',
+    items: [
+      { href: '/site-builder-landing', label: 'Landing Page' },
+      { href: '/builder?template=full-company', label: 'Brokerage Company Site' },
+      { href: '/builder?template=template-ads-launch', label: 'Listing Site' },
+      { href: '/builder?template=developer-focus', label: 'Developer Collection' },
+      { href: '/chat-agent-public', label: 'ChatAgent Site' },
+      { href: '/builder?template=template-roadshow', label: 'Launch Event Site' },
+    ],
+  },
+  {
+    title: 'ChatAgent',
+    items: [
+      { href: '/instagram-assistant-public', label: 'Instagram DM' },
+      { href: '/instagram-assistant', label: 'Instagram Bio Link' },
+      { href: '/dashboard/chat-agent', label: 'Real Estate Expert' },
+      { href: '/dashboard/chat-agent/learning', label: 'Branding & Learning' },
+    ],
+  },
+  {
+    title: 'Lead Generation',
+    items: [
+      { href: '/google-ads-public', label: 'Google Ads' },
+      { href: '/dashboard/meta-audience', label: 'Lookalike Audience' },
+      { href: '/dashboard/marketing', label: 'Smart Targeting' },
+      { href: '/dashboard/leads/cold-calling', label: 'Lead Cold Calling' },
+      { href: '/dashboard/leads', label: 'Lead Validating' },
+      { href: '/lead-pipeline-overview', label: 'Lead Pipe' },
+    ],
+  },
+  {
+    title: 'Smart Sender',
+    items: [
+      { href: '/dashboard/sms-marketing', label: 'SMS Sender' },
+      { href: '/dashboard/email-marketing', label: 'Email Campaign' },
+      { href: '/dashboard/email-marketing', label: 'Smart Email Plans' },
+    ],
+  },
+  {
+    title: 'Inventory',
+    items: [
+      { href: '/discover', label: 'Market Inventory' },
+      { href: '/discover', label: 'Top Marketing Projects' },
+      { href: '/discover', label: 'Dubai Market' },
+      { href: '/discover', label: 'Abu Dhabi Market' },
+      { href: '/discover', label: 'Investment Map' },
+      { href: '/discover', label: 'Market Overview' },
+    ],
+  },
+];
+
+const RESOURCE_LINKS = [
+  { href: '/docs', label: 'Documentation', icon: Library },
+  { href: '/support', label: 'Support', icon: LifeBuoy },
+  { href: '/status', label: 'Smart System', icon: Sparkles },
+  { href: '/blog', label: 'Articles', icon: Briefcase },
+  { href: '/trending', label: 'Market Updates', icon: TrendingUp },
 ];
 
 export function SiteHeader() {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? '';
   const router = useRouter();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [openMenu, setOpenMenu] = useState<'products' | 'resources' | null>(null);
   const { user, logOut } = useAuth();
   const { setBrochureFile } = useBrochure();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const showBrochureUpload = pathname === '/' || pathname === '/site-builder-landing' || pathname === '/builder-funnel';
 
   const handleLogOut = async () => {
     try {
@@ -101,39 +146,54 @@ export function SiteHeader() {
             <EntrestateLogo className="scale-90" />
           </Link>
           
-          <nav className="hidden xl:flex items-center space-x-8">
-            {NAV_LINKS.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={cn(
-                  "text-[10px] font-bold uppercase tracking-[0.2em] transition-all hover:text-white",
-                  pathname === link.href ? "text-white border-b border-white/40 pb-1" : "text-zinc-500"
-                )}
-              >
-                {link.label}
-              </Link>
-            ))}
+          <nav className="hidden xl:flex items-center space-x-6">
+            <button
+              onMouseEnter={() => setOpenMenu('products')}
+              onMouseLeave={() => setOpenMenu((prev) => (prev === 'products' ? null : prev))}
+              className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 hover:text-white transition-all"
+            >
+              Products
+            </button>
+            <button
+              onMouseEnter={() => setOpenMenu('resources')}
+              onMouseLeave={() => setOpenMenu((prev) => (prev === 'resources' ? null : prev))}
+              className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 hover:text-white transition-all"
+            >
+              Resources
+            </button>
+            <Link
+              href="/discover"
+              className={cn(
+                "text-[10px] font-bold uppercase tracking-[0.2em] transition-all hover:text-white",
+                pathname.startsWith('/discover') ? "text-white border-b border-white/40 pb-1" : "text-zinc-500"
+              )}
+            >
+              Inventory
+            </Link>
           </nav>
         </div>
         
         <div className="flex items-center gap-3">
-          {/* Header Upload Button */}
-          <input 
-            type="file" 
-            ref={fileInputRef}
-            className="hidden"
-            accept=".pdf"
-            onChange={handleHeaderUpload}
-          />
-          <Button 
-            variant="ghost" 
-            className="hidden sm:flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:text-white hover:bg-white/5"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <UploadCloud className="h-4 w-4" />
-            Upload
-          </Button>
+          {showBrochureUpload && (
+            <>
+              {/* Brochure upload belongs only on builder entry surfaces */}
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept=".pdf"
+                onChange={handleHeaderUpload}
+              />
+              <Button
+                variant="ghost"
+                className="hidden sm:flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:text-white hover:bg-white/5"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <UploadCloud className="h-4 w-4" />
+                Upload brochure
+              </Button>
+            </>
+          )}
 
           {/* Auth bypassed for testing */}
           {true || user ? (
@@ -167,6 +227,43 @@ export function SiteHeader() {
       </div>
 
       <AnimatePresence>
+        {(openMenu === 'products' || openMenu === 'resources') && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            onMouseEnter={() => setOpenMenu(openMenu)}
+            onMouseLeave={() => setOpenMenu(null)}
+            className="hidden xl:block absolute top-full left-0 right-0 bg-black/90 backdrop-blur-2xl border-t border-white/10"
+          >
+            <div className="max-w-[1400px] mx-auto px-8 py-10 grid grid-cols-5 gap-8">
+              {openMenu === 'products' && PRODUCT_GROUPS.map((group) => (
+                <div key={group.title}>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-500 mb-4">{group.title}</p>
+                  <div className="flex flex-col gap-3">
+                    {group.items.map((item) => (
+                      <Link key={item.href + item.label} href={item.href} className="text-sm text-white/90 hover:text-white">
+                        {item.label}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              {openMenu === 'resources' && (
+                <div className="col-span-5 grid grid-cols-3 gap-6">
+                  {RESOURCE_LINKS.map((item) => (
+                    <Link key={item.href} href={item.href} className="rounded-2xl border border-white/10 p-4 text-sm text-white/90 hover:text-white">
+                      <div className="flex items-center gap-3">
+                        <item.icon className="h-4 w-4 text-zinc-400" />
+                        {item.label}
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
         {isMobileMenuOpen && (
           <>
             <motion.div
@@ -186,35 +283,38 @@ export function SiteHeader() {
                 <div className="flex-1 overflow-y-auto px-6 pt-24 pb-12">
                     <div className="space-y-10">
                         <div>
-                            <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mb-6 px-1">Explore</p>
-                            <nav className="flex flex-col gap-4">
-                                {NAV_LINKS.map((link) => (
-                                    <Link
-                                        key={link.href}
-                                        href={link.href}
-                                        className="group flex items-center justify-between p-3 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] transition-all"
-                                    >
-                                        <div className="flex items-center gap-4">
-                                            <div className={cn(
-                                                "w-10 h-10 rounded-xl flex items-center justify-center border transition-all",
-                                                pathname === link.href ? "bg-blue-600 border-blue-500 text-white" : "bg-zinc-900 border-white/5 text-zinc-500"
-                                            )}>
-                                                <link.icon className="h-5 w-5" />
-                                            </div>
-                                            <div>
-                                                <h4 className={cn("text-lg font-bold tracking-tight", pathname === link.href ? "text-white" : "text-zinc-300")}>{link.label}</h4>
-                                                <p className="text-[10px] text-zinc-600 font-medium uppercase tracking-wider">{link.description.slice(0, 30)}...</p>
-                                            </div>
-                                        </div>
-                                        <ChevronRight className="h-4 w-4 text-zinc-800" />
-                                    </Link>
-                                ))}
-                            </nav>
+                            <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mb-6 px-1">Products</p>
+                            <div className="space-y-6">
+                              {PRODUCT_GROUPS.map((group) => (
+                                <div key={group.title}>
+                                  <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3">{group.title}</p>
+                                  <div className="grid grid-cols-2 gap-3">
+                                    {group.items.map((item) => (
+                                      <Link
+                                        key={item.href + item.label}
+                                        href={item.href}
+                                        className="rounded-xl border border-white/5 bg-white/[0.02] px-3 py-2 text-xs text-zinc-300 hover:text-white"
+                                      >
+                                        {item.label}
+                                      </Link>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
                         </div>
 
                         <div>
-                            <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mb-6 px-1">Quick Access</p>
+                            <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mb-6 px-1">Resources</p>
                             <div className="space-y-3">
+                                <div className="grid grid-cols-2 gap-3">
+                                  {RESOURCE_LINKS.map((item) => (
+                                    <Link key={item.href} href={item.href} className="p-4 rounded-xl bg-white/5 border border-white/5 flex flex-col gap-2">
+                                        <item.icon className="h-5 w-5 text-zinc-500" />
+                                        <span className="text-xs font-bold text-zinc-300">{item.label}</span>
+                                    </Link>
+                                  ))}
+                                </div>
                                 <Link href={true || user ? "/dashboard" : "/start"} className="block">
                                     <div className="p-6 rounded-[1.5rem] bg-blue-600 text-white shadow-xl shadow-blue-600/20 group">
                                         <div className="flex items-center justify-between mb-3">
@@ -225,18 +325,12 @@ export function SiteHeader() {
                                         <p className="text-blue-100/60 text-[10px] font-bold uppercase tracking-widest">Your Workspace</p>
                                     </div>
                                 </Link>
-                                <div className="grid grid-cols-2 gap-3">
-                                    {(true || user) && (
-                                      <Link href="/profile" className="p-4 rounded-xl bg-white/5 border border-white/5 flex flex-col gap-2">
-                                          <User className="h-5 w-5 text-zinc-500" />
-                                          <span className="text-xs font-bold text-zinc-300">Profile</span>
-                                      </Link>
-                                    )}
-                                    <Link href="/docs" className="p-4 rounded-xl bg-white/5 border border-white/5 flex flex-col gap-2">
-                                        <LifeBuoy className="h-5 w-5 text-zinc-500" />
-                                        <span className="text-xs font-bold text-zinc-300">Help Center</span>
-                                    </Link>
-                                </div>
+                                {(true || user) && (
+                                  <Link href="/profile" className="p-4 rounded-xl bg-white/5 border border-white/5 flex flex-col gap-2">
+                                      <User className="h-5 w-5 text-zinc-500" />
+                                      <span className="text-xs font-bold text-zinc-300">Profile</span>
+                                  </Link>
+                                )}
                             </div>
                         </div>
                     </div>
