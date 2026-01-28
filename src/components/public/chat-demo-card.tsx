@@ -76,22 +76,22 @@ export function ChatDemoCard({
   };
 
   return (
-    <div className="relative h-full rounded-3xl border border-white/10 bg-[#14110f]/90 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+    <div className="relative h-full rounded-3xl border border-white/10 bg-[#101829]/90 p-6 shadow-[0_20px_60px_rgba(4,10,24,0.55)]">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl md:text-2xl font-semibold text-[#f7f1e6] font-[var(--font-display)]">
+        <h2 className="text-xl md:text-2xl font-semibold text-[#f4f7ff] font-[var(--font-display)]">
           {title}
         </h2>
-        <span className="text-[10px] uppercase tracking-[0.3em] text-[#c7a36b]">Live</span>
+        <span className="text-[10px] uppercase tracking-[0.3em] text-[#7aa5ff]">Live</span>
       </div>
-      <div className="flex-grow flex flex-col rounded-2xl border border-white/10 bg-[#0f0e0c] p-4 mb-4 min-h-[260px]">
-        <div className="flex flex-col gap-3">
+      <div className="flex-grow flex flex-col rounded-2xl border border-white/10 bg-[#0b1222] p-4 mb-4 min-h-[320px]">
+        <div className="flex flex-col gap-4">
           {messages.map((msg, index) => (
             <div
               key={`${msg.role}-${index}`}
-              className={`text-sm text-[#e8e1d8] p-3 rounded-2xl max-w-[85%] border border-white/10 ${
+              className={`text-sm text-[#e8edf7] p-4 rounded-2xl max-w-[85%] border border-white/10 shadow-sm ${
                 msg.role === 'user'
-                  ? 'self-end rounded-br-sm bg-[#1f1a14]'
-                  : 'self-start rounded-bl-sm bg-[#12100e]'
+                  ? 'self-end rounded-br-sm bg-[#1b243a]'
+                  : 'self-start rounded-bl-sm bg-[#0f172a]'
               }`}
             >
               {msg.text}
@@ -104,14 +104,14 @@ export function ChatDemoCard({
           placeholder={placeholder}
           value={input}
           onChange={(event) => setInput(event.target.value)}
-          className="w-full rounded-xl border border-white/10 bg-[#0b0a09] px-3 py-2 text-sm text-[#f5f1e8] placeholder:text-[#6f665c] focus:outline-none focus:ring-2 focus:ring-[#c7a36b]/40"
+          className="w-full rounded-xl border border-white/10 bg-[#0a0f1c] px-3 py-2 text-sm text-[#f4f7ff] placeholder:text-[#6b7280] focus:outline-none focus:ring-2 focus:ring-[#7aa5ff]/40"
         />
       </div>
-      {error && <p className="text-xs text-[#f5a3a3] mb-3">{error}</p>}
+      {error && <p className="text-xs text-[#ffb3b3] mb-3">{error}</p>}
       <button
         onClick={handleSend}
         disabled={!canSend}
-        className="w-full rounded-xl bg-[#c7a36b] text-[#0b0a09] font-semibold py-3 text-sm uppercase tracking-[0.2em] transition disabled:opacity-50"
+        className="w-full rounded-xl bg-[#7aa5ff] text-[#0a0f1c] font-semibold py-3 text-sm uppercase tracking-[0.2em] transition disabled:opacity-50"
       >
         {loading ? 'Sending…' : buttonLabel}
       </button>

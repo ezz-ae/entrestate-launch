@@ -45,24 +45,24 @@ export function ColdCallDemoCard({ title, buttonLabel, topics, context }: ColdCa
   };
 
   return (
-    <div className="relative h-full rounded-3xl border border-white/10 bg-[#14110f]/90 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+    <div className="relative h-full rounded-3xl border border-white/10 bg-[#101829]/90 p-6 shadow-[0_20px_60px_rgba(4,10,24,0.55)]">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl md:text-2xl font-semibold text-[#f7f1e6] font-[var(--font-display)]">
+        <h2 className="text-xl md:text-2xl font-semibold text-[#f4f7ff] font-[var(--font-display)]">
           {title}
         </h2>
-        <span className="text-[10px] uppercase tracking-[0.3em] text-[#c7a36b]">Preview</span>
+        <span className="text-[10px] uppercase tracking-[0.3em] text-[#40c9c6]">Preview</span>
       </div>
       <input
         type="tel"
         placeholder="Enter your phone number"
         value={phone}
         onChange={(event) => setPhone(event.target.value)}
-        className="w-full rounded-xl border border-white/10 bg-[#0b0a09] px-3 py-2 text-sm text-[#f5f1e8] placeholder:text-[#6f665c] focus:outline-none focus:ring-2 focus:ring-[#c7a36b]/40 mb-3"
+        className="w-full rounded-xl border border-white/10 bg-[#0a0f1c] px-3 py-2 text-sm text-[#f4f7ff] placeholder:text-[#6b7280] focus:outline-none focus:ring-2 focus:ring-[#40c9c6]/40 mb-3"
       />
       <select
         value={topic}
         onChange={(event) => setTopic(event.target.value)}
-        className="w-full rounded-xl border border-white/10 bg-[#0b0a09] px-3 py-2 text-sm text-[#f5f1e8] focus:outline-none focus:ring-2 focus:ring-[#c7a36b]/40 mb-3"
+        className="w-full rounded-xl border border-white/10 bg-[#0a0f1c] px-3 py-2 text-sm text-[#f4f7ff] focus:outline-none focus:ring-2 focus:ring-[#40c9c6]/40 mb-3"
       >
         <option value="">Call me to discuss:</option>
         {topics.map((item) => (
@@ -71,16 +71,16 @@ export function ColdCallDemoCard({ title, buttonLabel, topics, context }: ColdCa
           </option>
         ))}
       </select>
-      {error && <p className="text-xs text-[#f5a3a3] mb-3">{error}</p>}
+      {error && <p className="text-xs text-[#ffb3b3] mb-3">{error}</p>}
       <button
         onClick={handlePreview}
         disabled={loading}
-        className="w-full rounded-xl bg-[#c7a36b] text-[#0b0a09] font-semibold py-3 text-sm uppercase tracking-[0.2em] transition disabled:opacity-50"
+        className="w-full rounded-xl bg-[#40c9c6] text-[#0a0f1c] font-semibold py-3 text-sm uppercase tracking-[0.2em] transition disabled:opacity-50"
       >
         {loading ? 'Saving…' : buttonLabel}
       </button>
       {preview && (
-        <div className="mt-4 text-xs text-[#d9d1c6] whitespace-pre-line rounded-xl bg-[#0f0e0c] border border-white/10 p-3">
+        <div className="mt-4 text-xs text-[#cbd5f5] whitespace-pre-line rounded-xl bg-[#0b1222] border border-white/10 p-3">
           {preview}
         </div>
       )}
