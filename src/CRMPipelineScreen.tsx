@@ -34,7 +34,7 @@ const CRMPipelineScreen: React.FC<CRMPipelineScreenProps> = ({ onBack }) => {
     <div className="screen-container" style={{ padding: '24px', paddingBottom: '40px', height: '100vh', display: 'flex', flexDirection: 'column' }}>
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', flexShrink: 0 }}>
         <button onClick={onBack} style={{ background: 'none', border: 'none', fontSize: '24px', marginRight: '16px', cursor: 'pointer', padding: 0, color: 'var(--text-tertiary)' }}>←</button>
-        <h1 className="screen-title" style={{ marginBottom: 0 }}>Pipeline</h1>
+        <h1 className="screen-title" style={{ marginBottom: 0 }}>Lead Desk</h1>
       </div>
 
       <div className="pipeline-container">
@@ -58,7 +58,7 @@ const CRMPipelineScreen: React.FC<CRMPipelineScreenProps> = ({ onBack }) => {
                       <button 
                         key={s.id}
                         onClick={() => moveLead(lead.id, s.id)}
-                        style={{ fontSize: '10px', padding: '4px 8px', borderRadius: '4px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', cursor: 'pointer', color: 'var(--text-secondary)' }}
+                        style={{ fontSize: '12px', padding: '8px 12px', borderRadius: '4px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', cursor: 'pointer', color: 'var(--text-secondary)' }}
                       >
                         → {s.label}
                       </button>

@@ -124,7 +124,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack, onSave, theme, 
         <SettingsMenuItem icon="🎯" label="Lead Scoring" onClick={() => onNavigateTo('leadScoring')} />
         <SettingsMenuItem icon="🔌" label="Integrations & API" onClick={() => onNavigateTo('integrations')} />
         <SettingsMenuItem icon="💳" label="Billing & Invoices" onClick={() => onNavigateTo('billing')} />
-        <SettingsMenuItem icon="📦" label="My Services & Reports" onClick={() => onNavigateTo('services')} />
+        <SettingsMenuItem icon="📈" label="Performance Reports" onClick={() => onNavigateTo('performanceReports')} />
         <SettingsMenuItem icon="🎁" label="Refer & Earn" onClick={() => onNavigateTo('referral')} />
         <SettingsMenuItem icon="❓" label="Help & Support" onClick={() => onNavigateTo('support')} />
       </div>

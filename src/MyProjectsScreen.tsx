@@ -31,7 +31,7 @@ const MyProjectsScreen: React.FC<MyProjectsScreenProps> = ({ onCreateNew, onSett
     { id: 1, name: "Downtown Luxury Loft", type: "website", status: "Live", views: 1240, leads: 45 },
     { id: 2, name: "October Newsletter", type: "email", status: "Sent", views: 560, leads: 12 },
     { id: 3, name: "Marina 2-Bed", type: "website", status: "Live", views: 850, leads: 12 },
-    { id: 4, name: "SMS Blast - Leads", type: "sms", status: "Completed", views: 980, leads: 5 }
+    { id: 4, name: "SMS Campaign - Leads", type: "sms", status: "Completed", views: 980, leads: 5 }
   ]); 
 
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
@@ -98,8 +98,8 @@ const MyProjectsScreen: React.FC<MyProjectsScreenProps> = ({ onCreateNew, onSett
   if (projects.length === 0) {
     return (
       <EmptyState 
-        title="No Projects Yet"
-        message="You haven't started any campaigns. Tap the button below to create your first website or ad."
+        title="Your Portfolio is Empty"
+        message="Create a property website, marketing email, or SMS campaign to get started."
         actionLabel="Start New Project"
         onAction={onCreateNew}
       />
@@ -132,7 +132,7 @@ const MyProjectsScreen: React.FC<MyProjectsScreenProps> = ({ onCreateNew, onSett
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <h1 className="screen-title" style={{ marginBottom: 0 }}>My Projects</h1>
+        <h1 className="screen-title" style={{ marginBottom: 0 }}>My Portfolio</h1>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button onClick={onScanDocument} style={{ background: '#F3F4F6', border: 'none', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', cursor: 'pointer' }}>📷</button>
           <button onClick={onVoiceAssistant} style={{ background: '#F3F4F6', border: 'none', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', cursor: 'pointer' }}>🎙️</button>
@@ -223,7 +223,7 @@ const SwipeableProjectItem: React.FC<{ project: Project, onDelete: (id: number) 
             <span style={{ fontSize: '14px', color: '#6B7280' }}>{project.status}</span>
             {project.views > 0 && (
               <span style={{ fontSize: '12px', fontWeight: '600', color: '#007AFF' }}>
-                {project.views} views
+                {project.views} visitors
               </span>
             )}
           </div>

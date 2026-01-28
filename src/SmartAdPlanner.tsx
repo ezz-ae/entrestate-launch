@@ -8,14 +8,14 @@ interface SmartAdPlannerProps {
   onBudgetChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-const SmartAdPlanner: React.FC<SmartAdPlannerProps> = ({ market, budget, onBudgetChange }) => {
+const AdCampaignPlanner: React.FC<AdCampaignPlannerProps> = ({ market, budget, onBudgetChange }) => {
   // Mock keyword generation based on market
   const keywords = market 
     ? [`${market} real estate`, `property in ${market}`, `buy home ${market}`]
     : ['real estate', 'property for sale'];
 
   return (
-    <div className="smart-planner-container" style={{ animation: 'none', border: 'none', padding: 0 }}>
+    <div className="optimization-insights-container" style={{ animation: 'none', border: 'none', padding: 0 }}>
       <BudgetCalculator 
         value={budget}
         onChange={onBudgetChange}
@@ -27,7 +27,7 @@ const SmartAdPlanner: React.FC<SmartAdPlannerProps> = ({ market, budget, onBudge
           Suggested Keywords
         </label>
         <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '12px', lineHeight: '1.4' }}>
-          We'll automatically target these keywords for you.
+          These keywords will be included in your campaign targeting.
         </p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
           {keywords.map(kw => (
@@ -39,4 +39,4 @@ const SmartAdPlanner: React.FC<SmartAdPlannerProps> = ({ market, budget, onBudge
   );
 };
 
-export default SmartAdPlanner;
+export default AdCampaignPlanner;

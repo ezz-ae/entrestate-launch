@@ -118,11 +118,11 @@ const KnowledgeBaseScreen: React.FC<KnowledgeBaseScreenProps> = ({ onBack, onSav
     <div className="screen-container" style={{ padding: '24px', paddingBottom: '100px' }}>
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '24px' }}>
         <button onClick={onBack} style={{ background: 'none', border: 'none', fontSize: '24px', marginRight: '16px', cursor: 'pointer', padding: 0, color: 'var(--text-tertiary)' }}>←</button>
-        <h1 className="screen-title" style={{ marginBottom: 0 }}>Knowledge Base</h1>
+        <h1 className="screen-title" style={{ marginBottom: 0 }}>Consultant Learning & Identity</h1>
       </div>
 
       <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>
-        Teach your AI agent about your projects, pricing, and FAQs.
+        Centralize information for your Digital Consultant. This content shapes its responses and brand identity across all platforms.
       </p>
 
       {/* Tabs */}
@@ -143,14 +143,14 @@ const KnowledgeBaseScreen: React.FC<KnowledgeBaseScreenProps> = ({ onBack, onSav
           onClick={() => setActiveTab('file')}
           style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', backgroundColor: activeTab === 'file' ? 'var(--bg-primary)' : 'transparent', color: activeTab === 'file' ? 'var(--text-primary)' : 'var(--text-secondary)', fontWeight: '600', boxShadow: activeTab === 'file' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none' }}
         >
-          Upload PDF
+          Upload Documents
         </button>
       </div>
 
       {activeTab === 'structured' && (
         <>
           <ForgivingInput
-            label="Chat Name"
+            label="Consultant Name"
             placeholder="e.g. My Awesome Real Estate Bot"
             value={chatName}
             onChange={(e) => setChatName(e.target.value)}

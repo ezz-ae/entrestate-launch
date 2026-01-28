@@ -23,6 +23,7 @@ interface ChatAgentDashboardProps {
   onViewChat: (chat: InstagramConversation) => void;
   onShowQR: () => void;
   onTestSimulator: () => void;
+  onNavigateTo: (screen: string) => void; // New prop for navigation
 }
 
 const ChatAgentDashboard: React.FC<ChatAgentDashboardProps> = ({ onBack, onUpdateKnowledge, onViewChat, onShowQR, onTestSimulator }) => {
@@ -86,7 +87,7 @@ const ChatAgentDashboard: React.FC<ChatAgentDashboardProps> = ({ onBack, onUpdat
       {/* Custom Header */}
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
         <button onClick={onBack} style={{ background: 'none', border: 'none', fontSize: '24px', marginRight: '16px', cursor: 'pointer', padding: 0, color: 'var(--text-tertiary)' }}>←</button>
-        <h1 className="screen-title" style={{ marginBottom: 0 }}>AI Agent</h1>
+        <h1 className="screen-title" style={{ marginBottom: 0 }}>Digital Consultant</h1>
       </div>
 
       {/* Status Card */}
@@ -108,7 +109,7 @@ const ChatAgentDashboard: React.FC<ChatAgentDashboardProps> = ({ onBack, onUpdat
           </div>
         </div>
         <p style={{ margin: 0, fontSize: '14px', opacity: 0.9 }}>
-          {isActive ? 'I am currently replying to DMs and booking meetings.' : 'I am sleeping. You need to reply manually.'}
+          {isActive ? 'Actively handling inquiries and booking meetings.' : 'Paused. Manual replies required.'}
         </p>
         
         <button 
@@ -126,7 +127,7 @@ const ChatAgentDashboard: React.FC<ChatAgentDashboardProps> = ({ onBack, onUpdat
             width: '100%'
           }}
         >
-          🧪 Test Simulator
+          Test a Conversation
         </button>
       </div>
 
@@ -161,7 +162,7 @@ const ChatAgentDashboard: React.FC<ChatAgentDashboardProps> = ({ onBack, onUpdat
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                 <span style={{ fontWeight: '700', fontSize: '12px' }}>{conv.senderId}</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  {isPaused && <span className="takeover-badge takeover-active">✋ Human Mode</span>}
+                  {isPaused && <span className="takeover-badge takeover-active">✋ Manual Reply</span>}
                   <span style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>
                     {lastMessage ? lastMessage.timestamp.toLocaleTimeString() : ''}
                   </span>
@@ -171,10 +172,10 @@ const ChatAgentDashboard: React.FC<ChatAgentDashboardProps> = ({ onBack, onUpdat
                 {lastMessage ? lastMessage.text : 'No messages yet.'}
               </p>
               {!isPaused && aiReply && (
-                <div style={{ marginTop: '8px', fontSize: '11px', color: 'var(--primary-color)', fontWeight: '600' }}>🤖 AI: {aiReply.text}</div>
+                <div style={{ marginTop: '8px', fontSize: '11px', color: 'var(--primary-color)', fontWeight: '600' }}>{aiReply.text}</div>
               )}
               <button className="takeover-btn" onClick={(e) => { e.stopPropagation(); toggleTakeover(conv.id); }}>
-                {isPaused ? '▶️ Resume AI' : '⏸️ Pause AI (Takeover)'}
+                {isPaused ? '▶️ Resume Assisted Replies' : '✋ Reply Manually'}
               </button>
             </div>
           );
@@ -184,12 +185,12 @@ const ChatAgentDashboard: React.FC<ChatAgentDashboardProps> = ({ onBack, onUpdat
       {/* Knowledge Base Quick Action */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '24px' }}>
         <button 
-          onClick={onUpdateKnowledge}
+          onClick={() => onNavigateTo('consultantLearning')}
           style={{ 
           padding: '16px', backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: '12px', color: 'var(--text-primary)', fontWeight: '600', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px'
         }}>
-          <span style={{ fontSize: '24px' }}>📚</span>
-          <span style={{ fontSize: '12px' }}>Knowledge Base</span>
+          <span style={{ fontSize: '24px' }}>📋</span>
+          <span style={{ fontSize: '12px' }}>Manage Learning Content</span>
         </button>
         <button 
           onClick={onShowQR}

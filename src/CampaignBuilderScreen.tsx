@@ -40,11 +40,11 @@ const CampaignBuilderScreen: React.FC<CampaignBuilderScreenProps> = ({ type = 'e
             onClick={() => setRecipients('all')} 
           />
           <RecipientOption 
-            label="High Intent (Hot)" 
+            label="High-Interest Leads" 
             count={45} 
             selected={recipients === 'hot'} 
             onClick={() => setRecipients('hot')} 
-            icon="🔥"
+            icon="📈"
           />
           <RecipientOption 
             label="Past Clients" 
@@ -111,7 +111,7 @@ const CampaignBuilderScreen: React.FC<CampaignBuilderScreenProps> = ({ type = 'e
           <div style={{ marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid var(--bg-tertiary)' }}>
             <span style={{ fontSize: '12px', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>To</span>
             <div style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text-primary)' }}>
-              {recipients === 'all' ? 'All Leads (1,250)' : recipients === 'hot' ? 'High Intent (45)' : 'Selected List'}
+              {recipients === 'all' ? 'All Leads (1,250)' : recipients === 'hot' ? 'High-Interest Leads (45)' : 'Selected List'}
             </div>
           </div>
           
@@ -132,7 +132,7 @@ const CampaignBuilderScreen: React.FC<CampaignBuilderScreenProps> = ({ type = 'e
       )}
 
       <StickyFooter 
-        label={step === 3 ? `Send ${type === 'email' ? 'Email' : 'SMS'} Blast` : 'Next Step'} 
+        label={step === 3 ? `Send ${type === 'email' ? 'Email' : 'SMS'} Campaign` : 'Next Step'} 
         onClick={handleNext} 
         // @ts-ignore
         disabled={step === 2 && !content}
@@ -158,7 +158,7 @@ const RecipientOption: React.FC<RecipientOptionProps> = ({ label, count, selecte
       <div style={{ fontSize: '20px' }}>{icon}</div>
       <div>
         <div style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{label}</div>
-        <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{count} recipients</div>
+        <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{count} contacts</div>
       </div>
     </div>
     {selected && <span style={{ color: 'var(--primary-color)', fontWeight: '700' }}>✓</span>}

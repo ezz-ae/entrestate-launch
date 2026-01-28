@@ -1,30 +1,55 @@
 import React, { useState } from 'react';
 import StickyFooter from './StickyFooter';
 import ForgivingInput from './ForgivingInput';
+import ProgressBar from '../ProgressBar';
 import './mobile-styles.css';
 
 interface ChatAgentSetupProps {
   onComplete: () => void;
   onBack: () => void;
+  onNavigateTo: (screen: string) => void; // New prop for navigation
 }
 
 const ChatAgentSetup: React.FC<ChatAgentSetupProps> = ({ onComplete, onBack }) => {
   const [step, setStep] = useState(1);
   const [isConnected, setIsConnected] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
   const [selectedProject, setSelectedProject] = useState('');
   const [agentName, setAgentName] = useState('');
   const [companyName, setCompanyName] = useState('');
+  const [communicationStyle, setCommunicationStyle] = useState('professional');
   const [conversionGoal, setConversionGoal] = useState('booking');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const totalSteps = 5; // 1. Connect, 2. Inventory, 3. Profile, 4. Objective, 5. Review
+
+  const handleNext = () => {
+    if (step < totalSteps) {
+      setStep(step + 1);
+    } else {
+      handleActivate();
+    }
+  };
+
+  const handleStepBack = () => {
+    if (step > 1) {
+      setStep(step - 1);
+    } else {
+      onBack();
+    }
+  };
+  
   const handleConnect = () => {
-    // Simulate auth
-    setTimeout(() => setIsConnected(true), 1000);
+    setIsConnecting(true);
+    setTimeout(() => {
+      setIsConnected(true);
+      setIsConnecting(false);
+    }, 1500);
   };
 
   const handleActivate = async () => {
-    if (!isConnected || !selectedProject || !agentName || loading) return;
+    if (!isConnected || !selectedProject || !agentName || !companyName || !communicationStyle || loading) return;
     setLoading(true);
     setError(null);
     try {
@@ -38,12 +63,13 @@ const ChatAgentSetup: React.FC<ChatAgentSetupProps> = ({ onComplete, onBack }) =
           companyName,
           knowledgeSource: selectedProject,
           conversionGoal,
+          communicationStyle,
         }),
       });
 
       if (!response.ok) {
         const err = await response.json();
-        throw new Error(err.error || 'Failed to activate agent.');
+        throw new Error(err.error || 'Failed to activate consultant.');
       }
 
       onComplete();
@@ -53,96 +79,70 @@ const ChatAgentSetup: React.FC<ChatAgentSetupProps> = ({ onComplete, onBack }) =
       setLoading(false);
     }
   };
+  
+  const getStepTitle = () => {
+    switch (step) {
+      case 1: return 'Connect Instagram';
+      case 2: return 'Select Inventory';
+      case 3: return 'Consultant Profile';
+      case 4: return 'Primary Objective';
+      case 5: return 'Review and Activate';
+      default: return '';
+    }
+  };
 
-  return (
-    <div className="screen-container" style={{ padding: '24px', paddingBottom: '100px' }}>
-      {/* Header / Marketing Hook */}
-      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '24px' }}>
-        <button onClick={onBack} style={{ background: 'none', border: 'none', fontSize: '24px', marginRight: '16px', cursor: 'pointer', padding: 0, color: 'var(--text-tertiary)' }}>←</button>
-        <h1 className="screen-title" style={{ marginBottom: 0 }}>AI Chat Expert</h1>
-      </div>
+  const isNextDisabled = () => {
+    switch (step) {
+      case 1: return !isConnected;
+      case 2: return !selectedProject;
+      case 3: return !agentName || !companyName || !communicationStyle;
+      case 4: return !conversionGoal;
+      default: return false;
+    }
+  };
 
-      <div style={{ backgroundColor: 'var(--bg-accent)', padding: '20px', borderRadius: '16px', marginBottom: '32px', border: '1px solid var(--primary-color)' }}>
-        <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--primary-color)', marginTop: 0 }}>Turn DMs into Deals</h3>
-        <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: '1.5', marginBottom: 0 }}>
-          Your AI agent replies instantly, knows every detail of your projects, and books meetings for you 24/7.
-        </p>
-      </div>
-
-      {/* Step 1: Connect */}
-      <div style={{ opacity: step >= 1 ? 1 : 0.5, marginBottom: '24px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
-          <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: step > 1 ? '#10B981' : 'var(--text-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold', marginRight: '12px' }}>1</div>
-          <span style={{ fontWeight: '700', fontSize: '16px', color: 'var(--text-primary)' }}>Connect Instagram</span>
-        </div>
-        
-        {step === 1 && (
-          <button 
-            onClick={handleConnect}
-            style={{
-              width: '100%',
-              padding: '16px',
-              borderRadius: '12px',
-              border: 'none',
-              backgroundColor: isConnected ? '#ECFDF5' : '#E1306C', /* Insta Color */
-              color: isConnected ? '#065F46' : 'white',
-              fontWeight: '700',
-              fontSize: '16px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              cursor: 'pointer',
-              transition: 'all 0.3s'
-            }}
-          >
-            {isConnected ? '✅ Connected as @RealEstatePro' : '📸 Connect Instagram Account'}
-          </button>
-        )}
-      </div>
-
-      {/* Step 2: Knowledge */}
-      <div style={{ opacity: isConnected ? 1 : 0.5, transition: 'opacity 0.5s', marginBottom: '24px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
-          <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: 'var(--text-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold', marginRight: '12px' }}>2</div>
-          <span style={{ fontWeight: '700', fontSize: '16px', color: 'var(--text-primary)' }}>What should I sell?</span>
-        </div>
-
-        {isConnected && (
-          <select 
-            value={selectedProject}
-            onChange={(e) => setSelectedProject(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '16px',
-              borderRadius: '12px',
-              border: '1px solid var(--border-color)',
-              backgroundColor: 'var(--bg-secondary)',
-              fontSize: '16px',
-              color: 'var(--text-primary)',
-              outline: 'none'
-            }}
-          >
-            <option value="">Select a Project...</option>
-            <option value="downtown">Downtown Luxury Loft</option>
-            <option value="marina">Marina 2-Bed</option>
-            <option value="all">Everything (I'm an expert)</option>
-          </select>
-        )}
-      </div>
-
-      {/* Step 3: Branding */}
-      <div style={{ opacity: selectedProject ? 1 : 0.5, transition: 'opacity 0.5s', marginBottom: '24px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
-          <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: 'var(--text-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold', marginRight: '12px' }}>3</div>
-          <span style={{ fontWeight: '700', fontSize: '16px', color: 'var(--text-primary)' }}>Agent Persona</span>
-        </div>
-
-        {selectedProject && (
-          <>
+  const renderStepContent = () => {
+    switch (step) {
+      case 1:
+        return (
+          <div>
+            <p className="step-guidance">First, connect the Instagram account you want your consultant to manage. This allows it to reply to your DMs.</p>
+            <button 
+              onClick={handleConnect}
+              disabled={isConnecting || isConnected}
+              className="instagram-connect-button"
+              style={{
+                backgroundColor: isConnecting ? '#ccc' : (isConnected ? '#ECFDF5' : '#E1306C'),
+                color: isConnected ? '#065F46' : 'white',
+              }}
+            >
+              {isConnecting ? 'Connecting...' : isConnected ? '✅ Connected as @RealEstatePro' : '📸 Connect Instagram Account'}
+            </button>
+          </div>
+        );
+      case 2:
+        return (
+          <div>
+            <p className="step-guidance">Choose which properties or projects the consultant should know about. It will only answer questions about this inventory.</p>
+            <select 
+              value={selectedProject}
+              onChange={(e) => setSelectedProject(e.target.value)}
+              className="setup-select"
+            >
+              <option value="">Select a Project...</option>
+              <option value="downtown">Downtown Luxury Loft</option>
+              <option value="marina">Marina 2-Bed</option>
+              <option value="all">All Projects</option>
+            </select>
+          </div>
+        );
+      case 3:
+        return (
+          <div>
+            <p className="step-guidance">Give your consultant a name and assign it to your company. This is how it will introduce itself to clients.</p>
             <ForgivingInput 
-              label="Agent Name" 
-              placeholder="e.g. Sarah (AI Assistant)" 
+              label="Consultant Name" 
+              placeholder="e.g. Sarah" 
               value={agentName} 
               onChange={(e) => setAgentName(e.target.value)} 
             />
@@ -152,45 +152,72 @@ const ChatAgentSetup: React.FC<ChatAgentSetupProps> = ({ onComplete, onBack }) =
               value={companyName} 
               onChange={(e) => setCompanyName(e.target.value)} 
             />
-          </>
-        )}
+            <div style={{height: '16px'}} />
+            <label className="control-label" style={{marginBottom: '8px'}}>Communication Style</label>
+            <select
+              value={communicationStyle}
+              onChange={(e) => setCommunicationStyle(e.target.value)}
+              className="setup-select"
+            >
+              <option value="professional">Professional</option>
+              <option value="friendly">Friendly</option>
+              <option value="direct">Direct</option>
+            </select>
+            <p className="step-guidance" style={{fontSize: '12px', marginTop: '12px', marginBottom: '0'}}>For advanced knowledge (timings, special offerings), go to <span style={{color: 'var(--primary-color)', cursor: 'pointer'}} onClick={() => onNavigateTo('agentLearning')}>Agent Learning & Content.</span></p>
+          </div>
+        );
+      case 4:
+        return (
+          <div>
+            <p className="step-guidance">What is the main goal for this consultant? This will determine its primary call-to-action.</p>
+            <select 
+              value={conversionGoal}
+              onChange={(e) => setConversionGoal(e.target.value)}
+              className="setup-select"
+            >
+              <option value="booking">📅 Book a Meeting</option>
+              <option value="whatsapp">💬 Send to WhatsApp</option>
+              <option value="phone">📞 Collect Phone Number</option>
+              <option value="event">🎟️ Register for Event</option>
+            </select>
+          </div>
+        );
+      case 5:
+        return (
+          <div className="review-panel">
+            <p className="step-guidance">Review your settings below. If everything looks good, activate your new Digital Consultant.</p>
+            <div className="review-item"><span>Instagram Account</span><strong>@RealEstatePro</strong></div>
+            <div className="review-item"><span>Inventory</span><strong>{selectedProject || 'Not Set'}</strong></div>
+            <div className="review-item"><span>Consultant Name</span><strong>{agentName || 'Not Set'}</strong></div>
+            <div className="review-item"><span>Company Name</span><strong>{companyName || 'Not Set'}</strong></div>
+            <div className="review-item"><span>Communication Style</span><strong>{communicationStyle || 'Not Set'}</strong></div>
+            <div className="review-item"><span>Primary Objective</span><strong>{conversionGoal || 'Not Set'}</strong></div>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="screen-container" style={{ padding: '24px', paddingBottom: '100px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
+        <button onClick={handleStepBack} style={{ background: 'none', border: 'none', fontSize: '24px', marginRight: '16px', cursor: 'pointer', padding: 0, color: 'var(--text-tertiary)' }}>←</button>
+        <h1 className="screen-title" style={{ marginBottom: 0, fontSize: '22px' }}>{getStepTitle()}</h1>
       </div>
 
-      {/* Step 4: Conversion Success */}
-      <div style={{ opacity: agentName ? 1 : 0.5, transition: 'opacity 0.5s', marginBottom: '100px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
-          <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: 'var(--text-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold', marginRight: '12px' }}>4</div>
-          <span style={{ fontWeight: '700', fontSize: '16px', color: 'var(--text-primary)' }}>Success Goal</span>
-        </div>
-
-        {agentName && (
-          <select 
-            value={conversionGoal}
-            onChange={(e) => setConversionGoal(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '16px',
-              borderRadius: '12px',
-              border: '1px solid var(--border-color)',
-              backgroundColor: 'var(--bg-secondary)',
-              fontSize: '16px',
-              color: 'var(--text-primary)',
-              outline: 'none'
-            }}
-          >
-            <option value="booking">📅 Book a Meeting</option>
-            <option value="whatsapp">💬 Send to WhatsApp</option>
-            <option value="phone">📞 Collect Phone Number</option>
-            <option value="event">🎟️ Register for Event</option>
-          </select>
-        )}
+      <ProgressBar progress={(step / totalSteps) * 100} />
+      
+      <div style={{ marginTop: '24px' }}>
+        {renderStepContent()}
       </div>
 
-      {error && <p style={{ color: 'red', textAlign: 'center', marginBottom: '16px' }}>{error}</p>}
+      {error && <p style={{ color: 'red', textAlign: 'center', margin: '24px 0' }}>{error}</p>}
 
       <StickyFooter 
-        label={loading ? 'Activating...' : 'Activate AI Agent'}
-        onClick={handleActivate} 
+        label={loading ? 'Preparing...' : (step === totalSteps ? 'Activate Consultant' : 'Next Step')}
+        onClick={handleNext}
+        disabled={isNextDisabled() || loading}
       />
     </div>
   );

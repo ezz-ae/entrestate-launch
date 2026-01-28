@@ -675,7 +675,7 @@
 .takeover-btn {
   background: none;
   border: 1px solid var(--border-color);
-  padding: 6px 12px;
+  padding: 10px 12px;
   border-radius: 8px;
   font-size: 11px;
   font-weight: 600;
@@ -997,8 +997,8 @@
 }
 
 .color-swatch {
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   cursor: pointer;
   border: 2px solid transparent;
@@ -1269,4 +1269,85 @@
   font-weight: 600;
   cursor: pointer;
   margin-top: 8px;
+}
+
+/* Chat Agent Setup Funnel */
+.step-guidance {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+
+.instagram-connect-button {
+  width: 100%;
+  padding: 16px;
+  border-radius: 12px;
+  border: none;
+  font-weight: 700;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.setup-select {
+  width: 100%;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
+  font-size: 16px;
+  color: var(--text-primary);
+  outline: none;
+}
+
+.review-panel {
+  background-color: var(--bg-secondary);
+  border-radius: 16px;
+  padding: 16px;
+  border: 1px solid var(--border-color);
+}
+
+.review-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.review-item:not(:last-child) {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.review-item strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* Google Ads Dashboard */
+.optimization-insights-container {
+  background-color: var(--bg-accent);
+  border: 1px solid var(--primary-color);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 24px;
+  animation: slideUp 0.4s ease-out;
+}
+
+.opportunity-badge {
+  display: inline-flex;
+  align-items: center;
+  background-color: #DCFCE7;
+  color: #166534;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 12px;
 }

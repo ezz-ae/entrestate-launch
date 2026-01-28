@@ -78,12 +78,12 @@ const GoogleAdsDashboard: React.FC<GoogleAdsDashboardProps> = ({ onBack, onCreat
         </div>
       </div>
 
-      {/* Smart Planner / Insights */}
-      <div className="smart-planner-container">
-        <div className="trend-badge">🔥 Trending Keyword</div>
+      {/* Optimization Opportunities */}
+      <div className="optimization-insights-container">
+        <div className="opportunity-badge">📈 High-Opportunity Keyword</div>
         <h3 style={{ margin: '0 0 8px 0', fontSize: '16px', color: 'var(--text-primary)' }}>"Luxury Apartments"</h3>
         <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
-          CPC has dropped by 15% for this keyword. Consider increasing bid cap.
+          Market Observation: CPC for this keyword has decreased by 15%. Consider reviewing your bid strategy for potential gains.
         </p>
         <div style={{ display: 'flex', gap: '8px' }}>
           <span className="keyword-tag">Real Estate</span>
