@@ -3,197 +3,135 @@ import Link from 'next/link';
 import { ChatDemoCard } from '@/components/public/chat-demo-card';
 import { ColdCallDemoCard } from '@/components/public/cold-call-demo-card';
 import { BrochureUploadCard } from '@/components/public/brochure-upload-card';
+import { FunnelShell } from '@/components/public/funnel-shell';
 
 const SiteBuilderLandingPage = () => {
   return (
-    <div className="min-h-screen bg-white text-gray-800 font-sans">
-      {/* Above the fold: "Try it now" */}
-      <section className="relative bg-gradient-to-br from-slate-50 to-stone-100 py-16 px-4 md:px-8 text-center overflow-hidden flex flex-col items-center justify-center min-h-screen-75vh">
-        <div className="relative z-10 max-w-4xl mx-auto">
-          <h1 className="text-4xl md:text-5xl font-bold mb-8 leading-tight text-gray-900">
-            Launch Your Property Page. Instantly. Experience the Power.
-          </h1>
-        </div>
-
-        <div className="relative z-10 w-full max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
-          <ChatDemoCard
-            title="Chat with Your Page Planner"
-            intro="Tell me about the property you're launching, or what kind of page you envision. I'll help you get started."
-            placeholder="Describe your next property page..."
-            buttonLabel="Start Chat"
-            context="Site builder public demo."
-            endpoint="/api/agent/demo"
-          />
-
-          <ColdCallDemoCard
-            title="Request a Call to Discuss Your Page"
-            buttonLabel="Show Call Preview"
-            topics={[
-              { value: 'property-launch', label: 'Property Launch Strategy' },
-              { value: 'lead-pages', label: 'Lead Capture Pages' },
-              { value: 'portfolio-showcase', label: 'Portfolio Showcase' },
-            ]}
-            context="Site builder call preview."
-          />
-
-          <BrochureUploadCard
-            title="Upload Brochure. See Your Live Page."
-            description="Drop any project brochure and we’ll draft the page summary."
-            ctaLabel="Claim This Page & Launch"
-          />
-        </div>
-        <div className="mt-8 text-sm text-gray-600">
-          Next step:{' '}
-          <Link href="/builder" className="text-navy-700 font-semibold underline">
-            Open the Builder
-          </Link>
-        </div>
-      </section>
-
-      {/* Social Proof Section (Before & After Visual) */}
-      <section className="py-16 px-4 md:px-8 bg-white">
-        <div className="max-w-6xl mx-auto text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">Pages that Perform. Brokers Who Lead.</h2>
-          <p className="text-lg text-gray-700">Transform your property presentations. Our Site Builder takes your existing brochures and turns them into stunning, lead-capturing pages. See the difference.</p>
-        </div>
-        <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-8 items-center">
-          <div className="bg-white rounded-lg shadow-xl overflow-hidden border border-gray-200">
-            <div className="h-64 bg-gray-100 flex items-center justify-center text-gray-500 italic p-4">
-              [Generic Brochure Image/Screenshot]
+    <FunnelShell>
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(199,163,107,0.2),_transparent_45%),radial-gradient(circle_at_bottom,_rgba(61,90,120,0.2),_transparent_55%)]" />
+        <div className="relative mx-auto max-w-6xl px-6 py-20 lg:py-28">
+          <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] items-center">
+            <div>
+              <p className="text-xs uppercase tracking-[0.4em] text-[#c7a36b]">Site Builder</p>
+              <h1 className="mt-4 text-4xl md:text-5xl lg:text-6xl font-[var(--font-display)] leading-[1.05]">
+                Launch a property page without a blank canvas.
+              </h1>
+              <p className="mt-6 text-base md:text-lg text-[#b6aca0] max-w-xl">
+                Start from inventory, brochure, or prompt. The builder creates a draft that captures leads immediately.
+              </p>
+              <div className="mt-8 flex flex-wrap items-center gap-4 text-sm">
+                <span className="rounded-full border border-white/15 px-4 py-2 text-[#f5f1e8]">Instant draft</span>
+                <span className="rounded-full border border-white/15 px-4 py-2 text-[#f5f1e8]">Real estate blocks</span>
+                <span className="rounded-full border border-white/15 px-4 py-2 text-[#f5f1e8]">Lead capture baked in</span>
+              </div>
+              <div className="mt-8 text-sm text-[#b6aca0]">
+                Next step:{' '}
+                <Link href="/builder" className="text-[#c7a36b] font-semibold underline">
+                  Open the Builder
+                </Link>
+              </div>
             </div>
-            <p className="p-4 text-center font-semibold text-lg text-gray-900">Your Brochure: Static Presentation</p>
-          </div>
-          <div className="text-5xl text-navy-600 font-bold hidden md:block">→</div>
-          <div className="bg-white rounded-lg shadow-xl overflow-hidden border border-gray-200">
-            <div className="h-64 bg-gray-100 flex items-center justify-center text-navy-700 italic p-4 font-bold text-lg">
-              [Screenshot: Dynamic Entrestate Property Page]
+
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-1">
+              <ChatDemoCard
+                title="Describe your next page"
+                intro="Tell me about the property or the listing style you need. I’ll draft the structure for you."
+                placeholder="Describe your next property page..."
+                buttonLabel="Start Chat"
+                context="Site builder public demo."
+                endpoint="/api/agent/demo"
+              />
+              <ColdCallDemoCard
+                title="Request a call preview"
+                buttonLabel="Show Call Preview"
+                topics={[
+                  { value: 'property-launch', label: 'Property Launch Strategy' },
+                  { value: 'lead-pages', label: 'Lead Capture Pages' },
+                  { value: 'portfolio-showcase', label: 'Portfolio Showcase' },
+                ]}
+                context="Site builder call preview."
+              />
+              <BrochureUploadCard
+                title="Upload a brochure"
+                description="Drop any project brochure and we’ll draft the page summary."
+                ctaLabel="Upload Brochure"
+              />
             </div>
-            <p className="p-4 text-center font-semibold text-lg text-gray-900">Entrestate Page: Lead-Generating Experience</p>
           </div>
         </div>
       </section>
 
-      {/* "How it Works" (Explanation of Value) */}
-      <section className="py-16 px-4 md:px-8 bg-stone-50">
-        <div className="max-w-6xl mx-auto text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">From Idea to Live: Building Your Lead-Gen Page.</h2>
-        </div>
-        <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-12 items-center">
-          <div className="flex flex-col items-center md:items-start text-center md:text-left p-6 rounded-xl bg-white shadow-md border border-gray-200">
-            <div className="text-5xl text-navy-600 mb-4">✨</div>
-            <h3 className="text-xl font-semibold mb-2 text-gray-900">1. Start Your Way.</h3>
-            <p className="text-gray-700">Begin with your property inventory, upload a brochure, or simply describe your vision. Our Builder adapts to your workflow, making creation intuitive.</p>
-          </div>
-          <div className="flex flex-col items-center md:items-start text-center md:text-left p-6 rounded-xl bg-white shadow-md border border-gray-200">
-            <div className="text-5xl text-navy-600 mb-4">🧱</div>
-            <h3 className="text-xl font-semibold mb-2 text-gray-900">2. Customize with Essential Elements.</h3>
-            <p className="text-gray-700">Drag and drop essential real estate blocks: interactive location maps, payment plans, photo galleries, WhatsApp CTAs, and integrated inquiry forms. Everything a buyer needs.</p>
-          </div>
-          <div className="flex flex-col items-center md:items-start text-center md:text-left p-6 rounded-xl bg-white shadow-md border border-gray-200">
-            <div className="text-5xl text-navy-600 mb-4">🌐</div>
-            <h3 className="text-xl font-semibold mb-2 text-gray-900">3. Publish with Your Unique Domain.</h3>
-            <p className="text-gray-700">Launch your page instantly with a free, custom Entrestate subdomain (e.g., name.site.entrestate.com), or easily connect your own domain. Your professional online presence, live in moments.</p>
-          </div>
-          <div className="flex flex-col items-center md:items-start text-center md:text-left p-6 rounded-xl bg-white shadow-md border border-gray-200">
-            <div className="text-5xl text-navy-600 mb-4">📈</div>
-            <h3 className="text-xl font-semibold mb-2 text-gray-900">4. Capture Leads Directly.</h3>
-            <p className="text-gray-700">Every page is optimized for lead generation. Inquiries from interested buyers land directly in your Entrestate Lead Pipeline, ensuring no opportunity is missed.</p>
+      <section className="border-t border-white/10 bg-[#0f0e0c]">
+        <div className="mx-auto max-w-6xl px-6 py-16">
+          <div className="grid gap-6 md:grid-cols-3">
+            {[
+              { value: '4 min', label: 'Average time to first draft' },
+              { value: '0', label: 'Blank canvas required' },
+              { value: '150+', label: 'Blocks optimized for real estate' },
+            ].map((stat) => (
+              <div key={stat.label} className="rounded-2xl border border-white/10 bg-[#14110f] p-6">
+                <p className="text-3xl font-semibold text-[#f7f1e6]">{stat.value}</p>
+                <p className="text-sm text-[#b6aca0] mt-2">{stat.label}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Pricing Card */}
-      <section className="py-16 px-4 md:px-8 bg-white">
-        <div className="max-w-6xl mx-auto text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">Unlimited Pages. Unlimited Potential. Transparent Investment.</h2>
+      <section className="mx-auto max-w-6xl px-6 py-20">
+        <div className="grid gap-10 lg:grid-cols-2">
+          <div>
+            <p className="text-xs uppercase tracking-[0.4em] text-[#c7a36b]">Workflow</p>
+            <h2 className="mt-4 text-3xl md:text-4xl font-[var(--font-display)]">
+              From brochure to live page in one flow.
+            </h2>
+          </div>
+          <div className="space-y-4 text-[#b6aca0]">
+            <p>Start from inventory, brochure, template, or prompt.</p>
+            <p>Customize blocks that buyers need to act fast.</p>
+            <p>Publish and capture leads instantly.</p>
+          </div>
         </div>
-        <div className="max-w-md mx-auto bg-gradient-to-br from-stone-50 to-slate-100 p-8 rounded-xl shadow-2xl border border-gray-200">
-          <h3 className="text-2xl font-bold mb-4 text-center text-gray-900">Entrestate Site Builder Pro</h3>
-          <p className="text-5xl font-extrabold text-center text-navy-700 mb-2">150 AED</p>
-          <p className="text-lg text-center text-gray-600 mb-8">/ month</p>
-          <ul className="space-y-3 mb-8 text-gray-700">
-            <li className="flex items-center"><span className="text-navy-600 text-xl mr-2">✓</span>Unlimited Lead-Generating Property Pages</li>
-            <li className="flex items-center"><span className="text-navy-600 text-xl mr-2">✓</span>Flexible Creation Methods (Inventory, Brochure, Description)</li>
-            <li className="flex items-center"><span className="text-navy-600 text-xl mr-2">✓</span>Free Custom Subdomain (name.site.entrestate.com)</li>
-            <li className="flex items-center"><span className="text-navy-600 text-xl mr-2">✓</span>Easy Custom Domain Connection & Management</li>
-            <li className="flex items-center"><span className="text-navy-600 text-xl mr-2">✓</span>Comprehensive Real Estate Block Library (Maps, Plans, CTAs)</li>
-            <li className="flex items-center"><span className="text-navy-600 text-xl mr-2">✓</span>Integrated Lead Capture & Performance Tracking</li>
-            <li className="flex items-center"><span className="text-navy-600 text-xl mr-2">✓</span>Multi-language Page Support</li>
-          </ul>
-          <button className="w-full bg-navy-700 hover:bg-navy-800 text-white font-bold py-3 rounded-lg text-xl transition-colors duration-300 shadow-md">
-            Start Building My First Page
-          </button>
-          <p className="text-sm text-center text-gray-600 mt-4">Billed Monthly. Flexible terms. No long-term contracts.</p>
-        </div>
-      </section>
-
-      {/* FAQ (Real Estate Objections) */}
-      <section className="py-16 px-4 md:px-8 bg-stone-50">
-        <div className="max-w-6xl mx-auto text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">Your Page Building Questions, Addressed with Clarity.</h2>
-        </div>
-        <div className="max-w-3xl mx-auto space-y-6">
-          <details className="group bg-white p-6 rounded-lg shadow-md border border-gray-200 cursor-pointer">
-            <summary className="flex justify-between items-center font-semibold text-lg text-gray-900 group-hover:text-navy-700 transition-colors duration-200">
-              I'm not tech-savvy. Can I truly build a professional page quickly?
-              <span className="text-navy-600 group-open:rotate-180 transition-transform duration-200">▼</span>
-            </summary>
-            <p className="mt-4 text-gray-700">
-              Absolutely. Entrestate's Site Builder is designed for real estate professionals. It’s intuitive and requires no technical skills to create stunning, lead-capturing property pages in minutes.
-            </p>
-          </details>
-          <details className="group bg-white p-6 rounded-lg shadow-md border border-gray-200 cursor-pointer">
-            <summary className="flex justify-between items-center font-semibold text-lg text-gray-900 group-hover:text-navy-700 transition-colors duration-200">
-              Will my property pages be mobile-friendly?
-              <span className="text-navy-600 group-open:rotate-180 transition-transform duration-200">▼</span>
-            </summary>
-            <p className="mt-4 text-gray-700">
-              Yes, every page created with Entrestate's Site Builder is automatically optimized for mobile responsiveness, ensuring it looks perfect and functions flawlessly on any device – critical for today's buyers.
-            </p>
-          </details>
-          <details className="group bg-white p-6 rounded-lg shadow-md border border-gray-200 cursor-pointer">
-            <summary className="flex justify-between items-center font-semibold text-lg text-gray-900 group-hover:text-navy-700 transition-colors duration-200">
-              How does this help me capture more leads?
-              <span className="text-navy-600 group-open:rotate-180 transition-transform duration-200">▼</span>
-            </summary>
-            <p className="mt-4 text-gray-700">
-              Our pages are engineered for conversion. With integrated inquiry forms, direct WhatsApp CTAs, and a focus on one property per page, visitors are guided to become qualified leads, which are then delivered to your Lead Pipeline.
-            </p>
-          </details>
-          <details className="group bg-white p-6 rounded-lg shadow-md border border-gray-200 cursor-pointer">
-            <summary className="flex justify-between items-center font-semibold text-lg text-gray-900 group-hover:text-navy-700 transition-colors duration-200">
-              Can I use my existing domain for these property pages?
-              <span className="text-navy-600 group-open:rotate-180 transition-transform duration-200">▼</span>
-            </summary>
-            <p className="mt-4 text-gray-700">
-              Yes. While we provide a free Entrestate subdomain, you can easily connect an existing custom domain or purchase a new one through your dashboard for complete brand alignment.
-            </p>
-          </details>
-          <details className="group bg-white p-6 rounded-lg shadow-md border border-gray-200 cursor-pointer">
-            <summary className="flex justify-between items-center font-semibold text-lg text-gray-900 group-hover:text-navy-700 transition-colors duration-200">
-              What if I need to update my page after it's live?
-              <span className="text-navy-600 group-open:rotate-180 transition-transform duration-200">▼</span>
-            </summary>
-            <p className="mt-4 text-gray-700">
-              Updating your page is simple and instant. You can edit any element, change details, or add new content directly from your Entrestate dashboard, and the changes will be reflected immediately.
-            </p>
-          </details>
+        <div className="mt-10 grid gap-4 md:grid-cols-2">
+          {[
+            'Start your way',
+            'Customize real estate blocks',
+            'Publish with a subdomain',
+            'Capture leads automatically',
+          ].map((step, index) => (
+            <div key={step} className="rounded-2xl border border-white/10 bg-[#14110f] p-5">
+              <p className="text-xs uppercase tracking-[0.3em] text-[#c7a36b]">Step {index + 1}</p>
+              <p className="mt-2 text-lg text-[#f5f1e8]">{step}</p>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* Final CTA Block */}
-      <section className="bg-navy-700 py-16 px-4 md:px-8 text-center text-white">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Turn Your Properties into Lead-Generating Powerhouses?</h2>
-          <p className="text-lg md:text-xl mb-8">
-            Stop relying on generic listings. Start launching dedicated property pages that truly sell. Your next successful launch is just a click away.
-          </p>
-          <button className="bg-white text-navy-700 hover:bg-gray-100 font-bold py-3 px-8 rounded-lg text-xl transition-colors duration-300 shadow-lg">
-            Build My Page Today
-          </button>
+      <section className="border-t border-white/10 bg-[#0f0e0c]">
+        <div className="mx-auto max-w-5xl px-6 py-20">
+          <div className="rounded-3xl border border-white/10 bg-[#14110f] p-8 md:p-12">
+            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] text-[#c7a36b]">Pricing</p>
+                <h3 className="mt-3 text-3xl font-[var(--font-display)]">Entrestate Builder</h3>
+                <p className="mt-2 text-[#b6aca0]">Unlimited pages. Cancel anytime.</p>
+              </div>
+              <div className="text-4xl font-semibold text-[#f5f1e8]">150 AED<span className="text-sm text-[#b6aca0]"> / month</span></div>
+            </div>
+            <div className="mt-8 grid gap-3 md:grid-cols-2 text-sm text-[#b6aca0]">
+              <p>Unlimited builds</p>
+              <p>Inventory-connected drafts</p>
+              <p>Lead capture baked in</p>
+              <p>Custom domains supported</p>
+            </div>
+            <button className="mt-8 w-full rounded-xl bg-[#c7a36b] text-[#0b0a09] font-semibold py-3 text-sm uppercase tracking-[0.2em]">
+              Build Your First Page
+            </button>
+          </div>
         </div>
       </section>
-    </div>
+    </FunnelShell>
   );
 };
 

@@ -3,215 +3,135 @@ import Link from 'next/link';
 import { ChatDemoCard } from '@/components/public/chat-demo-card';
 import { ColdCallDemoCard } from '@/components/public/cold-call-demo-card';
 import { BrochureUploadCard } from '@/components/public/brochure-upload-card';
+import { FunnelShell } from '@/components/public/funnel-shell';
 
 const ChatAgentPublicPage = () => {
   return (
-    <div className="min-h-screen bg-white text-gray-800 font-sans">
-      {/* Above the fold: "Try it now" */}
-      <section className="relative bg-gradient-to-br from-slate-50 to-stone-100 py-16 px-4 md:px-8 text-center overflow-hidden flex flex-col items-center justify-center min-h-screen-75vh">
-        <div className="relative z-10 max-w-4xl mx-auto">
-          <h1 className="text-4xl md:text-5xl font-bold mb-8 leading-tight text-gray-900">
-            Experience Your Digital Consultant. Instant Engagement. Real Results.
-          </h1>
-        </div>
-
-        <div className="relative z-10 w-full max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
-          <ChatDemoCard
-            title="Chat with Your Consultant"
-            intro="Tell me what you’re selling or looking for. I’ll respond as if I’m already on your team."
-            placeholder="Ask your Digital Consultant anything..."
-            buttonLabel="Start Chat"
-            context="Chat agent public demo."
-            endpoint="/api/agent/demo"
-          />
-
-          <ColdCallDemoCard
-            title="Request a Call from Your Consultant"
-            buttonLabel="Show Call Preview"
-            topics={[
-              { value: 'sales-strategy', label: 'Sales Strategy' },
-              { value: 'listings-management', label: 'Listings Management' },
-              { value: 'buyer-followup', label: 'Buyer Follow-up' },
-            ]}
-            context="Chat agent call preview."
-          />
-
-          <BrochureUploadCard
-            title="Upload Brochure. Launch a Page."
-            description="Drop a brochure and we’ll extract the key details for your draft."
-            ctaLabel="Upload Brochure"
-          />
-        </div>
-        <div className="mt-8 text-sm text-gray-600">
-          Next step:{' '}
-          <Link href="/dashboard/chat-agent" className="text-navy-700 font-semibold underline">
-            Activate your chat agent
-          </Link>
-        </div>
-      </section>
-
-      {/* Social Proof Section */}
-      <section className="py-16 px-4 md:px-8 bg-white">
-        <div className="max-w-6xl mx-auto text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">Results that Speak: Brokers Trust Entrestate.</h2>
-        </div>
-        <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-8">
-          <div className="bg-gradient-to-br from-stone-50 to-slate-100 p-6 rounded-xl shadow-lg flex items-start space-x-4">
-            <div className="flex-shrink-0 w-16 h-16 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 font-bold text-lg">FK</div>
+    <FunnelShell>
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(199,163,107,0.2),_transparent_45%),radial-gradient(circle_at_bottom,_rgba(88,103,124,0.25),_transparent_55%)]" />
+        <div className="relative mx-auto max-w-6xl px-6 py-20 lg:py-28">
+          <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] items-center">
             <div>
-              <blockquote className="text-lg text-gray-700 italic mb-3">
-                "My Digital Consultant is like having a top-tier associate who never sleeps. Every client interaction is handled with precision and speed, freeing me to focus on high-value closings."
-              </blockquote>
-              <p className="font-semibold text-gray-900">— Fatima K., Luxury Homes UAE</p>
+              <p className="text-xs uppercase tracking-[0.4em] text-[#c7a36b]">Digital Consultant</p>
+              <h1 className="mt-4 text-4xl md:text-5xl lg:text-6xl font-[var(--font-display)] leading-[1.05]">
+                Experience your consultant in real time. Capture intent before the first call.
+              </h1>
+              <p className="mt-6 text-base md:text-lg text-[#b6aca0] max-w-xl">
+                Every conversation is qualified, tagged, and routed into your pipeline. Try the live demo or request a call preview right now.
+              </p>
+              <div className="mt-8 flex flex-wrap items-center gap-4 text-sm">
+                <span className="rounded-full border border-white/15 px-4 py-2 text-[#f5f1e8]">24/7 Lead Capture</span>
+                <span className="rounded-full border border-white/15 px-4 py-2 text-[#f5f1e8]">Inventory-aware</span>
+                <span className="rounded-full border border-white/15 px-4 py-2 text-[#f5f1e8]">Intent scoring</span>
+              </div>
+              <div className="mt-8 text-sm text-[#b6aca0]">
+                Next step:{' '}
+                <Link href="/dashboard/chat-agent" className="text-[#c7a36b] font-semibold underline">
+                  Activate your chat agent
+                </Link>
+              </div>
             </div>
-          </div>
-          <div className="bg-gradient-to-br from-stone-50 to-slate-100 p-6 rounded-xl shadow-lg flex items-start space-x-4">
-            <div className="flex-shrink-0 w-16 h-16 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 font-bold text-lg">AA</div>
-            <div>
-              <blockquote className="text-lg text-gray-700 italic mb-3">
-                "The insight into client intent is invaluable. My Consultant filters out casual inquiries, allowing me to engage directly with qualified buyers who are ready to make decisions."
-              </blockquote>
-              <p className="font-semibold text-gray-900">— Ahmed A., City Properties</p>
+
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-1">
+              <ChatDemoCard
+                title="Chat with your consultant"
+                intro="Tell me what you’re selling or looking for. I’ll respond as if I’m already on your team."
+                placeholder="Ask your Digital Consultant anything..."
+                buttonLabel="Start Chat"
+                context="Chat agent public demo."
+                endpoint="/api/agent/demo"
+              />
+              <ColdCallDemoCard
+                title="Request a call preview"
+                buttonLabel="Show Call Preview"
+                topics={[
+                  { value: 'sales-strategy', label: 'Sales Strategy' },
+                  { value: 'listings-management', label: 'Listings Management' },
+                  { value: 'buyer-followup', label: 'Buyer Follow-up' },
+                ]}
+                context="Chat agent call preview."
+              />
+              <BrochureUploadCard
+                title="Upload a brochure"
+                description="Drop a brochure and we’ll extract the key details for your draft."
+                ctaLabel="Upload Brochure"
+              />
             </div>
           </div>
         </div>
-        <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-8 mt-12 text-center">
-          <div className="p-6 rounded-xl border border-gray-200 shadow-sm">
-            <p className="text-5xl font-bold text-navy-700 mb-2">+35%</p>
-            <p className="text-gray-700">Client Engagement Rate</p>
-          </div>
-          <div className="p-6 rounded-xl border border-gray-200 shadow-sm">
-            <p className="text-5xl font-bold text-navy-700 mb-2">24/7</p>
-            <p className="text-gray-700">Instant Inquiry Response</p>
-          </div>
-          <div className="p-6 rounded-xl border border-gray-200 shadow-sm">
-            <p className="text-5xl font-bold text-navy-700 mb-2">95%</p>
-            <p className="text-gray-700">Lead Qualification Accuracy</p>
+      </section>
+
+      <section className="border-t border-white/10 bg-[#0f0e0c]">
+        <div className="mx-auto max-w-6xl px-6 py-16">
+          <div className="grid gap-6 md:grid-cols-3">
+            {[
+              { value: '+35%', label: 'Client engagement lift' },
+              { value: '24/7', label: 'Instant inquiry coverage' },
+              { value: '95%', label: 'Lead qualification accuracy' },
+            ].map((stat) => (
+              <div key={stat.label} className="rounded-2xl border border-white/10 bg-[#14110f] p-6">
+                <p className="text-3xl font-semibold text-[#f7f1e6]">{stat.value}</p>
+                <p className="text-sm text-[#b6aca0] mt-2">{stat.label}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* "How it Works" (Explanation of Value) */}
-      <section className="py-16 px-4 md:px-8 bg-stone-50">
-        <div className="max-w-6xl mx-auto text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">Your Consultant's Path: From First Touch to Follow-up.</h2>
+      <section className="mx-auto max-w-6xl px-6 py-20">
+        <div className="grid gap-10 lg:grid-cols-2">
+          <div>
+            <p className="text-xs uppercase tracking-[0.4em] text-[#c7a36b]">How it works</p>
+            <h2 className="mt-4 text-3xl md:text-4xl font-[var(--font-display)]">
+              From first touch to qualified lead.
+            </h2>
+          </div>
+          <div className="space-y-4 text-[#b6aca0]">
+            <p>Instant dialogue with buyers, powered by your inventory.</p>
+            <p>Intent questions are asked automatically and logged.</p>
+            <p>High-intent leads flow into your pipeline with context.</p>
+          </div>
         </div>
-        <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-12 items-center">
-          <div className="flex flex-col items-center md:items-start text-center md:text-left p-6 rounded-xl bg-white shadow-md border border-gray-200">
-            <div className="text-5xl text-navy-600 mb-4">💬</div>
-            <h3 className="text-xl font-semibold mb-2 text-gray-900">1. Instant Client Dialogue.</h3>
-            <p className="text-gray-700">Your Digital Consultant engages clients across your website or dedicated chat link, providing immediate, accurate answers to all their property questions.</p>
-          </div>
-          <div className="flex flex-col items-center md:items-start text-center md:text-left p-6 rounded-xl bg-white shadow-md border border-gray-200">
-            <div className="text-5xl text-navy-600 mb-4">🏠</div>
-            <h3 className="text-xl font-semibold mb-2 text-gray-900">2. Deep Listings Understanding.</h3>
-            <p className="text-gray-700">Equipped with full access to your market inventory, it understands every listing's nuances – prices, locations, amenities, and payment plans – ensuring informed communication.</p>
-          </div>
-          <div className="flex flex-col items-center md:items-start text-center md:text-left p-6 rounded-xl bg-white shadow-md border border-gray-200">
-            <div className="text-5xl text-navy-600 mb-4">🎯</div>
-            <h3 className="text-xl font-semibold mb-2 text-gray-900">3. Qualify & Route Leads.</h3>
-            <p className="text-gray-700">It intelligently assesses buyer intent, asking precise questions to pre-qualify leads based on your criteria, and routes them directly into your Lead Pipeline.</p>
-          </div>
-          <div className="flex flex-col items-center md:items-start text-center md:text-left p-6 rounded-xl bg-white shadow-md border border-gray-200">
-            <div className="text-5xl text-navy-600 mb-4">🤝</div>
-            <h3 className="text-xl font-semibold mb-2 text-gray-900">4. Seamless Handoff & Follow-up.</h3>
-            <p className="text-gray-700">For high-intent leads, your Consultant facilitates meeting bookings and ensures a smooth handoff to you, providing full context for your personalized follow-up.</p>
-          </div>
+        <div className="mt-10 grid gap-4 md:grid-cols-2">
+          {[
+            'Instant client dialogue',
+            'Inventory-aware responses',
+            'Lead qualification & routing',
+            'Seamless handoff to your team',
+          ].map((step, index) => (
+            <div key={step} className="rounded-2xl border border-white/10 bg-[#14110f] p-5">
+              <p className="text-xs uppercase tracking-[0.3em] text-[#c7a36b]">Step {index + 1}</p>
+              <p className="mt-2 text-lg text-[#f5f1e8]">{step}</p>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* Pricing Card */}
-      <section className="py-16 px-4 md:px-8 bg-white">
-        <div className="max-w-6xl mx-auto text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">Flexible Investment. Exponential Growth.</h2>
-        </div>
-        <div className="max-w-md mx-auto bg-gradient-to-br from-stone-50 to-slate-100 p-8 rounded-xl shadow-2xl border border-gray-200">
-          <h3 className="text-2xl font-bold mb-4 text-center text-gray-900">Your Digital Consultant</h3>
-          <p className="text-5xl font-extrabold text-center text-navy-700 mb-2">46 AED</p>
-          <p className="text-lg text-center text-gray-600 mb-8">/ month</p>
-          <ul className="space-y-3 mb-8 text-gray-700">
-            <li className="flex items-center"><span className="text-navy-600 text-xl mr-2">✓</span>24/7 Client Engagement</li>
-            <li className="flex items-center"><span className="text-navy-600 text-xl mr-2">✓</span>Full Market Inventory Access</li>
-            <li className="flex items-center"><span className="text-navy-600 text-xl mr-2">✓</span>Dedicated Chat Link (agentname.chat.entrestate.com) & QR Code</li>
-            <li className="flex items-center"><span className="text-navy-600 text-xl mr-2">✓</span>Intelligent Lead Qualification</li>
-            <li className="flex items-center"><span className="text-navy-600 text-xl mr-2">✓</span>Seamless Lead Handoff to Your Pipeline</li>
-            <li className="flex items-center"><span className="text-navy-600 text-xl mr-2">✓</span>Deployable on Your Website & Social Channels</li>
-            <li className="flex items-center"><span className="text-navy-600 text-xl mr-2">✓</span>Multi-language Communication (Arabic, English, and more)</li>
-          </ul>
-          <button className="w-full bg-navy-700 hover:bg-navy-800 text-white font-bold py-3 rounded-lg text-xl transition-colors duration-300 shadow-md">
-            Activate My Digital Consultant
-          </button>
-          <p className="text-sm text-center text-gray-600 mt-4">Billed Monthly. No long-term contracts. Pause anytime.</p>
-        </div>
-      </section>
-
-      {/* FAQ (Real Estate Objections) */}
-      <section className="py-16 px-4 md:px-8 bg-stone-50">
-        <div className="max-w-6xl mx-auto text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">Clarity First: Your Questions, Answered.</h2>
-        </div>
-        <div className="max-w-3xl mx-auto space-y-6">
-          <details className="group bg-white p-6 rounded-lg shadow-md border border-gray-200 cursor-pointer">
-            <summary className="flex justify-between items-center font-semibold text-lg text-gray-900 group-hover:text-navy-700 transition-colors duration-200">
-              How quickly can my Digital Consultant start engaging clients?
-              <span className="text-navy-600 group-open:rotate-180 transition-transform duration-200">▼</span>
-            </summary>
-            <p className="mt-4 text-gray-700">
-              You can connect your listings and communication preferences in under 15 minutes. It’s ready to capture leads almost instantly.
-            </p>
-          </details>
-          <details className="group bg-white p-6 rounded-lg shadow-md border border-gray-200 cursor-pointer">
-            <summary className="flex justify-between items-center font-semibold text-lg text-gray-900 group-hover:text-navy-700 transition-colors duration-200">
-              Will this replace my personal interaction with clients?
-              <span className="text-navy-600 group-open:rotate-180 transition-transform duration-200">▼</span>
-            </summary>
-            <p className="mt-4 text-gray-700">
-              Never. Your Digital Consultant handles initial inquiries and qualification, connecting you with genuinely serious buyers, freeing your time for high-value interactions. You maintain full control and can take over any conversation at any moment.
-            </p>
-          </details>
-          <details className="group bg-white p-6 rounded-lg shadow-md border border-gray-200 cursor-pointer">
-            <summary className="flex justify-between items-center font-semibold text-lg text-gray-900 group-hover:text-navy-700 transition-colors duration-200">
-              What if a client isn't ready for a call yet?
-              <span className="text-navy-600 group-open:rotate-180 transition-transform duration-200">▼</span>
-            </summary>
-            <p className="mt-4 text-gray-700">
-              Your Consultant understands buyer intent. It provides relevant information, suggests suitable projects, and nurtures interest. Only when a client expresses readiness for a direct conversation or a meeting will it be handed off to your Pipeline with full context.
-            </p>
-          </details>
-          <details className="group bg-white p-6 rounded-lg shadow-md border border-gray-200 cursor-pointer">
-            <summary className="flex justify-between items-center font-semibold text-lg text-gray-900 group-hover:text-navy-700 transition-colors duration-200">
-              How does the 'full market inventory access' work?
-              <span className="text-navy-600 group-open:rotate-180 transition-transform duration-200">▼</span>
-            </summary>
-            <p className="mt-4 text-gray-700">
-              Your Consultant is equipped with a comprehensive understanding of your entire Entrestate market inventory. This means it can accurately answer questions and suggest relevant projects based on client preferences without needing manual input for each listing.
-            </p>
-          </details>
-          <details className="group bg-white p-6 rounded-lg shadow-md border border-gray-200 cursor-pointer">
-            <summary className="flex justify-between items-center font-semibold text-lg text-gray-900 group-hover:text-navy-700 transition-colors duration-200">
-              How does Entrestate ensure respectful communication?
-              <span className="text-navy-600 group-open:rotate-180 transition-transform duration-200">▼</span>
-            </summary>
-            <p className="mt-4 text-gray-700">
-              Your Digital Consultant operates strictly within the communication guidelines you define. It uses your approved tone and terminology, never engages in unsolicited outreach, and respects all opt-out requests, ensuring compliant, brand-aligned interactions across all languages.
-            </p>
-          </details>
+      <section className="border-t border-white/10 bg-[#0f0e0c]">
+        <div className="mx-auto max-w-5xl px-6 py-20">
+          <div className="rounded-3xl border border-white/10 bg-[#14110f] p-8 md:p-12">
+            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] text-[#c7a36b]">Pricing</p>
+                <h3 className="mt-3 text-3xl font-[var(--font-display)]">Digital Consultant</h3>
+                <p className="mt-2 text-[#b6aca0]">Deployable on chat, web, QR, and social.</p>
+              </div>
+              <div className="text-4xl font-semibold text-[#f5f1e8]">46 AED<span className="text-sm text-[#b6aca0]"> / month</span></div>
+            </div>
+            <div className="mt-8 grid gap-3 md:grid-cols-2 text-sm text-[#b6aca0]">
+              <p>24/7 client engagement</p>
+              <p>Full market inventory access</p>
+              <p>Dedicated chat link + QR</p>
+              <p>Multi-language support</p>
+            </div>
+            <button className="mt-8 w-full rounded-xl bg-[#c7a36b] text-[#0b0a09] font-semibold py-3 text-sm uppercase tracking-[0.2em]">
+              Activate My Digital Consultant
+            </button>
+          </div>
         </div>
       </section>
-
-      {/* Final CTA Block */}
-      <section className="bg-navy-700 py-16 px-4 md:px-8 text-center text-white">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Elevate Your Client Engagement and Lead Flow?</h2>
-          <p className="text-lg md:text-xl mb-8">
-            Connect instantly with buyers, qualify intent, and grow your portfolio with your dedicated Digital Consultant.
-          </p>
-          <button className="bg-white text-navy-700 hover:bg-gray-100 font-bold py-3 px-8 rounded-lg text-xl transition-colors duration-300 shadow-lg">
-            Activate My Digital Consultant Today
-          </button>
-        </div>
-      </section>
-    </div>
+    </FunnelShell>
   );
 };
 

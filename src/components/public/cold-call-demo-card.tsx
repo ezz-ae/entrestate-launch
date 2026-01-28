@@ -45,19 +45,24 @@ export function ColdCallDemoCard({ title, buttonLabel, topics, context }: ColdCa
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-2xl border border-gray-200 p-6 flex flex-col h-full transform transition-all duration-300 hover:scale-105 hover:shadow-3xl">
-      <h2 className="text-2xl font-bold text-navy-700 mb-4 text-center">{title}</h2>
+    <div className="relative h-full rounded-3xl border border-white/10 bg-[#14110f]/90 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl md:text-2xl font-semibold text-[#f7f1e6] font-[var(--font-display)]">
+          {title}
+        </h2>
+        <span className="text-[10px] uppercase tracking-[0.3em] text-[#c7a36b]">Preview</span>
+      </div>
       <input
         type="tel"
         placeholder="Enter your phone number"
         value={phone}
         onChange={(event) => setPhone(event.target.value)}
-        className="w-full p-3 border border-gray-300 rounded-lg mb-4 text-gray-800 focus:outline-none focus:ring-2 focus:ring-navy-500"
+        className="w-full rounded-xl border border-white/10 bg-[#0b0a09] px-3 py-2 text-sm text-[#f5f1e8] placeholder:text-[#6f665c] focus:outline-none focus:ring-2 focus:ring-[#c7a36b]/40 mb-3"
       />
       <select
         value={topic}
         onChange={(event) => setTopic(event.target.value)}
-        className="w-full p-3 border border-gray-300 rounded-lg mb-4 text-gray-800 focus:outline-none focus:ring-2 focus:ring-navy-500"
+        className="w-full rounded-xl border border-white/10 bg-[#0b0a09] px-3 py-2 text-sm text-[#f5f1e8] focus:outline-none focus:ring-2 focus:ring-[#c7a36b]/40 mb-3"
       >
         <option value="">Call me to discuss:</option>
         {topics.map((item) => (
@@ -66,16 +71,16 @@ export function ColdCallDemoCard({ title, buttonLabel, topics, context }: ColdCa
           </option>
         ))}
       </select>
-      {error && <p className="text-xs text-red-600 mb-3">{error}</p>}
+      {error && <p className="text-xs text-[#f5a3a3] mb-3">{error}</p>}
       <button
         onClick={handlePreview}
         disabled={loading}
-        className="bg-navy-700 hover:bg-navy-800 disabled:bg-gray-300 disabled:text-gray-600 text-white font-bold py-3 rounded-lg text-lg transition-colors duration-300 shadow-md"
+        className="w-full rounded-xl bg-[#c7a36b] text-[#0b0a09] font-semibold py-3 text-sm uppercase tracking-[0.2em] transition disabled:opacity-50"
       >
         {loading ? 'Saving…' : buttonLabel}
       </button>
       {preview && (
-        <div className="mt-4 text-xs text-gray-600 whitespace-pre-line rounded-lg bg-gray-50 border border-gray-200 p-3">
+        <div className="mt-4 text-xs text-[#d9d1c6] whitespace-pre-line rounded-xl bg-[#0f0e0c] border border-white/10 p-3">
           {preview}
         </div>
       )}

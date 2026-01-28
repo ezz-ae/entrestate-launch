@@ -88,36 +88,41 @@ export function BrochureUploadCard({ title, description, ctaLabel }: BrochureUpl
   })();
 
   return (
-    <div className="bg-white rounded-xl shadow-2xl border border-gray-200 p-6 flex flex-col h-full transform transition-all duration-300 hover:scale-105 hover:shadow-3xl">
-      <h2 className="text-2xl font-bold text-navy-700 mb-4 text-center">{title}</h2>
-      <p className="text-gray-700 mb-4 text-center">{description}</p>
-      <div className="flex-grow flex flex-col items-center justify-center bg-gray-50 rounded-lg p-4 mb-4 border border-gray-100">
-        <div className="text-5xl text-gray-400 mb-2">📄</div>
+    <div className="relative h-full rounded-3xl border border-white/10 bg-[#14110f]/90 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl md:text-2xl font-semibold text-[#f7f1e6] font-[var(--font-display)]">
+          {title}
+        </h2>
+        <span className="text-[10px] uppercase tracking-[0.3em] text-[#c7a36b]">PDF</span>
+      </div>
+      <p className="text-sm text-[#b6aca0] mb-4">{description}</p>
+      <div className="flex-grow flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/15 bg-[#0f0e0c] p-4 mb-4 text-center">
+        <div className="text-4xl text-[#6f665c] mb-3">⬇</div>
         <input
           type="file"
           accept=".pdf"
           onChange={(event) => setFile(event.target.files?.[0] || null)}
-          className="w-full text-sm text-gray-600"
+          className="w-full text-xs text-[#d2c7ba]"
         />
-        {statusLabel && <p className="mt-2 text-xs text-gray-500">{statusLabel}</p>}
-        {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+        {statusLabel && <p className="mt-2 text-xs text-[#8f8477]">{statusLabel}</p>}
+        {error && <p className="mt-2 text-xs text-[#f5a3a3]">{error}</p>}
       </div>
       {summary && (
-        <div className="text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded-lg p-3 mb-3">
+        <div className="text-xs text-[#d9d1c6] bg-[#0f0e0c] border border-white/10 rounded-xl p-3 mb-3">
           {summary}…
         </div>
       )}
       <button
         onClick={handleUpload}
         disabled={!file || status === 'uploading'}
-        className="bg-navy-700 hover:bg-navy-800 disabled:bg-gray-300 disabled:text-gray-600 text-white font-bold py-3 rounded-lg text-lg transition-colors duration-300 shadow-md"
+        className="w-full rounded-xl bg-[#c7a36b] text-[#0b0a09] font-semibold py-3 text-sm uppercase tracking-[0.2em] transition disabled:opacity-50"
       >
         {ctaLabel}
       </button>
       {status === 'done' && (
         <Link
           href="/builder"
-          className="mt-3 text-xs font-semibold text-navy-700 text-center"
+          className="mt-3 text-xs font-semibold text-[#c7a36b] text-center"
         >
           Continue in Builder →
         </Link>

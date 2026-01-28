@@ -31,10 +31,11 @@ import { useAuth } from '@/hooks/useAuth';
 import { useBrochure } from '@/context/BrochureContext';
 
 const NAV_LINKS = [
-    { href: "/instagram-assistant", label: "Instagram Assistant", icon: Bot, description: "Reply faster to buyer inquiries" },
-    { href: "/google-ads", label: "Google Ads", icon: Search, description: "Run ads without the headache" },
-    { href: "/audience-network", label: "Buyer Audience", icon: Users, description: "Pilot audience tools for brokers" },
-    { href: "/discover", label: "Market Feed", icon: Library, description: "Project listings and market updates" },
+    { href: "/chat-agent-public", label: "Chat Agent", icon: Bot, description: "Live lead capture chat demo" },
+    { href: "/instagram-assistant-public", label: "Instagram Assistant", icon: Zap, description: "Reply faster to buyer inquiries" },
+    { href: "/site-builder-landing", label: "Site Builder", icon: Layout, description: "Build a lead capture page" },
+    { href: "/lead-pipeline-overview", label: "Lead Pipeline", icon: Users, description: "Qualify and route leads" },
+    { href: "/google-ads-public", label: "Google Ads", icon: Search, description: "Plan ads without the headache" },
     { href: "/support", label: "Support", icon: LifeBuoy, description: "Message our support team" },
 ];
 
