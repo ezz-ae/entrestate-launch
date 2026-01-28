@@ -29,6 +29,8 @@ export function EmailCampaignDashboard() {
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [showImportDialog, setShowImportDialog] = useState(false);
+  const [providerReady, setProviderReady] = useState(true);
+  const [providerReason, setProviderReason] = useState<string | null>(null);
 
   const refreshCounts = async () => {
     try {
@@ -47,6 +49,33 @@ export function EmailCampaignDashboard() {
 
   useEffect(() => {
     refreshCounts();
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    const checkProvider = async () => {
+      try {
+        const res = await fetch('/api/health/runtime', { cache: 'no-store' });
+        const payload = await res.json().catch(() => null);
+        if (!active) return;
+        const hasResend = Boolean(payload?.flags?.hasResend);
+        if (!hasResend) {
+          setProviderReady(false);
+          setProviderReason('Set RESEND_API_KEY and FROM_EMAIL to enable email campaigns.');
+          return;
+        }
+        setProviderReady(true);
+        setProviderReason(null);
+      } catch {
+        if (!active) return;
+        setProviderReady(true);
+        setProviderReason(null);
+      }
+    };
+    void checkProvider();
+    return () => {
+      active = false;
+    };
   }, []);
 
   const handleImportComplete = () => {
@@ -92,13 +121,13 @@ export function EmailCampaignDashboard() {
       });
       const data = await res.json();
 
-      if (!res.ok) {
-        throw new Error(data?.error || 'Failed to send campaign');
+      if (!res.ok || !data?.ok) {
+        throw new Error(data?.error || data?.message || 'Failed to send campaign');
       }
 
       toast({
         title: mode === 'test' ? 'Test email sent' : 'Campaign sent',
-        description: `Delivered ${data.sentCount} of ${data.requestedCount}.`,
+        description: `Delivered ${data.data?.sentCount ?? 0} of ${data.data?.requestedCount ?? 0}.`,
       });
     } catch (error: any) {
       toast({
@@ -128,12 +157,12 @@ export function EmailCampaignDashboard() {
       });
       const data = await res.json();
 
-      if (!res.ok) {
-        throw new Error(data?.error || 'Failed to generate email');
+      if (!res.ok || !data?.ok) {
+        throw new Error(data?.error || data?.message || 'Failed to generate email');
       }
 
-      if (data.subject) setSubject(data.subject);
-      if (data.body) setMessage(data.body);
+      if (data.data?.subject) setSubject(data.data.subject);
+      if (data.data?.body) setMessage(data.data.body);
 
       toast({ title: 'AI draft ready', description: 'Review and edit before sending.' });
     } catch (error: any) {
@@ -173,6 +202,13 @@ export function EmailCampaignDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
+          {!providerReady && (
+            <Card className="bg-amber-500/10 border-amber-500/30 rounded-[2rem]">
+              <CardContent className="p-5 text-sm text-amber-100">
+                {providerReason || 'Email provider is not configured.'}
+              </CardContent>
+            </Card>
+          )}
           <Card className="bg-zinc-900 border-white/10 rounded-[2rem]">
             <CardHeader>
               <CardTitle>Message</CardTitle>
@@ -238,14 +274,14 @@ export function EmailCampaignDashboard() {
                   onClick={() => handleSend('test')}
                   variant="outline"
                   className="h-12 rounded-full border-white/10 bg-white/5 text-white font-bold"
-                  disabled={loading}
+                  disabled={loading || !providerReady}
                 >
                   <Mail className="h-4 w-4 mr-2" /> Send test to me
                 </Button>
                 <Button
                   onClick={() => handleSend('list')}
                   className="h-12 rounded-full bg-white text-black font-bold"
-                  disabled={loading || listCount === 0}
+                  disabled={loading || listCount === 0 || !providerReady}
                 >
                   {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
                   Send to list

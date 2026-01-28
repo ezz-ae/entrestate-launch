@@ -1,10 +1,16 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { generateText } from 'ai';
 import { z } from 'zod';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
 import { enforceRateLimit, getRequestIp } from '@/lib/server/rateLimit';
 import { FLASH_MODEL, getGoogleModel } from '@/lib/ai/google';
+import { logError } from '@/lib/server/log';
+import {
+  createRequestId,
+  errorResponse,
+  jsonWithRequestId,
+} from '@/lib/server/request-id';
 
 const requestSchema = z.object({
   topic: z.string().min(1),
@@ -21,11 +27,18 @@ const clampLength = (value: string, maxChars: number) => {
 };
 
 export async function POST(req: NextRequest) {
+  const scope = 'api/sms/generate';
+  const requestId = createRequestId();
+  const respond = (body: unknown, init?: ResponseInit) =>
+    jsonWithRequestId(requestId, body, init);
   try {
     const { tenantId } = await requireRole(req, ALL_ROLES);
     const ip = getRequestIp(req);
     if (!(await enforceRateLimit(`sms:generate:${tenantId}:${ip}`, 30, 60_000))) {
-      return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
+      return respond(
+        { ok: false, error: 'Rate limit exceeded', requestId },
+        { status: 429 }
+      );
     }
     const payload = requestSchema.parse(await req.json());
     const maxChars = payload.maxChars && payload.maxChars > 0 ? payload.maxChars : 260;
@@ -40,17 +53,40 @@ export async function POST(req: NextRequest) {
     const sanitized = stripNonAscii(text.replace(/\s+/g, ' '));
     const message = clampLength(sanitized, maxChars);
 
-    return NextResponse.json({ message });
+    return respond({
+      ok: true,
+      data: { message },
+      requestId,
+    });
   } catch (error: any) {
+    if (
+      error instanceof Error &&
+      error.message.includes('Google Generative AI API key is not configured')
+    ) {
+      return respond(
+        {
+          ok: false,
+          error: 'missing_api_key',
+          message: 'AI is not configured.',
+          missing: ['GEMINI_API_KEY'],
+          requestId,
+        },
+        { status: 503 }
+      );
+    }
     if (error instanceof UnauthorizedError) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return respond({ ok: false, error: 'Unauthorized', requestId }, { status: 401 });
     }
     if (error instanceof ForbiddenError) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      return respond({ ok: false, error: 'Forbidden', requestId }, { status: 403 });
     }
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Invalid payload', details: error.errors }, { status: 400 });
+      return respond(
+        { ok: false, error: 'Invalid payload', details: error.errors, requestId },
+        { status: 400 }
+      );
     }
-    return NextResponse.json({ error: 'Generation failed', details: error?.message }, { status: 500 });
+    logError(scope, error, { requestId });
+    return errorResponse(requestId, scope);
   }
 }

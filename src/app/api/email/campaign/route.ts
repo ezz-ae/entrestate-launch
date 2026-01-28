@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { getAdminDb } from '@/server/firebase-admin';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
@@ -15,6 +15,13 @@ import {
   PlanLimitError,
   planLimitErrorResponse,
 } from '@/lib/server/billing';
+import { resolveEntitlementsForTenant } from '@/lib/server/entitlements';
+import { logError } from '@/lib/server/log';
+import {
+  createRequestId,
+  errorResponse,
+  jsonWithRequestId,
+} from '@/lib/server/request-id';
 
 const MAX_RECIPIENTS = 50;
 const RATE_LIMIT_WINDOW_MS = 60_000;
@@ -28,22 +35,45 @@ const payloadSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  const scope = 'api/email/campaign';
+  const requestId = createRequestId();
+  const respond = (body: unknown, init?: ResponseInit) =>
+    jsonWithRequestId(requestId, body, init);
   const logger = createApiLogger(req, { route: 'POST /api/email/campaign' });
   try {
     const payload = payloadSchema.parse(await req.json());
     const { tenantId } = await requireRole(req, ADMIN_ROLES);
+    const db = getAdminDb();
+    const entitlements = await resolveEntitlementsForTenant(db, tenantId);
+    if (!entitlements.features.senders.allowed) {
+      return respond(
+        {
+          ok: false,
+          error:
+            entitlements.features.senders.reason ||
+            'Email senders are locked on your plan.',
+          requestId,
+        },
+        { status: 403 }
+      );
+    }
     const ip = getRequestIp(req);
     if (!(await enforceRateLimit(`email:campaign:${tenantId}:${ip}`, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW_MS))) {
       logger.logRateLimit();
-      return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
+      return respond(
+        { ok: false, error: 'Rate limit exceeded', requestId },
+        { status: 429 }
+      );
     }
 
     if (!CAP.resend || !resend) {
       logger.logError('Resend not configured', 500);
-      return NextResponse.json({ error: 'Email provider is not configured' }, { status: 500 });
+      return respond(
+        { ok: false, error: 'Email provider is not configured', requestId },
+        { status: 500 }
+      );
     }
 
-    const db = getAdminDb();
     logger.setTenant(tenantId);
     let recipients: string[] = [];
 
@@ -65,7 +95,10 @@ export async function POST(req: NextRequest) {
 
     if (!recipients.length) {
       logger.logError('No recipients', 400);
-      return NextResponse.json({ error: 'No recipients found for this list.' }, { status: 400 });
+      return respond(
+        { ok: false, error: 'No recipients found for this list.', requestId },
+        { status: 400 }
+      );
     }
 
     await checkUsageLimit(db, tenantId, 'campaigns');
@@ -118,33 +151,42 @@ export async function POST(req: NextRequest) {
       failedCount: failures.length,
       requestedCount: recipients.length,
     });
-    return NextResponse.json({
-      success: true,
-      list: payload.list,
-      sentCount,
-      requestedCount: recipients.length,
-      failedCount: failures.length,
-      limited: recipients.length >= MAX_RECIPIENTS,
+    return respond({
+      ok: true,
+      data: {
+        list: payload.list,
+        sentCount,
+        requestedCount: recipients.length,
+        failedCount: failures.length,
+        limited: recipients.length >= MAX_RECIPIENTS,
+      },
+      requestId,
     });
   } catch (error) {
     if (error instanceof PlanLimitError) {
       logger.logError(error, 402, { metric: error.metric, limit: error.limit });
-      return NextResponse.json(planLimitErrorResponse(error), { status: 402 });
+      return respond(
+        { ok: false, requestId, ...planLimitErrorResponse(error) },
+        { status: 402 }
+      );
     }
     if (error instanceof z.ZodError) {
       logger.logError(error, 400, { validation_errors: error.errors });
-      return NextResponse.json({ error: 'Invalid payload', details: error.errors }, { status: 400 });
+      return respond(
+        { ok: false, error: 'Invalid payload', details: error.errors, requestId },
+        { status: 400 }
+      );
     }
     if (error instanceof UnauthorizedError) {
       logger.logError(error, 401);
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return respond({ ok: false, error: 'Unauthorized', requestId }, { status: 401 });
     }
     if (error instanceof ForbiddenError) {
       logger.logError(error, 403);
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      return respond({ ok: false, error: 'Forbidden', requestId }, { status: 403 });
     }
-    console.error('[email/campaign] error', error);
+    logError(scope, error, { requestId });
     logger.logError(error, 500);
-    return NextResponse.json({ error: 'Failed to send campaign.' }, { status: 500 });
+    return errorResponse(requestId, scope);
   }
 }
