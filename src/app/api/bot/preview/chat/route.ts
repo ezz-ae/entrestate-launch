@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { generateText } from 'ai';
 import { z } from 'zod';
 import { getGoogleModel, FLASH_MODEL } from '@/lib/ai/google';
-import { formatProjectContext, getRelevantProjects } from '@/server/inventory';
+import { formatProjectContext } from '@/server/inventory';
 import { mainSystemPrompt } from '@/config/prompts';
 import { enforceRateLimit, getRequestIp } from '@/lib/server/rateLimit';
 import { logError } from '@/lib/server/log';
@@ -10,6 +10,10 @@ import {
   createRequestId,
   jsonWithRequestId,
 } from '@/lib/server/request-id';
+import { fetchRelevantProjects } from '@/lib/server/inventory-search';
+import { scoreLeadIntent } from '@/lib/server/lead-intent';
+import { getAdminDb } from '@/server/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 
 const requestSchema = z.object({
   message: z.string().min(1),
@@ -30,14 +34,18 @@ export async function POST(req: NextRequest) {
   const scope = 'api/bot/preview/chat';
   const requestId = createRequestId();
   const respond = (body: Record<string, unknown>, init?: ResponseInit) =>
-    jsonWithRequestId(requestId, { ...body, requestId }, init);
+    jsonWithRequestId(requestId, body, init);
 
   let payload: z.infer<typeof requestSchema> | null = null;
   try {
     const ip = getRequestIp(req);
     if (!(await enforceRateLimit(`bot:preview:${ip}`, 20, 60_000))) {
       return respond(
-        { ok: false, error: 'Rate limit exceeded' },
+        {
+          ok: false,
+          error: { code: 'rate_limited', message: 'Rate limit exceeded' },
+          requestId,
+        },
         { status: 429 }
       );
     }
@@ -46,17 +54,29 @@ export async function POST(req: NextRequest) {
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return respond(
-        { ok: false, error: 'Invalid request payload.', details: error.errors },
+        {
+          ok: false,
+          error: {
+            code: 'invalid_payload',
+            message: 'Invalid request payload.',
+            details: error.errors,
+          },
+          requestId,
+        },
         { status: 400 }
       );
     }
     return respond(
-      { ok: false, error: 'Invalid request payload.' },
+      {
+        ok: false,
+        error: { code: 'invalid_payload', message: 'Invalid request payload.' },
+        requestId,
+      },
       { status: 400 }
     );
   }
 
-  const projectContext = await getProjectContext(payload.message, payload.context);
+  const projectContext = await getProjectContext(req, payload.message, payload.context);
   const systemPrompt = `
 Role & Context:
 ${payload.context || 'Entrestate chat assistant for UAE real estate teams.'}
@@ -77,31 +97,90 @@ ${projectContext}
   }));
   messages.push({ role: 'user', content: payload.message });
 
+  const historyText = (payload.history || [])
+    .map((entry) => entry.text)
+    .join(' ');
+  const contactText = `${payload.message} ${historyText}`;
+  const emailMatch = contactText.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0];
+  const phoneMatch = contactText.match(/\+?\d[\d\s-]{6,}\d/)?.[0];
+  const intent = scoreLeadIntent({
+    text: contactText,
+    hasEmail: Boolean(emailMatch),
+    hasPhone: Boolean(phoneMatch),
+    projectIds: [],
+  });
+
+  let reply = '';
+  let aiFailure: { error: string; message: string; missing?: string[] } | null = null;
   try {
-    const reply = await generatePreviewReply(messages, systemPrompt);
-    return respond({ ok: true, data: { reply } });
+    reply = await generatePreviewReply(messages, systemPrompt);
   } catch (error: unknown) {
     logError(scope, error, { requestId });
     if (error instanceof MissingAIKeyError) {
-      return respond(
-        {
-          ok: false,
-          error: 'missing_api_key',
-          message: 'AI is not configured. Set GEMINI_API_KEY to enable preview responses.',
-          missing: ['GEMINI_API_KEY'],
-        },
-        { status: 503 }
-      );
+      aiFailure = {
+        error: 'missing_api_key',
+        message: 'AI is not configured. Set GEMINI_API_KEY to enable preview responses.',
+        missing: ['GEMINI_API_KEY'],
+      };
+    } else {
+      aiFailure = {
+        error: 'ai_unavailable',
+        message: 'AI is temporarily unavailable. Please try again later.',
+      };
     }
+    reply =
+      'Thanks for your message. Share your budget, preferred area, and timeline, and we will follow up.';
+  }
+
+  const db = getAdminDb();
+  const leadRef = await db.collection('public_leads').add({
+    source: 'preview_chat',
+    message: payload.message,
+    email: emailMatch || null,
+    phone: phoneMatch || null,
+    intentScore: intent.intent_score,
+    intentFocus: intent.focus,
+    intentReasoning: intent.reasoning,
+    intentProjectIds: [],
+    intentNextAction: intent.next_action,
+    createdAt: FieldValue.serverTimestamp(),
+    updatedAt: FieldValue.serverTimestamp(),
+  });
+  console.log(
+    JSON.stringify({
+      event: 'lead.created',
+      source: 'preview_chat',
+      leadId: leadRef.id,
+      requestId,
+    })
+  );
+
+  const responseData = {
+    reply,
+    lead_id: leadRef.id,
+    intent_score: intent.intent_score,
+    focus: intent.focus,
+    project_ids: [],
+    next_action: intent.next_action,
+  };
+
+  if (aiFailure) {
     return respond(
       {
         ok: false,
-        error: 'ai_unavailable',
-        message: 'AI is temporarily unavailable. Please try again later.',
+        error: {
+          code: aiFailure.error,
+          message: aiFailure.message,
+          missing: aiFailure.missing,
+        },
+        data: responseData,
+        requestId,
       },
       { status: 503 }
     );
   }
+
+  return respond({ ok: true, data: responseData, requestId });
 }
 
 async function generatePreviewReply(
@@ -149,9 +228,9 @@ function resolveModel(modelId: string) {
   }
 }
 
-async function getProjectContext(message: string, context?: string) {
+async function getProjectContext(req: NextRequest, message: string, context?: string) {
   try {
-    const relevantProjects = await getRelevantProjects(message, context, 8);
+    const relevantProjects = await fetchRelevantProjects(req, `${message} ${context || ''}`, 8);
     if (!relevantProjects.length) return '';
     return `\nRelevant listings:\n${relevantProjects.map(formatProjectContext).join('\n')}`;
   } catch (error) {

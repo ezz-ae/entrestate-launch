@@ -106,6 +106,7 @@ export async function GET(request: NextRequest) {
         tenantId,
         cursorUsed: cursor || '<start>',
         countReturned: items.length,
+        requestId,
       })
     );
 

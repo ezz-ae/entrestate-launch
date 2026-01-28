@@ -47,11 +47,16 @@ export function ChatAgentBlock({
       });
       const data = await response.json();
       if (!response.ok || !data?.ok) {
-        if (Array.isArray(data?.missing) && data.missing.includes('GEMINI_API_KEY')) {
+        const missingKeys = data?.error?.missing || data?.missing;
+        if (Array.isArray(missingKeys) && missingKeys.includes('GEMINI_API_KEY')) {
           setAiConfigured(false);
           setAiError('AI key missing. Contact your admin to enable Gemini.');
         }
-        const fallback = data?.error || data?.message || "I'm having trouble right now. Share your preferred area and budget and I'll follow up.";
+        const fallback =
+          data?.error?.message ||
+          data?.error ||
+          data?.message ||
+          "I'm having trouble right now. Share your preferred area and budget and I'll follow up.";
         setMessages((prev) => [
           ...prev,
           { role: 'agent', text: fallback },

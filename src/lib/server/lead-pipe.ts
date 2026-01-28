@@ -26,11 +26,15 @@ export type LeadPipeCandidate = {
   message?: string | null;
   source: 'site' | 'chat';
   createdAt: string;
+  intentScore?: number | null;
+  intentReasoning?: string | null;
+  focus?: string | null;
 };
 
 export type LeadPipeRecord = LeadPipeCandidate & {
   activeProbability: number;
   reasoning: string;
+  focus?: string | null;
 };
 
 function toIsoString(value: unknown) {
@@ -123,6 +127,9 @@ export async function collectLeadPipeCandidates(db: Firestore, tenantId: string)
   const candidates: LeadPipeCandidate[] = [];
   leadSnap.docs.forEach((doc) => {
     const data = doc.data();
+    if (data.pipelineDecision === 'rejected' || data.status === 'ignored') {
+      return;
+    }
     const createdAt = toIsoString(
       data.createdAt?.toDate?.() ??
         (data.createdAt instanceof Date ? data.createdAt : undefined)
@@ -134,6 +141,9 @@ export async function collectLeadPipeCandidates(db: Firestore, tenantId: string)
       phone: mapNumber(data.phone),
       message: normalizeContact(data.message || data.source || ''),
       source: 'site',
+      intentScore: typeof data.intentScore === 'number' ? data.intentScore : null,
+      intentReasoning: data.intentReasoning || null,
+      focus: data.intentFocus || null,
       createdAt,
     });
   });
@@ -178,7 +188,13 @@ export function deduplicateLeads(candidates: LeadPipeCandidate[]) {
 
 export function buildLeadPipeRecords(candidates: LeadPipeCandidate[]): LeadPipeRecord[] {
   return candidates.map((candidate) => {
-    const analysis = analyzeLead(candidate);
+    const analysis =
+      typeof candidate.intentScore === 'number'
+        ? {
+            activeProbability: Math.min(Math.max(candidate.intentScore, 0), 1),
+            reasoning: candidate.intentReasoning || 'Intent score from chat.',
+          }
+        : analyzeLead(candidate);
     return {
       ...candidate,
       activeProbability: analysis.activeProbability,

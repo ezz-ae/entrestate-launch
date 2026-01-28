@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { FieldValue } from 'firebase-admin/firestore';
 import { getGoogleModel, PRO_MODEL, FLASH_MODEL } from '@/lib/ai/google';
 import { mainSystemPrompt } from '@/config/prompts';
-import { formatProjectContext, getRelevantProjects } from '@/server/inventory';
+import { formatProjectContext } from '@/server/inventory';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
 import {
@@ -25,6 +25,8 @@ import {
   normalizeEmail,
   normalizePhone,
 } from '@/lib/server/lead-dedupe';
+import { scoreLeadIntent } from '@/lib/server/lead-intent';
+import { fetchRelevantProjects } from '@/lib/server/inventory-search';
 
 const requestSchema = z.object({
   message: z.string().min(1),
@@ -112,16 +114,12 @@ export async function POST(req: NextRequest) {
       console.error('[bot/main/chat] agent knowledge scan failed', error);
     }
 
-    let relevantProjects: Awaited<ReturnType<typeof getRelevantProjects>> = [];
-    try {
-      relevantProjects = await getRelevantProjects(
-        payload.message,
-        history.map((entry) => `${entry.role}: ${entry.text}`).join('\n'),
-        8
-      );
-    } catch (error) {
-      console.error('[bot/main/chat] inventory context failed', error);
-    }
+    const historyText = history.map((entry) => `${entry.role}: ${entry.text}`).join('\n');
+    const relevantProjects = await fetchRelevantProjects(
+      req,
+      `${payload.message} ${historyText}`,
+      8
+    );
 
     const projectContext = relevantProjects.length
       ? `\nRelevant listings:\n${relevantProjects
@@ -152,7 +150,21 @@ ${agentKnowledge}
       .reverse()
       .find((entry) => entry.role === 'agent');
 
+    const contactText = `${payload.message} ${historyText}`;
+    const emailMatch = contactText.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0];
+    const phoneMatch = contactText.match(/\+?\d[\d\s-]{6,}\d/)?.[0];
+    const emailNormalized = normalizeEmail(emailMatch);
+    const phoneNormalized = normalizePhone(phoneMatch);
+    const projectIds = relevantProjects.map((project) => project.id).filter(Boolean);
+    const intent = scoreLeadIntent({
+      text: contactText,
+      hasEmail: Boolean(emailNormalized),
+      hasPhone: Boolean(phoneNormalized),
+      projectIds,
+    });
+
     let reply = '';
+    let aiFailure: { error: string; message: string; missing?: string[] } | null = null;
     try {
       reply = await generateUniqueReply(
         messages,
@@ -161,29 +173,27 @@ ${agentKnowledge}
       );
     } catch (generateError) {
       if (generateError instanceof MissingAIKeyError) {
-        logError(scope, generateError, { requestId, tenantId, path });
-        return respond(
-          {
-            ok: false,
-            error: 'missing_api_key',
-            message:
-              'AI is not configured. Set GEMINI_API_KEY to enable conversational replies.',
-            missing: ['GEMINI_API_KEY'],
-            requestId,
-          },
-          { status: 503 }
-        );
-      }
-      logError(scope, generateError, { requestId, tenantId, path });
-      return respond(
-        {
-          ok: false,
-          scope: 'ai',
+        aiFailure = {
+          error: 'missing_api_key',
+          message:
+            'AI is not configured. Set GEMINI_API_KEY to enable conversational replies.',
+          missing: ['GEMINI_API_KEY'],
+        };
+      } else {
+        aiFailure = {
+          error: 'ai_unavailable',
           message: 'AI is temporarily unavailable. Please try again shortly.',
-          requestId,
-        },
-        { status: 503 }
-      );
+        };
+      }
+    }
+    if (aiFailure) {
+      const fallbackList = relevantProjects
+        .slice(0, 3)
+        .map(formatProjectContext)
+        .join('\n');
+      reply = fallbackList
+        ? `Here are a few options I can share right now:\n${fallbackList}\nTell me your budget and preferred area, and I will narrow it down.`
+        : 'I can help with UAE projects, pricing ranges, and next steps. What area and budget should I focus on?';
     }
 
     const storedMessages = [
@@ -208,23 +218,73 @@ ${agentKnowledge}
       status: 'active',
       leadIntent: leadIntent.flag,
       leadIntentReason: leadIntent.reason ?? null,
+      intentScore: intent.intent_score,
+      intentFocus: intent.focus,
+      intentReasoning: intent.reasoning,
+      intentProjectIds: projectIds.length ? projectIds : null,
+      intentNextAction: intent.next_action,
     });
 
-    if (leadIntent.flag) {
-      void upsertChatLead(db, tenantId, storedMessages, payload.message, conversationRef.id);
-    }
+    const leadId = await upsertChatLead(
+      db,
+      tenantId,
+      storedMessages,
+      payload.message,
+      conversationRef.id,
+      {
+        email: emailMatch,
+        phone: phoneMatch,
+        intentScore: intent.intent_score,
+        intentFocus: intent.focus,
+        intentReasoning: intent.reasoning,
+        intentProjectIds: projectIds.length ? projectIds : null,
+        intentNextAction: intent.next_action,
+      }
+    );
+
+    console.log(
+      JSON.stringify({
+        event: 'lead.created',
+        source: 'chat',
+        tenantId,
+        leadId,
+        intentScore: intent.intent_score,
+        nextAction: intent.next_action,
+        requestId,
+      })
+    );
 
     const responseData = {
       reply,
       threadId: conversationRef.id,
       history: storedMessages,
       leadIntent,
+      lead_id: leadId,
+      intent_score: intent.intent_score,
+      focus: intent.focus,
+      project_ids: projectIds,
+      next_action: intent.next_action,
     };
+    if (aiFailure) {
+      logError(scope, aiFailure, { requestId, tenantId, path });
+      return respond(
+        {
+          ok: false,
+          error: {
+            code: aiFailure.error,
+            message: aiFailure.message,
+            missing: aiFailure.missing,
+          },
+          data: responseData,
+          requestId,
+        },
+        { status: 503 }
+      );
+    }
 
     return respond({
       ok: true,
       data: responseData,
-      ...responseData,
       requestId,
     });
   } catch (error: unknown) {
@@ -233,9 +293,11 @@ ${agentKnowledge}
       return respond(
         {
           ok: false,
-          scope,
-          message: 'Invalid request payload.',
-          error: error.errors,
+          error: {
+            code: 'invalid_payload',
+            message: 'Invalid request payload.',
+            details: error.errors,
+          },
           requestId,
         },
         { status: 400 }
@@ -245,9 +307,11 @@ ${agentKnowledge}
       return respond(
         {
           ok: false,
-          scope,
-          message: 'Plan limit reached',
-          error: planLimitErrorResponse(error),
+          error: {
+            code: 'plan_limit',
+            message: 'Plan limit reached',
+            details: planLimitErrorResponse(error),
+          },
           requestId,
         },
         { status: 402 }
@@ -255,13 +319,17 @@ ${agentKnowledge}
     }
     if (error instanceof UnauthorizedError) {
       return respond(
-        { ok: false, scope: 'auth', message: 'Unauthorized', requestId },
+        {
+          ok: false,
+          error: { code: 'unauthorized', message: 'Unauthorized' },
+          requestId,
+        },
         { status: 401 }
       );
     }
     if (error instanceof ForbiddenError) {
       return respond(
-        { ok: false, scope: 'auth', message: 'Forbidden', requestId },
+        { ok: false, error: { code: 'forbidden', message: 'Forbidden' }, requestId },
         { status: 403 }
       );
     }
@@ -274,12 +342,23 @@ async function upsertChatLead(
   tenantId: string,
   messages: Array<{ role: 'user' | 'agent'; text: string }>,
   latestMessage: string,
-  threadId: string
+  threadId: string,
+  intent: {
+    email?: string | null;
+    phone?: string | null;
+    intentScore: number;
+    intentFocus: string;
+    intentReasoning: string;
+    intentProjectIds?: string[] | null;
+    intentNextAction: string;
+  }
 ) {
   try {
     const messageText = messages.map((entry) => entry.text).join(' ');
-    const emailMatch = messageText.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}/i)?.[0];
-    const phoneMatch = messageText.match(/\\+?\\d[\\d\\s-]{6,}\\d/)?.[0];
+    const emailMatch =
+      intent.email || messageText.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}/i)?.[0];
+    const phoneMatch =
+      intent.phone || messageText.match(/\\+?\\d[\\d\\s-]{6,}\\d/)?.[0];
     const emailNormalized = normalizeEmail(emailMatch);
     const phoneNormalized = normalizePhone(phoneMatch);
 
@@ -296,6 +375,11 @@ async function upsertChatLead(
           phone: phoneMatch || existing.data?.phone || null,
           message: latestMessage,
           source: 'Chat Agent',
+          intentScore: intent.intentScore,
+          intentFocus: intent.intentFocus,
+          intentReasoning: intent.intentReasoning,
+          intentProjectIds: intent.intentProjectIds ?? null,
+          intentNextAction: intent.intentNextAction,
         })
       );
       await db
@@ -304,7 +388,7 @@ async function upsertChatLead(
         .collection('chatThreads')
         .doc(threadId)
         .set({ leadId: existing.id }, { merge: true });
-      return;
+      return existing.id;
     }
 
     await enforceUsageLimit(db, tenantId, 'leads', 1);
@@ -329,6 +413,11 @@ async function upsertChatLead(
         createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
         context: { threadId, channel: 'chat' },
+        intentScore: intent.intentScore,
+        intentFocus: intent.intentFocus,
+        intentReasoning: intent.intentReasoning,
+        intentProjectIds: intent.intentProjectIds ?? null,
+        intentNextAction: intent.intentNextAction,
       });
     await db
       .collection('tenants')
@@ -336,8 +425,10 @@ async function upsertChatLead(
       .collection('chatThreads')
       .doc(threadId)
       .set({ leadId: leadRef.id }, { merge: true });
+    return leadRef.id;
   } catch (error) {
     console.error('[bot/main/chat] lead upsert failed', error);
+    throw error;
   }
 }
 

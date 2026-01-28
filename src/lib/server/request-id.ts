@@ -33,7 +33,15 @@ export function attachRequestId(response: NextResponse, requestId: string) {
 export function errorResponse(requestId: string, scope: string, status = 500) {
   return jsonWithRequestId(
     requestId,
-    { ok: false, requestId, scope },
+    {
+      ok: false,
+      error: {
+        code: 'internal_error',
+        message: 'Request failed.',
+        scope,
+      },
+      requestId,
+    },
     { status }
   );
 }

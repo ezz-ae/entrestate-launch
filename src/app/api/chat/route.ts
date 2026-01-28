@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { generateText } from 'ai';
+import { FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
 import { mainSystemPrompt } from '@/config/prompts';
 import { getGoogleModel, FLASH_MODEL } from '@/lib/ai/google';
-import { formatProjectContext, getRelevantProjects } from '@/server/inventory';
+import { formatProjectContext } from '@/server/inventory';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
 import {
@@ -12,6 +13,20 @@ import {
   planLimitErrorResponse,
 } from '@/lib/server/billing';
 import { getAdminDb } from '@/server/firebase-admin';
+import { logError } from '@/lib/server/log';
+import {
+  createRequestId,
+  errorResponse,
+  jsonWithRequestId,
+} from '@/lib/server/request-id';
+import { fetchRelevantProjects } from '@/lib/server/inventory-search';
+import { scoreLeadIntent } from '@/lib/server/lead-intent';
+import {
+  buildLeadTouchUpdate,
+  findExistingLead,
+  normalizeEmail,
+  normalizePhone,
+} from '@/lib/server/lead-dedupe';
 
 const requestSchema = z.object({
   message: z.string().min(1),
@@ -26,6 +41,10 @@ const requestSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  const scope = 'api/chat';
+  const requestId = createRequestId();
+  const respond = (body: unknown, init?: ResponseInit) =>
+    jsonWithRequestId(requestId, body, init);
   let payload: z.infer<typeof requestSchema> | null = null;
   let tenantId: string;
   try {
@@ -36,21 +55,46 @@ export async function POST(req: NextRequest) {
     payload = requestSchema.parse(body);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ reply: 'Invalid request payload.', error: error.errors }, { status: 400 });
+      return respond(
+        {
+          ok: false,
+          error: {
+            code: 'invalid_payload',
+            message: 'Invalid request payload.',
+            details: error.errors,
+          },
+          requestId,
+        },
+        { status: 400 }
+      );
     }
     if (error instanceof PlanLimitError) {
-      return NextResponse.json(
-        { reply: 'Plan limit reached', error: planLimitErrorResponse(error) },
-        { status: 402 },
+      return respond(
+        {
+          ok: false,
+          error: {
+            code: 'plan_limit',
+            message: 'Plan limit reached',
+            details: planLimitErrorResponse(error),
+          },
+          requestId,
+        },
+        { status: 402 }
       );
     }
     if (error instanceof UnauthorizedError) {
-      return NextResponse.json({ reply: 'Unauthorized' }, { status: 401 });
+      return respond(
+        { ok: false, error: { code: 'unauthorized', message: 'Unauthorized' }, requestId },
+        { status: 401 }
+      );
     }
     if (error instanceof ForbiddenError) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      return respond(
+        { ok: false, error: { code: 'forbidden', message: 'Forbidden' }, requestId },
+        { status: 403 }
+      );
     }
-    return NextResponse.json({ reply: 'Invalid request payload.' }, { status: 400 });
+    return errorResponse(requestId, scope, 400);
   }
 
   const db = getAdminDb();
@@ -79,12 +123,11 @@ export async function POST(req: NextRequest) {
     .map((entry) => `${entry.role === 'user' ? 'Client' : 'Agent'}: ${entry.text}`)
     .join('\n');
 
-  let relevantProjects: Awaited<ReturnType<typeof getRelevantProjects>> = [];
-  try {
-    relevantProjects = await getRelevantProjects(payload.message, historyText, 8);
-  } catch (error) {
-    console.error('[chat] inventory context failed', error);
-  }
+  const relevantProjects = await fetchRelevantProjects(
+    req,
+    `${payload.message} ${historyText}`,
+    8
+  );
 
   const projectContext = relevantProjects.length
     ? `\nRelevant listings:\n${relevantProjects.map(formatProjectContext).join('\n')}`
@@ -110,20 +153,144 @@ ${agentKnowledge}
   }));
   messages.push({ role: 'user', content: payload.message });
 
+  const contactText = `${payload.message} ${historyText}`;
+  const emailMatch = contactText.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0];
+  const phoneMatch = contactText.match(/\+?\d[\d\s-]{6,}\d/)?.[0];
+  const emailNormalized = normalizeEmail(emailMatch);
+  const phoneNormalized = normalizePhone(phoneMatch);
+  const projectIds = relevantProjects.map((project) => project.id).filter(Boolean);
+  const intent = scoreLeadIntent({
+    text: contactText,
+    hasEmail: Boolean(emailNormalized),
+    hasPhone: Boolean(phoneNormalized),
+    projectIds,
+  });
+
+  let reply = '';
+  let aiFailure: { error: string; message: string; missing?: string[] } | null = null;
   try {
     const { text } = await generateText({
       model: getGoogleModel(FLASH_MODEL),
       system: `${mainSystemPrompt}\nAlways be clear, helpful, and broker-friendly.\n${systemPrompt}`,
       messages,
     });
-
-    return NextResponse.json({ reply: text });
+    reply = text;
   } catch (error) {
     console.error('[chat] ai error', error);
+    if (
+      error instanceof Error &&
+      error.message.includes('Google Generative AI API key is not configured')
+    ) {
+      aiFailure = {
+        error: 'missing_api_key',
+        message: 'AI is not configured.',
+        missing: ['GEMINI_API_KEY'],
+      };
+    } else {
+      aiFailure = {
+        error: 'ai_unavailable',
+        message: 'AI is temporarily unavailable. Please try again shortly.',
+      };
+    }
     const fallbackList = relevantProjects.slice(0, 3).map(formatProjectContext).join('\n');
-    const fallbackReply = fallbackList
+    reply = fallbackList
       ? `Here are a few options I can share right now:\n${fallbackList}\nTell me your budget and preferred area, and I will narrow it down.`
       : 'I can help with UAE projects, pricing ranges, and next steps. What area and budget should I focus on?';
-    return NextResponse.json({ reply: fallbackReply });
   }
+
+  const db = getAdminDb();
+  const existing = await findExistingLead(db, tenantId, {
+    email: emailNormalized,
+    phone: phoneNormalized,
+  });
+
+  let leadId = '';
+  if (existing) {
+    await existing.ref.update(
+      buildLeadTouchUpdate({
+        name: existing.data?.name || null,
+        email: emailMatch || existing.data?.email || null,
+        phone: phoneMatch || existing.data?.phone || null,
+        message: payload.message,
+        source: 'Chat Agent',
+        intentScore: intent.intent_score,
+        intentFocus: intent.focus,
+        intentReasoning: intent.reasoning,
+        intentProjectIds: projectIds,
+        intentNextAction: intent.next_action,
+      })
+    );
+    leadId = existing.id;
+  } else {
+    const leadRef = await db
+      .collection('tenants')
+      .doc(tenantId)
+      .collection('leads')
+      .add({
+        tenantId,
+        name: null,
+        email: emailMatch || null,
+        emailNormalized,
+        phone: phoneMatch || null,
+        phoneNormalized,
+        message: payload.message,
+        source: 'Chat Agent',
+        status: 'New',
+        priority: 'Warm',
+        touches: 1,
+        lastSeenAt: FieldValue.serverTimestamp(),
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+        context: { channel: 'chat' },
+        intentScore: intent.intent_score,
+        intentFocus: intent.focus,
+        intentReasoning: intent.reasoning,
+        intentProjectIds: projectIds,
+        intentNextAction: intent.next_action,
+      });
+    leadId = leadRef.id;
+  }
+
+  console.log(
+    JSON.stringify({
+      event: 'lead.created',
+      source: 'chat',
+      tenantId,
+      leadId,
+      intentScore: intent.intent_score,
+      nextAction: intent.next_action,
+      requestId,
+    })
+  );
+
+  const responseData = {
+    reply,
+    lead_id: leadId,
+    intent_score: intent.intent_score,
+    focus: intent.focus,
+    project_ids: projectIds,
+    next_action: intent.next_action,
+  };
+
+  if (aiFailure) {
+    return respond(
+      {
+        ok: false,
+        error: {
+          code: aiFailure.error,
+          message: aiFailure.message,
+          missing: aiFailure.missing,
+        },
+        data: responseData,
+        requestId,
+      },
+      { status: 503 }
+    );
+  }
+
+  return respond({
+    ok: true,
+    data: responseData,
+    requestId,
+  });
 }

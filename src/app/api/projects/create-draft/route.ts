@@ -37,6 +37,16 @@ export async function POST(req: NextRequest) {
 
     await draftRef.set(draft);
 
+    console.log(
+      JSON.stringify({
+        event: 'builder.start',
+        tenantId,
+        draftId: draftRef.id,
+        source: body?.source || null,
+        requestId,
+      })
+    );
+
     return respond({ ok: true, data: { draftId: draftRef.id, draft }, requestId });
   } catch (error) {
     logError(scope, error, { requestId });

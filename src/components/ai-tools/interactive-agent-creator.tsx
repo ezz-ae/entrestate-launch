@@ -94,11 +94,13 @@ export function InteractiveAgentCreator() {
             });
             const data = await response.json();
             const fallback =
+                data?.error?.message ||
                 data?.error ||
                 data?.message ||
                 "I can help with pricing, projects, or areas. What would you like to know?";
             if (!response.ok || !data?.ok) {
-                if (Array.isArray(data?.missing) && data.missing.includes('GEMINI_API_KEY')) {
+                const missingKeys = data?.error?.missing || data?.missing;
+                if (Array.isArray(missingKeys) && missingKeys.includes('GEMINI_API_KEY')) {
                     setAiConfigured(false);
                     setAiError('AI key missing. Contact your admin to enable Gemini.');
                 }

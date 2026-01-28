@@ -45,6 +45,7 @@ export function ChatAgentShowcase() {
       });
       const data = await response.json();
       const fallback =
+        data?.error?.message ||
         data?.error ||
         data?.message ||
         'I can share options and help schedule a viewing. What area and budget should I focus on?';

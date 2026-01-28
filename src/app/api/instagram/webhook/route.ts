@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminDb } from '@/server/firebase-admin'; // Import Firebase Admin
 import { FieldValue } from 'firebase-admin/firestore'; // Import FieldValue for arrayUnion
+import { createRequestId, jsonWithRequestId } from '@/lib/server/request-id';
 
 const VERIFY_TOKEN = process.env.INSTAGRAM_VERIFY_TOKEN || 'your-very-secret-token';
 const INSTAGRAM_ACCESS_TOKEN = process.env.INSTAGRAM_ACCESS_TOKEN;
@@ -19,6 +20,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const requestId = createRequestId();
+  const respond = (body: Record<string, unknown>, init?: ResponseInit) =>
+    jsonWithRequestId(requestId, body, init);
   try {
     const body = await req.json();
     console.log('Instagram webhook received:', JSON.stringify(body, null, 2));
@@ -51,18 +55,24 @@ export async function POST(req: NextRequest) {
                   // Potentially add other conversation metadata here (e.g., agentId, status)
                 }, { merge: true });
 
-                const chatResponse = await fetch('http://localhost:3000/api/chat', {
+                const baseUrl = new URL(req.url).origin;
+                const chatResponse = await fetch(`${baseUrl}/api/agent/demo`, {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
-                    // TODO: Add Authorization header for tenantId if necessary
                   },
-                  body: JSON.stringify({ message: messageText }),
+                  body: JSON.stringify({
+                    message: messageText,
+                    context: 'Instagram DM lead capture.',
+                  }),
                 });
 
                 if (chatResponse.ok) {
                   const chatData = await chatResponse.json();
-                  const aiReply = chatData.reply;
+                  const aiReply =
+                    chatData?.data?.reply ||
+                    chatData?.reply ||
+                    'Thanks for your message. Share your budget, preferred area, and timeline, and we will follow up.';
                   console.log('Chat API response:', aiReply);
 
                   // Save AI reply to Firestore
@@ -109,9 +119,16 @@ export async function POST(req: NextRequest) {
       }
     }
     
-    return NextResponse.json({ status: 'success' }, { status: 200 });
+    return respond({ ok: true, data: { status: 'success' }, requestId });
   } catch (error) {
     console.error('Error processing Instagram webhook:', error);
-    return new NextResponse('Internal Server Error', { status: 500 });
+    return respond(
+      {
+        ok: false,
+        error: { code: 'internal_error', message: 'Failed to process webhook.' },
+        requestId,
+      },
+      { status: 500 }
+    );
   }
 }

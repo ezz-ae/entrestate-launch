@@ -12,6 +12,7 @@ import {
   errorResponse,
   jsonWithRequestId,
 } from '@/lib/server/request-id';
+import { scoreLeadIntent } from '@/lib/server/lead-intent';
 
 const NIL_HISTORY: Array<{ role: 'user' | 'agent'; content: string }> = [];
 
@@ -62,7 +63,11 @@ export async function POST(req: NextRequest) {
     const ip = getRequestIp(req);
     if (!(await enforceRateLimit(`agent:demo:${ip}`, 30, 60_000))) {
       return respond(
-        { ok: false, error: 'Rate limit exceeded', requestId },
+        {
+          ok: false,
+          error: { code: 'rate_limited', message: 'Rate limit exceeded' },
+          requestId,
+        },
         { status: 429 }
       );
     }
@@ -72,15 +77,22 @@ export async function POST(req: NextRequest) {
       return respond(
         {
           ok: false,
-          error: 'Invalid request payload.',
-          details: error.errors,
+          error: {
+            code: 'invalid_payload',
+            message: 'Invalid request payload.',
+            details: error.errors,
+          },
           requestId,
         },
         { status: 400 }
       );
     }
     return respond(
-      { ok: false, error: 'Invalid request payload.', requestId },
+      {
+        ok: false,
+        error: { code: 'invalid_payload', message: 'Invalid request payload.' },
+        requestId,
+      },
       { status: 400 }
     );
   }
@@ -98,42 +110,46 @@ export async function POST(req: NextRequest) {
   const leadIntent = analyzeLeadIntent(
     conversation.map((entry) => entry.content)
   );
+  const contactText = conversation.map((entry) => entry.content).join(' ');
+  const emailMatch = contactText.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0];
+  const phoneMatch = contactText.match(/\+?\d[\d\s-]{6,}\d/)?.[0];
+  const intent = scoreLeadIntent({
+    text: contactText,
+    hasEmail: Boolean(emailMatch),
+    hasPhone: Boolean(phoneMatch),
+    projectIds: [],
+  });
 
   const systemPrompt = buildSystemPrompt(parsed.context);
 
   let reply = '';
+  let aiFailure: { error: string; message: string; missing?: string[] } | null = null;
   try {
     reply = await generateReply(recentMessages, systemPrompt);
   } catch (error) {
     if (error instanceof MissingAIKeyError) {
-      const missing = ['GEMINI_API_KEY'];
-      return respond(
-        {
-          ok: false,
-          error: 'missing_api_key',
-          message: 'AI is not configured.',
-          missing,
-          requestId,
-        },
-        { status: 503 }
-      );
-    }
-    logError(scope, error, { requestId });
-    return respond(
-      {
-        ok: false,
+      aiFailure = {
+        error: 'missing_api_key',
+        message: 'AI is not configured.',
+        missing: ['GEMINI_API_KEY'],
+      };
+    } else {
+      aiFailure = {
         error: 'ai_unavailable',
         message: 'AI is temporarily unavailable. Please try again shortly.',
-        requestId,
-      },
-      { status: 503 }
-    );
+      };
+    }
+  }
+
+  if (aiFailure) {
+    reply =
+      'Thanks for reaching out. Share your budget, preferred area, and timeline, and I will follow up.';
   }
 
   const storedMessages = [...conversation, { role: 'agent', content: reply }];
-
+  let leadId: string | null = null;
+  const db = getAdminDb();
   try {
-    const db = getAdminDb();
     const now = new Date().toISOString();
     const threadId = nanoid();
     await db.collection('public_agent_threads').doc(threadId).set({
@@ -148,27 +164,66 @@ export async function POST(req: NextRequest) {
       updatedAt: now,
       ip,
     });
+    const leadRef = await db.collection('public_leads').add({
+      threadId,
+      source: 'agent_demo',
+      message: parsed.message,
+      email: emailMatch || null,
+      phone: phoneMatch || null,
+      intentScore: intent.intent_score,
+      intentFocus: intent.focus,
+      intentReasoning: intent.reasoning,
+      intentProjectIds: [],
+      intentNextAction: intent.next_action,
+      createdAt: now,
+      updatedAt: now,
+    });
+    leadId = leadRef.id;
+    console.log(
+      JSON.stringify({
+        event: 'lead.created',
+        source: 'agent_demo',
+        leadId,
+        requestId,
+      })
+    );
+
+    const responseData = {
+      reply,
+      threadId,
+      leadIntent,
+      lead_id: leadId,
+      intent_score: intent.intent_score,
+      focus: intent.focus,
+      project_ids: [],
+      next_action: intent.next_action,
+      history: storedMessages,
+    };
+
+    if (aiFailure) {
+      return respond(
+        {
+          ok: false,
+          error: {
+            code: aiFailure.error,
+            message: aiFailure.message,
+            missing: aiFailure.missing,
+          },
+          data: responseData,
+          requestId,
+        },
+        { status: 503 }
+      );
+    }
+
     return respond({
       ok: true,
-      data: {
-        reply,
-        threadId,
-        leadIntent,
-        history: storedMessages,
-      },
+      data: responseData,
       requestId,
     });
   } catch (error) {
     logError(scope, error, { requestId });
-    return respond(
-      {
-        ok: false,
-        error: 'thread_persist_failed',
-        message: 'Could not persist conversation.',
-        requestId,
-      },
-      { status: 500 }
-    );
+    return errorResponse(requestId, scope);
   }
 }
 

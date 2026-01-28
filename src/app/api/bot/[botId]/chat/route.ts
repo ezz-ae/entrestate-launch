@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { generateText } from 'ai';
 import { z } from 'zod';
 import { getGoogleModel, FLASH_MODEL } from '@/lib/ai/google';
 import { getAdminDb } from '@/server/firebase-admin';
-import { formatProjectContext, getRelevantProjects } from '@/server/inventory';
+import { FieldValue } from 'firebase-admin/firestore';
+import { formatProjectContext } from '@/server/inventory';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
 import {
@@ -11,6 +12,20 @@ import {
   PlanLimitError,
   planLimitErrorResponse,
 } from '@/lib/server/billing';
+import { logError } from '@/lib/server/log';
+import {
+  createRequestId,
+  errorResponse,
+  jsonWithRequestId,
+} from '@/lib/server/request-id';
+import { fetchRelevantProjects } from '@/lib/server/inventory-search';
+import { scoreLeadIntent } from '@/lib/server/lead-intent';
+import {
+  buildLeadTouchUpdate,
+  findExistingLead,
+  normalizeEmail,
+  normalizePhone,
+} from '@/lib/server/lead-dedupe';
 
 const requestSchema = z.object({
   message: z.string().min(1),
@@ -41,13 +56,24 @@ function consumeRateLimit(key: string) {
 }
 
 export async function POST(req: NextRequest, { params: paramsPromise }: { params: Promise<{ botId: string }> }) {
+  const scope = 'api/bot/[botId]/chat';
+  const requestId = createRequestId();
+  const respond = (body: unknown, init?: ResponseInit) =>
+    jsonWithRequestId(requestId, body, init);
   try {
     const params = await paramsPromise;
     const { tenantId } = await requireRole(req, ALL_ROLES);
     await enforceUsageLimit(getAdminDb(), tenantId, 'ai_conversations', 1);
     const ip = req.headers.get('x-forwarded-for') || 'anon';
     if (!consumeRateLimit(`${params.botId}:${ip}`)) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+      return respond(
+        {
+          ok: false,
+          error: { code: 'rate_limited', message: 'Too many requests' },
+          requestId,
+        },
+        { status: 429 }
+      );
     }
 
     const body = await req.json();
@@ -57,7 +83,11 @@ export async function POST(req: NextRequest, { params: paramsPromise }: { params
       .map((entry) => `${entry.role === 'user' ? 'User' : 'Agent'}: ${entry.text}`)
       .join('\n');
 
-    const relevantProjects = await getRelevantProjects(payload.message, payload.context, 8);
+    const relevantProjects = await fetchRelevantProjects(
+      req,
+      `${payload.message} ${payload.context || ''}`,
+      8
+    );
     const projectContext = relevantProjects.length
       ? `\nRelevant listings:\n${relevantProjects.map(formatProjectContext).join('\n')}`
       : '';
@@ -74,7 +104,21 @@ ${historyText}
 User (${params.botId}): ${payload.message}
 `;
 
+    const contactText = `${payload.message} ${historyText}`;
+    const emailMatch = contactText.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0];
+    const phoneMatch = contactText.match(/\+?\d[\d\s-]{6,}\d/)?.[0];
+    const emailNormalized = normalizeEmail(emailMatch);
+    const phoneNormalized = normalizePhone(phoneMatch);
+    const projectIds = relevantProjects.map((project) => project.id).filter(Boolean);
+    const intent = scoreLeadIntent({
+      text: contactText,
+      hasEmail: Boolean(emailNormalized),
+      hasPhone: Boolean(phoneNormalized),
+      projectIds,
+    });
+
     let reply = '';
+    let aiFailure: { error: string; message: string; missing?: string[] } | null = null;
     try {
       const { text } = await generateText({
         model: getGoogleModel(FLASH_MODEL),
@@ -85,46 +129,161 @@ User (${params.botId}): ${payload.message}
       reply = text;
     } catch (error) {
       console.error('[bot/chat] ai error', error);
+      if (
+        error instanceof Error &&
+        error.message.includes('Google Generative AI API key is not configured')
+      ) {
+        aiFailure = {
+          error: 'missing_api_key',
+          message: 'AI is not configured.',
+          missing: ['GEMINI_API_KEY'],
+        };
+      } else {
+        aiFailure = {
+          error: 'ai_unavailable',
+          message: 'AI is temporarily unavailable. Please try again shortly.',
+        };
+      }
       const fallbackList = relevantProjects.slice(0, 3).map(formatProjectContext).join('\n');
       reply = fallbackList
         ? `Here are a few options I can share right now:\n${fallbackList}\nTell me your budget and preferred area, and I will narrow it down.`
         : 'I can help with UAE projects, pricing ranges, and next steps. What area and budget should I focus on?';
     }
 
-    // Log to Firestore for monitoring
-    try {
-      const db = getAdminDb();
-      await db.collection('bot_events').add({
-        botId: params.botId,
-        tenantId,
-        siteId: payload.siteId || null,
-        userMessage: payload.message,
-        agentReply: reply,
-        createdAt: new Date().toISOString(),
-        context: payload.context || 'web_widget',
-      });
-    } catch (logError) {
-      console.error('[bot] failed to log event', logError);
+    const db = getAdminDb();
+    const existing = await findExistingLead(db, tenantId, {
+      email: emailNormalized,
+      phone: phoneNormalized,
+    });
+
+    let leadId = '';
+    if (existing) {
+      await existing.ref.update(
+        buildLeadTouchUpdate({
+          name: existing.data?.name || null,
+          email: emailMatch || existing.data?.email || null,
+          phone: phoneMatch || existing.data?.phone || null,
+          message: payload.message,
+          source: 'Chat Widget',
+          intentScore: intent.intent_score,
+          intentFocus: intent.focus,
+          intentReasoning: intent.reasoning,
+          intentProjectIds: projectIds,
+          intentNextAction: intent.next_action,
+        })
+      );
+      leadId = existing.id;
+    } else {
+      const leadRef = await db
+        .collection('tenants')
+        .doc(tenantId)
+        .collection('leads')
+        .add({
+          tenantId,
+          name: null,
+          email: emailMatch || null,
+          emailNormalized,
+          phone: phoneMatch || null,
+          phoneNormalized,
+          message: payload.message,
+          source: 'Chat Widget',
+          status: 'New',
+          priority: 'Warm',
+          touches: 1,
+          lastSeenAt: FieldValue.serverTimestamp(),
+          createdAt: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
+          context: { botId: params.botId, siteId: payload.siteId || null },
+          intentScore: intent.intent_score,
+          intentFocus: intent.focus,
+          intentReasoning: intent.reasoning,
+          intentProjectIds: projectIds,
+          intentNextAction: intent.next_action,
+        });
+      leadId = leadRef.id;
     }
 
-    return NextResponse.json({ reply });
+    console.log(
+      JSON.stringify({
+        event: 'lead.created',
+        source: 'chat_widget',
+        tenantId,
+        leadId,
+        intentScore: intent.intent_score,
+        nextAction: intent.next_action,
+        requestId,
+      })
+    );
+
+    const responseData = {
+      reply,
+      lead_id: leadId,
+      intent_score: intent.intent_score,
+      focus: intent.focus,
+      project_ids: projectIds,
+      next_action: intent.next_action,
+    };
+
+    if (aiFailure) {
+      return respond(
+        {
+          ok: false,
+          error: {
+            code: aiFailure.error,
+            message: aiFailure.message,
+            missing: aiFailure.missing,
+          },
+          data: responseData,
+          requestId,
+        },
+        { status: 503 }
+      );
+    }
+
+    return respond({ ok: true, data: responseData, requestId });
   } catch (error) {
     console.error('[bot/chat] error', error);
     if (error instanceof PlanLimitError) {
-      return NextResponse.json(
-        { reply: 'Plan limit reached', error: planLimitErrorResponse(error) },
-        { status: 402 },
+      return respond(
+        {
+          ok: false,
+          error: {
+            code: 'plan_limit',
+            message: 'Plan limit reached',
+            details: planLimitErrorResponse(error),
+          },
+          requestId,
+        },
+        { status: 402 }
       );
     }
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors }, { status: 400 });
+      return respond(
+        {
+          ok: false,
+          error: {
+            code: 'invalid_payload',
+            message: 'Invalid payload',
+            details: error.errors,
+          },
+          requestId,
+        },
+        { status: 400 }
+      );
     }
     if (error instanceof UnauthorizedError) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return respond(
+        { ok: false, error: { code: 'unauthorized', message: 'Unauthorized' }, requestId },
+        { status: 401 }
+      );
     }
     if (error instanceof ForbiddenError) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      return respond(
+        { ok: false, error: { code: 'forbidden', message: 'Forbidden' }, requestId },
+        { status: 403 }
+      );
     }
-    return NextResponse.json({ error: 'Failed to process message' }, { status: 500 });
+    logError(scope, error, { requestId });
+    return errorResponse(requestId, scope);
   }
 }

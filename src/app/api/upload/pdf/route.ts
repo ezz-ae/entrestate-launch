@@ -32,6 +32,14 @@ export async function POST(req: NextRequest) {
     const jobStore = getPdfJobStore();
     jobStore.set(jobId, { status: 'uploaded', updatedAt: new Date().toISOString() });
 
+    console.log(
+      JSON.stringify({
+        event: 'pdf.uploaded',
+        jobId,
+        requestId,
+      })
+    );
+
     void processPdfJob(jobId, buffer, requestId);
 
     return respond({
@@ -60,6 +68,13 @@ export async function POST(req: NextRequest) {
 async function processPdfJob(jobId: string, buffer: Buffer, requestId: string) {
   const jobStore = getPdfJobStore();
   jobStore.set(jobId, { status: 'processing', updatedAt: new Date().toISOString() });
+  console.log(
+    JSON.stringify({
+      event: 'pdf.parse.start',
+      jobId,
+      requestId,
+    })
+  );
   try {
     const result = await Promise.race([
       pdf(buffer),
@@ -72,6 +87,13 @@ async function processPdfJob(jobId: string, buffer: Buffer, requestId: string) {
       text: (result as { text: string }).text,
       updatedAt: new Date().toISOString(),
     });
+    console.log(
+      JSON.stringify({
+        event: 'pdf.parse.done',
+        jobId,
+        requestId,
+      })
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Processing failed';
     jobStore.set(jobId, {
@@ -79,6 +101,14 @@ async function processPdfJob(jobId: string, buffer: Buffer, requestId: string) {
       error: message,
       updatedAt: new Date().toISOString(),
     });
+    console.log(
+      JSON.stringify({
+        event: 'pdf.parse.failed',
+        jobId,
+        requestId,
+        message,
+      })
+    );
     logError('api/upload/pdf', error, { requestId, jobId });
   }
 }
