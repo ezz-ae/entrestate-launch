@@ -169,7 +169,8 @@ export function GoogleAdsDashboard() {
       const payload = await response.json().catch(() => null);
       if (!response.ok || !payload?.ok) {
         throw new Error(
-          payload?.error ||
+          payload?.error?.message ||
+            payload?.error ||
             payload?.message ||
             'Pricing preview unavailable. Please adjust the budget or duration.'
         );
@@ -233,7 +234,10 @@ export function GoogleAdsDashboard() {
       const payload = await res.json().catch(() => null);
       if (!res.ok || !payload?.ok) {
         throw new Error(
-          payload?.error || payload?.message || 'Plan generation failed'
+          payload?.error?.message ||
+            payload?.error ||
+            payload?.message ||
+            'Plan generation failed'
         );
       }
       const planPayload = payload.data ?? {};

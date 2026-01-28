@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
   const scope = 'api/ads/google/plan/checkout';
   const requestId = createRequestId();
   const respond = (body: Record<string, unknown>, init?: ResponseInit) =>
-    jsonWithRequestId(requestId, { ...body, requestId }, init);
+    jsonWithRequestId(requestId, body, init);
 
   try {
     await requireRole(req, ALL_ROLES);
@@ -27,6 +27,7 @@ export async function POST(req: NextRequest) {
 
     return respond({
       ok: true,
+      requestId,
       data: {
         budget: payload.budget,
         duration: payload.duration,
@@ -41,10 +42,25 @@ export async function POST(req: NextRequest) {
     logError(scope, error, { requestId, path: req.url });
     if (error instanceof z.ZodError) {
       return respond(
-        { ok: false, error: 'Invalid payload', details: error.errors },
+        {
+          ok: false,
+          error: {
+            code: 'invalid_payload',
+            message: 'Invalid payload',
+            details: error.errors,
+          },
+          requestId,
+        },
         { status: 400 }
       );
     }
-    return respond({ ok: false, error: 'Failed to summarize checkout' }, { status: 500 });
+    return respond(
+      {
+        ok: false,
+        error: { code: 'checkout_failed', message: 'Failed to summarize checkout' },
+        requestId,
+      },
+      { status: 500 }
+    );
   }
 }

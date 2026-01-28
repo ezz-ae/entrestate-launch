@@ -95,7 +95,11 @@ export async function POST(req: NextRequest) {
     const ip = getRequestIp(req);
     if (!(await enforceRateLimit(`ads:plan:${tenantId}:${ip}`, 20, 60_000))) {
       return respond(
-        { ok: false, error: 'Rate limit exceeded', requestId },
+        {
+          ok: false,
+          error: { code: 'rate_limited', message: 'Rate limit exceeded' },
+          requestId,
+        },
         { status: 429 }
       );
     }
@@ -168,8 +172,11 @@ export async function POST(req: NextRequest) {
       return respond(
         {
           ok: false,
-          error: 'Invalid payload',
-          details: error.errors,
+          error: {
+            code: 'invalid_payload',
+            message: 'Invalid payload',
+            details: error.errors,
+          },
           requestId,
         },
         { status: 400 }
@@ -180,26 +187,34 @@ export async function POST(req: NextRequest) {
         {
           ok: false,
           requestId,
-          ...featureAccessErrorResponse(error),
+          error: {
+            code: 'feature_locked',
+            message: 'Google Ads planning is locked for your plan.',
+            details: featureAccessErrorResponse(error),
+          },
         },
         { status: 403 }
       );
     }
     if (error instanceof UnauthorizedError) {
       return respond(
-        { ok: false, error: 'Unauthorized', requestId },
+        { ok: false, error: { code: 'unauthorized', message: 'Unauthorized' }, requestId },
         { status: 401 }
       );
     }
     if (error instanceof ForbiddenError) {
       return respond(
-        { ok: false, error: 'Forbidden', requestId },
+        { ok: false, error: { code: 'forbidden', message: 'Forbidden' }, requestId },
         { status: 403 }
       );
     }
     logError(scope, error, { requestId, path: req.url });
     return respond(
-      { ok: false, error: 'Failed to generate plan', requestId },
+      {
+        ok: false,
+        error: { code: 'plan_failed', message: 'Failed to generate plan' },
+        requestId,
+      },
       { status: 500 }
     );
   }
