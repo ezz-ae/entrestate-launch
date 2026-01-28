@@ -2,20 +2,24 @@
 
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
-import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getAdminDb } from '@/server/firebase-admin';
 import { verifyFirebaseIdToken } from '@/lib/server/auth';
 import { resolveEntitlementsForTenant } from '@/lib/server/entitlements';
+import { FieldValue } from 'firebase-admin/firestore';
 
 export async function generateLookalikeAudience() {
-  const supabase = await createSupabaseServerClient();
-  
-  // Auth check disabled as requested
-  // const { data: { user } } = await supabase.auth.getUser();
-  
-  // Fetch all leads to simulate processing
-  const { data: leads } = await supabase.from('leads').select('id');
-  const count = leads?.length || 0;
+  const tenantId = await resolveTenantForExport();
+  const db = getAdminDb();
+
+  const snapshot = await db
+    .collection('tenants')
+    .doc(tenantId)
+    .collection('leads')
+    .orderBy('createdAt', 'desc')
+    .limit(50)
+    .get();
+
+  const count = snapshot.size;
 
   // Simulate processing delay (e.g. calling external API)
   await new Promise(resolve => setTimeout(resolve, 2000));
@@ -45,14 +49,23 @@ export async function triggerCampaign(type: 'email' | 'sms') {
 }
 
 export async function syncLeadsToWebhook(webhookUrl: string) {
-  const supabase = await createSupabaseServerClient();
-  
-  // Fetch recent leads (limit to 50 for this demo)
-  const { data: leads } = await supabase
-    .from('leads')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(50);
+  const tenantId = await resolveTenantForExport();
+  const db = getAdminDb();
+  const snapshot = await db
+    .collection('tenants')
+    .doc(tenantId)
+    .collection('leads')
+    .orderBy('createdAt', 'desc')
+    .limit(50)
+    .get();
+
+  const leads = snapshot.docs.map((doc) => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      ...data,
+    };
+  });
 
   if (!leads || leads.length === 0) {
     return { success: false, message: 'No leads found to sync.' };
@@ -78,28 +91,34 @@ export async function syncLeadsToWebhook(webhookUrl: string) {
 }
 
 export async function updateLeadStatus(leadId: string, status: string) {
-  const supabase = await createSupabaseServerClient();
-  
-  const { error } = await supabase
-    .from('leads')
-    .update({ status })
-    .eq('id', leadId);
-
-  if (error) throw new Error('Failed to update status');
+  const tenantId = await resolveTenantForExport();
+  const db = getAdminDb();
+  await db
+    .collection('tenants')
+    .doc(tenantId)
+    .collection('leads')
+    .doc(leadId)
+    .set(
+      {
+        status,
+        updatedAt: FieldValue.serverTimestamp(),
+      },
+      { merge: true }
+    );
   
   revalidatePath('/dashboard/leads');
   return { success: true };
 }
 
 export async function deleteLeads(leadIds: string[]) {
-  const supabase = await createSupabaseServerClient();
-  
-  const { error } = await supabase
-    .from('leads')
-    .delete()
-    .in('id', leadIds);
-
-  if (error) throw new Error('Failed to delete leads');
+  const tenantId = await resolveTenantForExport();
+  const db = getAdminDb();
+  const batch = db.batch();
+  const leadsCollection = db.collection('tenants').doc(tenantId).collection('leads');
+  leadIds.forEach((id) => {
+    batch.delete(leadsCollection.doc(id));
+  });
+  await batch.commit();
   
   revalidatePath('/dashboard/leads');
   return { success: true };
@@ -114,21 +133,40 @@ export async function getLeadsForExport(query?: string) {
     );
   }
 
-  const supabase = await createSupabaseServerClient();
-  
-  let leadsQuery = supabase
-    .from('leads')
-    .select('*, projects(headline)')
-    .order('created_at', { ascending: false });
+  const db = getAdminDb();
+  const snapshot = await db
+    .collection('tenants')
+    .doc(tenantId)
+    .collection('leads')
+    .orderBy('createdAt', 'desc')
+    .limit(500)
+    .get();
 
-  if (query) {
-    leadsQuery = leadsQuery.or(`name.ilike.%${query}%,email.ilike.%${query}%`);
-  }
+  const normalizedQuery = query?.toLowerCase().trim();
+  const leads = snapshot.docs.map((doc): {
+    id: string;
+    name?: string;
+    email?: string;
+    phone?: string;
+    projects?: { headline?: string | null };
+    [key: string]: any;
+  } => {
+    const data = doc.data() as Record<string, any>;
+    return {
+      id: doc.id,
+      ...data,
+      projects: { headline: data.projectHeadline || data.projectName || null },
+    };
+  });
 
-  const { data, error } = await leadsQuery;
-  
-  if (error) throw new Error(error.message);
-  return data;
+  if (!normalizedQuery) return leads;
+  return leads.filter((lead) => {
+    const values = [lead.name, lead.email, lead.phone]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+    return values.includes(normalizedQuery);
+  });
 }
 
 async function resolveTenantForExport() {
@@ -164,14 +202,20 @@ async function resolveTenantForExport() {
 }
 
 export async function updateLeadNotes(leadId: string, notes: string) {
-  const supabase = await createSupabaseServerClient();
-  
-  const { error } = await supabase
-    .from('leads')
-    .update({ notes })
-    .eq('id', leadId);
-
-  if (error) throw new Error('Failed to update notes');
+  const tenantId = await resolveTenantForExport();
+  const db = getAdminDb();
+  await db
+    .collection('tenants')
+    .doc(tenantId)
+    .collection('leads')
+    .doc(leadId)
+    .set(
+      {
+        notes,
+        updatedAt: FieldValue.serverTimestamp(),
+      },
+      { merge: true }
+    );
   
   revalidatePath('/dashboard/leads');
   return { success: true };

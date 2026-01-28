@@ -198,7 +198,6 @@ ${agentKnowledge}
       : 'I can help with UAE projects, pricing ranges, and next steps. What area and budget should I focus on?';
   }
 
-  const db = getAdminDb();
   const existing = await findExistingLead(db, tenantId, {
     email: emailNormalized,
     phone: phoneNormalized,

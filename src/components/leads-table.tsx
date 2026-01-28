@@ -12,13 +12,23 @@ interface LeadsTableProps {
   leads: any[];
   pagination: React.ReactNode;
   totalCount: number;
+  totalLabel?: string;
   from: number;
   to: number;
   currentSort?: string;
   currentOrder?: string;
 }
 
-export function LeadsTable({ leads, pagination, totalCount, from, to, currentSort, currentOrder }: LeadsTableProps) {
+export function LeadsTable({
+  leads,
+  pagination,
+  totalCount,
+  totalLabel,
+  from,
+  to,
+  currentSort,
+  currentOrder,
+}: LeadsTableProps) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
@@ -102,7 +112,10 @@ export function LeadsTable({ leads, pagination, totalCount, from, to, currentSor
             <div className="flex items-center justify-between w-full">
                 <div>
                     <h3 className="font-bold">Recent Leads</h3>
-                    <p className="text-xs text-zinc-500">Showing {from + 1}-{Math.min(to + 1, totalCount)} of {totalCount}</p>
+                    <p className="text-xs text-zinc-500">
+                      Showing {totalCount > 0 ? from + 1 : 0}-{Math.min(to + 1, totalCount)} of {totalCount}
+                      {totalLabel ? ` ${totalLabel}` : ''}
+                    </p>
                 </div>
                 {pagination}
             </div>

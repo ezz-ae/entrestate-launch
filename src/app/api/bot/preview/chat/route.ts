@@ -91,7 +91,7 @@ Avoid repetition and try to keep the conversation flowing naturally, providing d
 ${projectContext}
 `;
 
-  const messages = (payload.history || []).map((entry) => ({
+  const messages: Array<{ role: 'user' | 'assistant'; content: string }> = (payload.history || []).map((entry) => ({
     role: entry.role === 'user' ? 'user' : 'assistant',
     content: entry.text,
   }));

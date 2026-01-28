@@ -1,7 +1,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import App from './App';
-import './mobile-styles.css';
+import App from './src/mobile/App';
+import './src/mobile/mobile-styles.css';
 
 const container = document.getElementById('root');
 const root = createRoot(container!);

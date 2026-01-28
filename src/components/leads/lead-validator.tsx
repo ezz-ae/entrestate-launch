@@ -38,7 +38,7 @@ const PROVIDER_FALLBACK = {
 export function LeadValidator() {
   const { toast } = useToast();
   const [leads, setLeads] = useState<LeadPipeRecord[]>([]);
-  const [summary, setSummary] = useState<LeadPipeResponse['summary']>(null);
+  const [summary, setSummary] = useState<LeadPipeResponse['summary'] | null>(null);
   const [providers, setProviders] = useState(PROVIDER_FALLBACK);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -55,9 +55,17 @@ export function LeadValidator() {
       const data: LeadPipeResponse = payload.data || {};
       setLeads(data.leads || []);
       setSummary(data.summary || null);
+      const emailProvider = data.providers?.email;
+      const smsProvider = data.providers?.sms;
       setProviders({
-        email: data.providers?.email || PROVIDER_FALLBACK.email,
-        sms: data.providers?.sms || PROVIDER_FALLBACK.sms,
+        email: {
+          enabled: Boolean(emailProvider?.enabled),
+          reason: emailProvider?.reason ?? PROVIDER_FALLBACK.email.reason,
+        },
+        sms: {
+          enabled: Boolean(smsProvider?.enabled),
+          reason: smsProvider?.reason ?? PROVIDER_FALLBACK.sms.reason,
+        },
       });
     } catch (fetchError) {
       setError(fetchError instanceof Error ? fetchError.message : 'Failed to load leads.');

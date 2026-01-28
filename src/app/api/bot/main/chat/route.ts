@@ -141,7 +141,7 @@ ${projectContext}
 ${agentKnowledge}
 `;
 
-    const messages = history.map((entry) => ({
+    const messages: Array<{ role: 'user' | 'assistant'; content: string }> = history.map((entry) => ({
       role: entry.role === 'user' ? 'user' : 'assistant',
       content: entry.text,
     }));
@@ -196,7 +196,7 @@ ${agentKnowledge}
         : 'I can help with UAE projects, pricing ranges, and next steps. What area and budget should I focus on?';
     }
 
-    const storedMessages = [
+    const storedMessages: Array<{ role: 'agent' | 'user'; text: string }> = [
       ...history,
       { role: 'user', text: payload.message },
       { role: 'agent', text: reply },

@@ -3,6 +3,7 @@ import pdf from 'pdf-parse-fork';
 import { nanoid } from 'nanoid';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
+import { enforceRateLimit, getRequestIp } from '@/lib/server/rateLimit';
 import { logError } from '@/lib/server/log';
 import { createRequestId, errorResponse, jsonWithRequestId } from '@/lib/server/request-id';
 import { getPdfJobStore } from '@/lib/pdf-jobs';
@@ -16,7 +17,26 @@ export async function POST(req: NextRequest) {
     jsonWithRequestId(requestId, body, init);
 
   try {
-    await requireRole(req, ALL_ROLES);
+    let authContext: Awaited<ReturnType<typeof requireRole>> | null = null;
+    try {
+      authContext = await requireRole(req, ALL_ROLES);
+    } catch (error) {
+      if (error instanceof UnauthorizedError || error instanceof ForbiddenError) {
+        authContext = null;
+      } else {
+        throw error;
+      }
+    }
+
+    if (!authContext) {
+      const ip = getRequestIp(req);
+      if (!(await enforceRateLimit(`upload:pdf:public:${ip}`, 6, 60_000))) {
+        return respond(
+          { ok: false, error: 'Rate limit exceeded', requestId },
+          { status: 429 }
+        );
+      }
+    }
     const formData = await req.formData();
     const file = formData.get('file') as File | null;
 
@@ -49,18 +69,6 @@ export async function POST(req: NextRequest) {
     });
   } catch (error: unknown) {
     logError(scope, error, { requestId });
-    if (error instanceof UnauthorizedError) {
-      return respond(
-        { ok: false, error: 'Unauthorized', requestId },
-        { status: 401 }
-      );
-    }
-    if (error instanceof ForbiddenError) {
-      return respond(
-        { ok: false, error: 'Forbidden', requestId },
-        { status: 403 }
-      );
-    }
     return errorResponse(requestId, scope);
   }
 }

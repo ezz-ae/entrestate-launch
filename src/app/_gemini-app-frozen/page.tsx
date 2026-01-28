@@ -1,6 +1,6 @@
 'use client';
 
-import App from '../../../App';
+import App from '@/mobile/App';
 
 export default function GeminiAppPage() {
     return <App />;

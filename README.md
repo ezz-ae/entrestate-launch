@@ -2,6 +2,13 @@
 
 This workspace contains the Entrestate OS marketing site, dashboard, API routes, and Firebase-powered backend services. The UI is already implemented, so day-to-day work focuses on wiring those surfaces to live data and integrations (Entrestate inventory ingestion, SendGrid, SMS, Google Ads, PayPal, Vercel domains, etc.).
 
+## Repo Map (Next + Mobile)
+
+- **Next.js app (web):** `src/app/**` + `next.config.mjs`
+- **Mobile app (React):** `src/mobile/**` (entry in `src/mobile/App.tsx`)
+- **Shared UI + API client:** `src/shared/**` (no Next-only imports)
+- **Shared API client:** `src/shared/api/client.ts` (used by both frontends)
+
 ## Getting Started
 
 1. **Install dependencies**

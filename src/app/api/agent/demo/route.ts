@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { nanoid } from 'nanoid';
 import { generateText } from 'ai';
+import type { ModelMessage } from 'ai';
 import { getGoogleModel, FLASH_MODEL } from '@/lib/ai/google';
 import { mainSystemPrompt } from '@/config/prompts';
 import { getAdminDb } from '@/server/firebase-admin';
@@ -59,8 +60,9 @@ export async function POST(req: NextRequest) {
   const respond = (body: unknown, init?: ResponseInit) =>
     jsonWithRequestId(requestId, body, init);
   let parsed: z.infer<typeof requestSchema> | null = null;
+  let ip: string | null = null;
   try {
-    const ip = getRequestIp(req);
+    ip = getRequestIp(req);
     if (!(await enforceRateLimit(`agent:demo:${ip}`, 30, 60_000))) {
       return respond(
         {
@@ -162,7 +164,7 @@ export async function POST(req: NextRequest) {
       status: 'active',
       createdAt: now,
       updatedAt: now,
-      ip,
+      ip: ip ?? 'unknown',
     });
     const leadRef = await db.collection('public_leads').add({
       threadId,
@@ -256,11 +258,15 @@ async function attemptModel(
   messages: Array<{ role: 'user' | 'agent'; content: string }>
 ) {
   const model = resolveModel(modelId);
+  const modelMessages: ModelMessage[] = messages.map((message) => ({
+    role: message.role === 'agent' ? 'assistant' : 'user',
+    content: message.content,
+  }));
   try {
     const { text } = await generateText({
       model,
       system: systemPrompt,
-      messages,
+      messages: modelMessages,
     });
     return text.trim();
   } catch (error) {

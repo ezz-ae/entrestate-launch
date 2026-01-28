@@ -28,7 +28,10 @@ export async function GET(req: NextRequest) {
       .limit(MAX_RESULTS)
       .get();
 
-    const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    const items: Array<{ id: string; status?: string }> = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...(doc.data() as { status?: string }),
+    }));
     const ignoredCount = items.filter((item) => item.status === 'ignored').length;
 
     return respond({

@@ -25,9 +25,9 @@
       }
     ],
     "paths": {
-      "@/*": [
-        "./src/*"
-      ]
+      "@/*": ["./src/*"],
+      "@mobile/*": ["./src/mobile/*"],
+      "@shared/*": ["./src/shared/*"]
     },
     "typeRoots": [
       "./types",
