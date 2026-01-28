@@ -3,6 +3,7 @@ import StickyFooter from './StickyFooter';
 import ProgressBar from '../ProgressBar';
 import './mobile-styles.css';
 import { Database, FileText, LayoutTemplate, Square } from 'lucide-react';
+import ForgivingInput from './ForgivingInput';
 
 interface ListingBuilderFunnelProps {
   onComplete: (data: any) => void;
@@ -119,7 +120,6 @@ const ListingBuilderFunnel: React.FC<ListingBuilderFunnelProps> = ({ onComplete,
               placeholder="e.g. A stunning seaside apartment with breathtaking views..."
               value={propertyDescription}
               onChange={(e) => setPropertyDescription(e.target.value)}
-              as="textarea"
             />
           </div>
         );

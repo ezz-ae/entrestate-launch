@@ -8,7 +8,7 @@ interface SmartAdPlannerProps {
   onBudgetChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-const AdCampaignPlanner: React.FC<AdCampaignPlannerProps> = ({ market, budget, onBudgetChange }) => {
+const AdCampaignPlanner: React.FC<SmartAdPlannerProps> = ({ market, budget, onBudgetChange }) => {
   // Mock keyword generation based on market
   const keywords = market 
     ? [`${market} real estate`, `property in ${market}`, `buy home ${market}`]

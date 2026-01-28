@@ -26,7 +26,14 @@ interface ChatAgentDashboardProps {
   onNavigateTo: (screen: string) => void; // New prop for navigation
 }
 
-const ChatAgentDashboard: React.FC<ChatAgentDashboardProps> = ({ onBack, onUpdateKnowledge, onViewChat, onShowQR, onTestSimulator }) => {
+const ChatAgentDashboard: React.FC<ChatAgentDashboardProps> = ({
+  onBack,
+  onUpdateKnowledge,
+  onViewChat,
+  onShowQR,
+  onTestSimulator,
+  onNavigateTo,
+}) => {
   const [isActive, setIsActive] = useState(true);
   const [pausedChats, setPausedChats] = useState<string[]>([]); // Changed to string for senderId
   const [conversations, setConversations] = useState<InstagramConversation[]>([]);

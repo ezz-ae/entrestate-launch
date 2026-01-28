@@ -10,7 +10,11 @@ interface ChatAgentSetupProps {
   onNavigateTo: (screen: string) => void; // New prop for navigation
 }
 
-const ChatAgentSetup: React.FC<ChatAgentSetupProps> = ({ onComplete, onBack }) => {
+const ChatAgentSetup: React.FC<ChatAgentSetupProps> = ({
+  onComplete,
+  onBack,
+  onNavigateTo,
+}) => {
   const [step, setStep] = useState(1);
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);

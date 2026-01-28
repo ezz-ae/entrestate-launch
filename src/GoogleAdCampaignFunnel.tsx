@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import StickyFooter from './StickyFooter';
 import ProgressBar from '../ProgressBar';
 import ForgivingInput from './ForgivingInput';
-import AdCampaignPlanner from './AdCampaignPlanner'; // Assuming this provides budget/keyword logic
+import AdCampaignPlanner from './SmartAdPlanner'; // Budget/keyword logic
 import './mobile-styles.css';
 
 interface GoogleAdCampaignFunnelProps {
@@ -19,15 +19,30 @@ const GoogleAdCampaignFunnel: React.FC<GoogleAdCampaignFunnelProps> = ({ onCompl
   const [headline1, setHeadline1] = useState('');
   const [headline2, setHeadline2] = useState('');
   const [description, setDescription] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const totalSteps = 5; // 1. Objective, 2. Audience, 3. Budget, 4. Creatives, 5. Review
 
-  const handleNext = () => {
+  const handleLaunch = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      onComplete({ objective, targetLocation, targetAudience, budget, headline1, headline2, description });
+    } catch (e: any) {
+      setError(e?.message || 'Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleNext = async () => {
     if (step < totalSteps) {
       setStep(step + 1);
-    } else {
-      onComplete({ objective, targetLocation, targetAudience, budget, headline1, headline2, description });
+      return;
     }
+    await handleLaunch();
   };
 
   const handleStepBack = () => {
@@ -130,7 +145,6 @@ const GoogleAdCampaignFunnel: React.FC<GoogleAdCampaignFunnelProps> = ({ onCompl
               placeholder="e.g. Explore exclusive properties with stunning views and world-class amenities in Dubai."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              as="textarea"
               maxLength={90}
             />
           </div>
@@ -166,10 +180,10 @@ const GoogleAdCampaignFunnel: React.FC<GoogleAdCampaignFunnelProps> = ({ onCompl
         {renderStepContent()}
       </div>
 
-      {error && <p style={{ color: 'red', textAlign: 'center', margin: '24px 0' }}>{error}</p>}
+      {error ? <p style={{ color: 'red', textAlign: 'center', margin: '24px 0' }}>{error}</p> : null}
 
       <StickyFooter 
-        label={step === totalSteps ? 'Launch Campaign' : 'Next Step'}
+        label={loading ? 'Working…' : step === totalSteps ? 'Launch Campaign' : 'Next Step'}
         onClick={handleNext}
         disabled={isNextDisabled() || loading}
       />

@@ -185,11 +185,18 @@ const AppContent: React.FC = () => {
               navigateTo('conversationView');
             }}
             onTestSimulator={() => alert('Simulator started')}
+            onNavigateTo={navigateTo}
           />
         );
 
       case 'chatAgentSetup':
-        return <ChatAgentSetup onBack={() => navigateTo('dashboard')} onComplete={() => navigateTo('chatAgentDashboard')} />;
+        return (
+          <ChatAgentSetup
+            onBack={() => navigateTo('dashboard')}
+            onComplete={() => navigateTo('chatAgentDashboard')}
+            onNavigateTo={navigateTo}
+          />
+        );
 
       case 'teamManagement':
         return <TeamManagementScreen onBack={() => navigateTo('settings')} />;
