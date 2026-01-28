@@ -1,6 +1,6 @@
 'use server';
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { promises as fs } from 'fs';
 import { parse } from 'csv-parse/sync';
 import { tmpdir } from 'os';
@@ -10,23 +10,40 @@ import { getAdminDb } from '@/server/firebase-admin';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { ADMIN_ROLES } from '@/lib/server/roles';
 import { enforceRateLimit, getRequestIp } from '@/lib/server/rateLimit';
+import { logError } from '@/lib/server/log';
+import {
+  createRequestId,
+  errorResponse,
+  jsonWithRequestId,
+} from '@/lib/server/request-id';
 
 export async function POST(req: NextRequest) {
+  const scope = 'api/sms/import';
+  const requestId = createRequestId();
+  const respond = (body: unknown, init?: ResponseInit) =>
+    jsonWithRequestId(requestId, body, init);
+
   try {
     const { tenantId } = await requireRole(req, ADMIN_ROLES);
     const ip = getRequestIp(req);
     if (!(await enforceRateLimit(`sms:import:${tenantId}:${ip}`, 5, 60_000))) {
-      return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
+      return respond(
+        { ok: false, error: 'Rate limit exceeded', requestId },
+        { status: 429 }
+      );
     }
     const formData = await req.formData();
     const file = formData.get('file') as File | null;
 
     if (!file) {
-      return NextResponse.json({ error: 'No file uploaded.' }, { status: 400 });
+      return respond({ ok: false, error: 'No file uploaded.', requestId }, { status: 400 });
     }
 
     if (file.type !== 'text/csv') {
-      return NextResponse.json({ error: 'Invalid file type. Only CSV is accepted.' }, { status: 400 });
+      return respond(
+        { ok: false, error: 'Invalid file type. Only CSV is accepted.', requestId },
+        { status: 400 }
+      );
     }
 
     // Read file content
@@ -45,7 +62,10 @@ export async function POST(req: NextRequest) {
     // Validate records
     if (!records.length || !records[0].hasOwnProperty('phone')) {
         await fs.unlink(tempFilePath);
-        return NextResponse.json({ error: 'CSV must contain a \'phone\' column.' }, { status: 400 });
+        return respond(
+          { ok: false, error: "CSV must contain a 'phone' column.", requestId },
+          { status: 400 }
+        );
     }
 
     const db = getAdminDb();
@@ -90,16 +110,20 @@ export async function POST(req: NextRequest) {
 
     await fs.unlink(tempFilePath);
 
-    return NextResponse.json({ message: 'Import successful', count: importedCount });
+    return respond({
+      ok: true,
+      data: { count: importedCount },
+      requestId,
+    });
 
   } catch (error) {
     if (error instanceof UnauthorizedError) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return respond({ ok: false, error: 'Unauthorized', requestId }, { status: 401 });
     }
     if (error instanceof ForbiddenError) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      return respond({ ok: false, error: 'Forbidden', requestId }, { status: 403 });
     }
-    console.error('Import API Error:', error);
-    return NextResponse.json({ error: 'An unexpected error occurred during import.' }, { status: 500 });
+    logError(scope, error, { requestId });
+    return errorResponse(requestId, scope);
   }
 }

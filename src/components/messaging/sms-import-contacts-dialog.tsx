@@ -54,16 +54,16 @@ export function ImportSmsContactsDialog({ open, onOpenChange, onImportComplete }
 
       const result = await res.json();
 
-      if (res.ok) {
+      if (res.ok && result?.ok) {
         toast({
           title: "Import Successful",
-          description: `${result.count} contacts were imported.`,
+          description: `${result.data?.count ?? 0} contacts were imported.`,
         });
-        onImportComplete(result.count);
+        onImportComplete(result.data?.count ?? 0);
         setFile(null);
         onOpenChange(false);
       } else {
-        setError(result.error || 'An unknown error occurred.');
+        setError(result?.error || result?.message || 'An unknown error occurred.');
       }
     } catch (e: any) {
       setError("Couldn't connect right now. Please try again.");

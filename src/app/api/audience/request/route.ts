@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { FieldValue } from 'firebase-admin/firestore';
 import { getAdminDb } from '@/server/firebase-admin';
@@ -8,6 +8,12 @@ import {
   FeatureAccessError,
   featureAccessErrorResponse,
 } from '@/lib/server/billing';
+import { logError } from '@/lib/server/log';
+import {
+  createRequestId,
+  errorResponse,
+  jsonWithRequestId,
+} from '@/lib/server/request-id';
 
 const payloadSchema = z.object({
   listType: z.enum(['imported', 'pilot']),
@@ -18,6 +24,11 @@ const payloadSchema = z.object({
 });
 
 export async function GET(req: NextRequest) {
+  const scope = 'api/audience/request';
+  const requestId = createRequestId();
+  const respond = (body: unknown, init?: ResponseInit) =>
+    jsonWithRequestId(requestId, body, init);
+
   try {
     const { tenantId } = await requireRole(req, ADMIN_ROLES);
     const db = getAdminDb();
@@ -30,24 +41,33 @@ export async function GET(req: NextRequest) {
       .get();
 
     if (snapshot.empty) {
-      return NextResponse.json({ request: null });
+      return respond({ ok: true, data: { request: null }, requestId });
     }
 
     const doc = snapshot.docs[0];
-    return NextResponse.json({ request: { id: doc.id, ...doc.data() } });
+    return respond({
+      ok: true,
+      data: { request: { id: doc.id, ...doc.data() } },
+      requestId,
+    });
   } catch (error) {
-    console.error('[audience/request] get error', error);
     if (error instanceof UnauthorizedError) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return respond({ ok: false, error: 'Unauthorized', requestId }, { status: 401 });
     }
     if (error instanceof ForbiddenError) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      return respond({ ok: false, error: 'Forbidden', requestId }, { status: 403 });
     }
-    return NextResponse.json({ error: 'Failed to load request' }, { status: 500 });
+    logError(scope, error, { requestId, path: req.url });
+    return errorResponse(requestId, scope);
   }
 }
 
 export async function POST(req: NextRequest) {
+  const scope = 'api/audience/request';
+  const requestId = createRequestId();
+  const respond = (body: unknown, init?: ResponseInit) =>
+    jsonWithRequestId(requestId, body, init);
+
   try {
     const payload = payloadSchema.parse(await req.json());
     const { tenantId } = await requireRole(req, ADMIN_ROLES);
@@ -72,21 +92,31 @@ export async function POST(req: NextRequest) {
 
     await requestRef.set(requestData);
 
-    return NextResponse.json({ success: true, request: { id: requestRef.id, ...requestData } });
+    return respond({
+      ok: true,
+      data: { request: { id: requestRef.id, ...requestData } },
+      requestId,
+    });
   } catch (error) {
-    console.error('[audience/request] post error', error);
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Invalid payload', details: error.errors }, { status: 400 });
+      return respond(
+        { ok: false, error: 'Invalid payload', details: error.errors, requestId },
+        { status: 400 }
+      );
     }
     if (error instanceof FeatureAccessError) {
-      return NextResponse.json(featureAccessErrorResponse(error), { status: 403 });
+      return respond(
+        { ok: false, requestId, ...featureAccessErrorResponse(error) },
+        { status: 403 }
+      );
     }
     if (error instanceof UnauthorizedError) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return respond({ ok: false, error: 'Unauthorized', requestId }, { status: 401 });
     }
     if (error instanceof ForbiddenError) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      return respond({ ok: false, error: 'Forbidden', requestId }, { status: 403 });
     }
-    return NextResponse.json({ error: 'Failed to submit request' }, { status: 500 });
+    logError(scope, error, { requestId, path: req.url });
+    return errorResponse(requestId, scope);
   }
 }

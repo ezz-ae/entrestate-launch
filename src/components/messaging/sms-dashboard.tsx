@@ -33,10 +33,10 @@ export function SmsCampaignDashboard() {
     try {
       const res = await authorizedFetch('/api/contacts/summary?channel=sms');
       const data = await res.json();
-      if (res.ok) {
+      if (res.ok && data?.ok) {
         setCounts({
-          imported: data.importedCount || 0,
-          pilot: data.pilotCount || 0,
+          imported: data.data?.importedCount || 0,
+          pilot: data.data?.pilotCount || 0,
         });
       }
     } catch (error) {

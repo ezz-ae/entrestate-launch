@@ -28,8 +28,11 @@ export function AudienceBuilderTool() {
     try {
       const res = await authorizedFetch('/api/contacts/summary?channel=email');
       const data = await res.json();
-      if (res.ok) {
-        setCounts({ imported: data.importedCount || 0, pilot: data.pilotCount || 0 });
+      if (res.ok && data?.ok) {
+        setCounts({
+          imported: data.data?.importedCount || 0,
+          pilot: data.data?.pilotCount || 0,
+        });
       }
     } catch (error) {
       console.error('Failed to load audience summary', error);
@@ -40,8 +43,8 @@ export function AudienceBuilderTool() {
     try {
       const res = await authorizedFetch('/api/audience/request', { cache: 'no-store' });
       const data = await res.json();
-      if (res.ok) {
-        setLastRequest(data.request || null);
+      if (res.ok && data?.ok) {
+        setLastRequest(data.data?.request || null);
       }
     } catch (error) {
       console.error('Failed to load audience request', error);
@@ -88,8 +91,8 @@ export function AudienceBuilderTool() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data?.error || 'Request failed');
+      if (!res.ok || !data?.ok) {
+        throw new Error(data?.error || data?.message || 'Request failed');
       }
       toast({
         title: 'Activation started',
@@ -97,7 +100,7 @@ export function AudienceBuilderTool() {
       });
       setNotes('');
       setBudget('');
-      setLastRequest(data.request || null);
+      setLastRequest(data.data?.request || null);
     } catch (error: any) {
       toast({
         title: 'Request failed',
