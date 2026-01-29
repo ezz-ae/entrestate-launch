@@ -4,6 +4,7 @@ import { envBool } from '@/lib/env';
 const serverEnvSchema = z.object({
   NODE_ENV: z.string().optional(),
   FIREBASE_ADMIN_CREDENTIALS: z.string().optional(),
+  FIREBASE_ADMIN_SDK_CONFIG: z.string().optional(),
   FIREBASE_ADMIN_PROJECT_ID: z.string().optional(),
   FIREBASE_ADMIN_CLIENT_EMAIL: z.string().optional(),
   FIREBASE_ADMIN_PRIVATE_KEY: z.string().optional(),
@@ -29,6 +30,7 @@ const serverEnvSchema = z.object({
   RATE_LIMIT_DISABLED: z.string().optional(),
   USE_STATIC_INVENTORY: z.string().optional(),
   ENABLE_FIREBASE_AUTH: z.string().optional(),
+  NEXT_PUBLIC_ENABLE_FIREBASE_AUTH: z.string().optional(),
   ENABLE_PAYMENTS: z.string().optional().default('false'),
   ENABLE_GOOGLE_ADS: z.string().optional().default('false'),
   ENABLE_SMS: z.string().optional().default('false'),
@@ -79,5 +81,5 @@ export const IS_EMAIL_ENABLED = SERVER_ENV.ENABLE_EMAIL === 'true' || Boolean(pr
 
 export const FIREBASE_AUTH_ENABLED = envBool(
   'ENABLE_FIREBASE_AUTH',
-  process.env.NODE_ENV === 'production'
+  envBool('NEXT_PUBLIC_ENABLE_FIREBASE_AUTH', process.env.NODE_ENV === 'production')
 );
