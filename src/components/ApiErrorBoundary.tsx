@@ -8,9 +8,6 @@ import { cn } from '@/lib/utils';
 import { PaymentModal } from '@/components/payment-modal';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import dynamic from 'next/dynamic';
-import { useAsyncError } from '@/components/use-async-error';
-import { fetchWithAuth } from '@/app/api/projects/search/api';
-import { WalletHistory } from '@/components/wallet-history';
 
 // Dynamically import BudgetChart to avoid SSR issues with Recharts
 const BudgetChart = dynamic(() => import('@/components/budget-chart').then(mod => mod.BudgetChart), { ssr: false });
@@ -27,10 +24,6 @@ export function GoogleAdsDashboard({ projects, readOnly = false }: { projects: P
   const [externalUrl, setExternalUrl] = useState('');
   const [sourceType, setSourceType] = useState<'project' | 'url'>('project');
   const [mobileView, setMobileView] = useState<'config' | 'preview'>('config');
-  const [walletBalance, setWalletBalance] = useState<number>(0);
-  const [transactions, setTransactions] = useState<any[]>([]);
-  const [isWalletLoading, setIsWalletLoading] = useState(true);
-  const throwError = useAsyncError();
   
   const [budget, setBudget] = useState(50); // Daily budget in AED
   const [totalBudget, setTotalBudget] = useState(1500);
@@ -78,32 +71,6 @@ export function GoogleAdsDashboard({ projects, readOnly = false }: { projects: P
   const dailyLeads = Math.floor(dailyClicks * conversionRate);
   const totalCampaignRate = Math.min(75 + (budget / 20), 98); // Score out of 100
 
-  useEffect(() => {
-    setTotalBudget(budget * duration);
-  }, [budget, duration]);
-
-  useEffect(() => {
-    const loadWallet = async () => {
-      setIsWalletLoading(true);
-      try {
-        const res = await fetchWithAuth('/api/me/wallet');
-        const result = await res.json();
-        if (result.ok) {
-          setWalletBalance(result.data.balance);
-          setTransactions(result.data.transactions || []);
-        }
-      } catch (error) {
-        console.error('[ads-dashboard] Failed to load wallet', error);
-      } finally {
-        setIsWalletLoading(false);
-      }
-    };
-    
-    if (step !== 'analyzing') {
-      loadWallet();
-    }
-  }, [step]);
-
   const handleConnect = async () => {
     setStep('analyzing');
     setIsLoading(true);
@@ -127,7 +94,6 @@ export function GoogleAdsDashboard({ projects, readOnly = false }: { projects: P
       setStep('config');
     } catch (error) {
       console.error(error);
-      throwError(error);
       setStep('source');
     } finally {
       setIsLoading(false);
@@ -139,42 +105,15 @@ export function GoogleAdsDashboard({ projects, readOnly = false }: { projects: P
   };
 
   const handleConfirmLaunch = async () => {
-    if (walletBalance < totalBudget) {
-      alert(`Insufficient wallet balance. You need ${totalBudget} AED but have ${walletBalance} AED.`);
-      return;
-    }
-
     setIsLaunching(true);
     setShowPaymentModal(false);
-    
-    try {
-      const response = await fetchWithAuth('/api/me/wallet', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          amount: totalBudget,
-          description: `Google Ads Campaign: ${projects.find(p => p.id === selectedProjectId)?.headline || 'New Campaign'}`,
-          type: 'debit'
-        })
-      });
-
-      const result = await response.json();
-      if (!result.ok) throw new Error(result.error?.message || "Payment failed");
-
-      setWalletBalance(result.data.newBalance);
-      
-      // Proceed with launch simulation
-      setStep('analyzing'); 
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      setStep('active');
-      setCampaignStatus({ status: 'Active', impressions: 0, clicks: 0, cost: 0 });
-      alert("Campaign launched successfully!");
-    } catch (error: any) {
-      console.error('[ads-dashboard] Launch failed', error);
-      alert(error.message || "Failed to process payment and launch campaign");
-    } finally {
-      setIsLaunching(false);
-    }
+    // Simulate launch delay
+    setStep('analyzing'); // Reuse analyzing for "Launching" state
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    setIsLaunching(false);
+    setStep('active');
+    setCampaignStatus({ status: 'Active', impressions: 0, clicks: 0, cost: 0 });
+    alert("Campaign launched successfully!");
   };
 
   const handleShare = async () => {
@@ -891,10 +830,7 @@ export function GoogleAdsDashboard({ projects, readOnly = false }: { projects: P
           <div className="space-y-4">
             <div className="flex items-end justify-between">
               <span className="text-3xl font-black text-white">{budget} <span className="text-sm font-medium text-zinc-500">AED/day</span></span>
-              <div className="text-right">
-                <div className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Total Campaign</div>
-                <div className="text-lg font-bold text-white">{totalBudget.toLocaleString()} AED</div>
-              </div>
+              <span className="text-xs text-zinc-500">{(budget * 30).toLocaleString()} AED / mo</span>
             </div>
             
             <input 
@@ -915,12 +851,6 @@ export function GoogleAdsDashboard({ projects, readOnly = false }: { projects: P
           </div>
 
             <div className="pt-4 space-y-4">
-              <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-white/5 border border-white/5">
-                <div className="flex items-center gap-2 text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
-                  <ShieldCheck className="h-4 w-4 text-emerald-500" /> Wallet Balance
-                </div>
-                <span className="text-sm font-bold text-white">{walletBalance.toLocaleString()} AED</span>
-              </div>
               <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-white/5 border border-white/5 text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
                 <ShieldCheck className="h-4 w-4 text-emerald-500" /> Managed by Entrestate Verified Accounts
               </div>
@@ -932,7 +862,72 @@ export function GoogleAdsDashboard({ projects, readOnly = false }: { projects: P
             >
               {isLaunching ? <Loader2 className="animate-spin mr-2" /> : <TrendingUp className="mr-2 h-5 w-5" />}
               {isLaunching ? "Launching Campaign..." : "Launch Campaign"}
+'use client';
+
+import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { AlertCircle, RefreshCcw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+
+interface Props {
+  children: ReactNode;
+}
+
+interface State {
+  hasError: boolean;
+  error: Error | null;
+}
+
+/**
+ * A global Error Boundary to catch and display API-related errors.
+ * Note: To catch async errors from fetchWithAuth, callers should re-throw 
+ * them into the React render cycle using the useAsyncError hook.
+ */
+export class ApiErrorBoundary extends Component<Props, State> {
+  public state: State = {
+    hasError: false,
+    error: null,
+  };
+
+  public static getDerivedStateFromError(error: Error): State {
+    return { hasError: true, error };
+  }
+
+  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('[ApiErrorBoundary] Caught error:', error, errorInfo);
+  }
+
+  private handleReset = () => {
+    this.setState({ hasError: false, error: null });
+  };
+
+  public render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex items-center justify-center min-h-[400px] p-6">
+          <div className="w-full max-w-md p-8 rounded-[2.5rem] bg-zinc-900 border border-white/10 shadow-2xl text-center space-y-6">
+            <div className="mx-auto w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center">
+              <AlertCircle className="h-8 w-8 text-red-500" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-xl font-bold text-white">Application Error</h2>
+              <p className="text-sm text-zinc-400 leading-relaxed">
+                {this.state.error?.message || "An unexpected error occurred while communicating with our services."}
+              </p>
+            </div>
+            <Button 
+              onClick={this.handleReset}
+              className="w-full bg-white text-black hover:bg-zinc-200 font-bold h-12 rounded-2xl"
+            >
+              <RefreshCcw className="mr-2 h-4 w-4" /> Retry Request
             </Button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.children;
+  }
+}
             </div>
           </motion.div>
         )}
@@ -1151,7 +1146,6 @@ export function GoogleAdsDashboard({ projects, readOnly = false }: { projects: P
         onConfirm={handleConfirmLaunch}
         dailyBudget={budget}
         duration={duration}
-        walletBalance={walletBalance}
       />
     </div>
     </LayoutGroup>
