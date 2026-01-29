@@ -20,8 +20,10 @@ import {
   requireRole,
   UnauthorizedError,
   ForbiddenError,
-} from '@/server/auth';
+  resolveOptionalAuth,
+} from '@/lib/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
+import { handleApiError } from '@/lib/server/http-errors';
 
 const DEFAULT_PAGE_SIZE = 12;
 const STATIC_CURSOR_PREFIX = 'static:';
@@ -63,17 +65,6 @@ function buildStaticCursor(page: number) {
   return `${STATIC_CURSOR_PREFIX}${page}`;
 }
 
-async function resolveOptionalAuth(req: NextRequest) {
-  try {
-    return await requireRole(req, ALL_ROLES);
-  } catch (error) {
-    if (error instanceof UnauthorizedError || error instanceof ForbiddenError) {
-      return null;
-    }
-    throw error;
-  }
-}
-
 const PUBLIC_PROJECT_ID =
   process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ||
   process.env.FIREBASE_PROJECT_ID ||
@@ -107,7 +98,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    if (authContext) {
+    if (authContext && authContext.uid !== 'anonymous') {
       const db = getAdminDb();
       const entitlements = await resolveEntitlementsForTenant(db, authContext.tenantId);
       if (!entitlements.features.inventoryAccess.allowed) {
@@ -284,7 +275,6 @@ export async function GET(req: NextRequest) {
       }
     );
   } catch (error) {
-    logError(scope, error, { url: path, requestId });
-    return errorResponse(requestId, scope);
+    return handleApiError(error, requestId);
   }
 }

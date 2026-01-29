@@ -167,7 +167,7 @@ const ChatAgentSetup: React.FC<ChatAgentSetupProps> = ({
               <option value="friendly">Friendly</option>
               <option value="direct">Direct</option>
             </select>
-            <p className="step-guidance" style={{fontSize: '12px', marginTop: '12px', marginBottom: '0'}}>For advanced knowledge (timings, special offerings), go to <span style={{color: 'var(--primary-color)', cursor: 'pointer'}} onClick={() => onNavigateTo('agentLearning')}>Agent Learning & Content.</span></p>
+            <p className="step-guidance" style={{fontSize: '12px', marginTop: '12px', marginBottom: '0'}}>For advanced knowledge (timings, special offerings), go to <span style={{color: 'var(--primary-color)', cursor: 'pointer'}} onClick={() => onNavigateTo('chatAgentDashboard')}>Agent Learning & Content.</span></p>
           </div>
         );
       case 4:

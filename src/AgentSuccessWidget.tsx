@@ -9,7 +9,7 @@ const AgentSuccessWidget: React.FC<{ onAction: () => void }> = ({ onAction }) =>
       </div>
     </div>
     <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0 0 16px 0' }}>
-      AI has qualified this lead as "High Intent".
+      The system has qualified this lead as "High Intent".
     </p>
     <button className="next-step-card" onClick={onAction}>
       <div className="step-icon">💬</div>

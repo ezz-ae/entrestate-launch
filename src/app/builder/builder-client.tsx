@@ -150,7 +150,7 @@ type ProjectDraft = {
   updatedAt: string;
 };
 
-export default function BuilderPage() {
+export default function BuilderClient({ initialProjectData }: { initialProjectData?: ProjectData | null }) {
   const { brochureFile, setBrochureFile } = useBrochure();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -166,7 +166,7 @@ export default function BuilderPage() {
   const [analysisResult, setAnalysisResult] = useState<any>(null);
   const [editableData, setEditableData] = useState<any>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [selectedProject, setSelectedProject] = useState<ProjectData | null>(null);
+  const [selectedProject, setSelectedProject] = useState<ProjectData | null>(initialProjectData || null);
   const [projectLoading, setProjectLoading] = useState(false);
 
   const [builderTemplate, setBuilderTemplate] = useState<SiteTemplate | null>(null);
@@ -372,6 +372,17 @@ export default function BuilderPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [brochureFile, status]);
+
+  useEffect(() => {
+    if (initialProjectData && !builderPage) {
+      const template = buildProjectTemplate(initialProjectData);
+      setBuilderTemplate(template);
+      setBuilderPage(clonePage(template.pages[0]));
+      setBuilderError(null);
+      setNotice(`Loaded ${initialProjectData.name} from inventory.`);
+      setShowTemplates(false);
+    }
+  }, [initialProjectData, builderPage]);
 
   useEffect(() => {
     if (
@@ -887,11 +898,11 @@ export default function BuilderPage() {
               >
                 {isGenerating ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating draft...
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Preparing draft...
                   </>
                 ) : (
                   <>
-                    <Sparkles className="mr-2 h-4 w-4" /> Generate draft
+                    <Sparkles className="mr-2 h-4 w-4" /> Create draft
                   </>
                 )}
               </Button>

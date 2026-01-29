@@ -1,7 +1,11 @@
-import React, { useState, useEffect } from 'react';
+'use client';
+
+import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import './mobile-styles.css';
 import { getDbSafe } from '@/lib/firebase/client';
 import { collection, query, orderBy, onSnapshot, DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
+import ForgivingInput from './ForgivingInput';
 
 export interface Message {
   role: 'user' | 'assistant';
@@ -34,11 +38,42 @@ const ChatAgentDashboard: React.FC<ChatAgentDashboardProps> = ({
   onTestSimulator,
   onNavigateTo,
 }) => {
+  const searchParams = useSearchParams();
   const [isActive, setIsActive] = useState(true);
   const [pausedChats, setPausedChats] = useState<string[]>([]); // Changed to string for senderId
   const [conversations, setConversations] = useState<InstagramConversation[]>([]);
   const [dmsHandled, setDmsHandled] = useState(0);
   const [meetingsBooked, setMeetingsBooked] = useState(0);
+
+  const [activeTab, setActiveTab] = useState<'activity' | 'knowledge' | 'identity'>(() => {
+    const tab = searchParams?.get('tab');
+    if (tab === 'knowledge' || tab === 'identity' || tab === 'activity') return tab as any;
+    return 'activity';
+  });
+
+  useEffect(() => {
+    const tab = searchParams?.get('tab');
+    if (tab === 'knowledge' || tab === 'identity' || tab === 'activity') {
+      setActiveTab(tab as any);
+    }
+  }, [searchParams]);
+  
+  // Identity State
+  const [agentName, setAgentName] = useState('Sarah');
+  const [companyName, setCompanyName] = useState('Elite Properties');
+  const [communicationStyle, setCommunicationStyle] = useState('professional');
+  const [conversionGoal, setConversionGoal] = useState('booking');
+
+  // Knowledge State
+  const [knowledgeTab, setKnowledgeTab] = useState<'structured' | 'text' | 'file'>('structured');
+  const [companyDetails, setCompanyDetails] = useState('');
+  const [importantInfo, setImportantInfo] = useState('');
+  const [exclusiveListing, setExclusiveListing] = useState('');
+  const [contactDetails, setContactDetails] = useState('');
+  const [textData, setTextData] = useState('');
+  const [files, setFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     const firestore = getDbSafe();
@@ -89,6 +124,21 @@ const ChatAgentDashboard: React.FC<ChatAgentDashboardProps> = ({
     onViewChat(chat);
   };
 
+  const handleSave = async () => {
+    setIsSaving(true);
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setIsSaving(false);
+    alert('Settings saved successfully!');
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files);
+      setFiles([...files, ...newFiles]);
+    }
+  };
+
   return (
     <div className="screen-container" style={{ padding: '24px', paddingBottom: '40px' }}>
       {/* Custom Header */}
@@ -102,7 +152,7 @@ const ChatAgentDashboard: React.FC<ChatAgentDashboardProps> = ({
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <div>
             <span style={{ fontSize: '12px', opacity: 0.8, textTransform: 'uppercase', fontWeight: '700', letterSpacing: '1px' }}>Status</span>
-            <h2 style={{ margin: 0, fontSize: '28px' }}>{isActive ? 'Online 🟢' : 'Paused ⏸️'}</h2>
+            <h2 style={{ margin: 0, fontSize: '28px', color: 'white' }}>{isActive ? 'Online 🟢' : 'Paused ⏸️'}</h2>
           </div>
           <div 
             onClick={() => setIsActive(!isActive)}
@@ -138,67 +188,40 @@ const ChatAgentDashboard: React.FC<ChatAgentDashboardProps> = ({
         </button>
       </div>
 
-      {/* Quick Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px' }}>
-        <div style={{ backgroundColor: 'var(--bg-secondary)', padding: '16px', borderRadius: '16px', border: '1px solid var(--border-color)', textAlign: 'center' }}>
-          <span style={{ fontSize: '24px', display: 'block', marginBottom: '4px' }}>💬</span>
-          <span style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-primary)' }}>{dmsHandled}</span>
-          <span style={{ display: 'block', fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>DMs Handled</span>
-        </div>
-        <div style={{ backgroundColor: 'var(--bg-accent)', padding: '16px', borderRadius: '16px', border: '1px solid var(--primary-color)', textAlign: 'center' }}>
-          <span style={{ fontSize: '24px', display: 'block', marginBottom: '4px' }}>📅</span>
-          <span style={{ fontSize: '20px', fontWeight: '800', color: 'var(--primary-color)' }}>{meetingsBooked}</span>
-          <span style={{ display: 'block', fontSize: '11px', color: 'var(--primary-color)', textTransform: 'uppercase', fontWeight: '700' }}>Meetings Booked</span>
-        </div>
+      {/* Tab Switcher */}
+      <div style={{ display: 'flex', marginBottom: '24px', backgroundColor: 'var(--bg-secondary)', padding: '4px', borderRadius: '12px' }}>
+        {(['activity', 'knowledge', 'identity'] as const).map(tab => (
+          <button 
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            style={{ 
+              flex: 1, padding: '10px', borderRadius: '8px', border: 'none', 
+              backgroundColor: activeTab === tab ? 'var(--bg-primary)' : 'transparent', 
+              color: activeTab === tab ? 'var(--text-primary)' : 'var(--text-secondary)', 
+              fontWeight: '600', textTransform: 'capitalize', transition: 'all 0.2s'
+            }}
+          >
+            {tab}
+          </button>
+        ))}
       </div>
 
-      {/* Live Feed */}
-      <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '12px', color: 'var(--text-primary)' }}>Live Activity</h3>
-      <div className="live-feed-container">
-        {conversations.map(conv => {
-          const isPaused = pausedChats.includes(conv.id); // Check by conversation ID
-          const lastMessage = conv.messages[conv.messages.length - 1];
-          const aiReply = conv.messages.findLast(msg => msg.role === 'assistant');
-          return (
-            <div 
-              key={conv.id} 
-              className="chat-message-preview" 
-              style={{ borderLeftColor: isPaused ? '#EF4444' : '#10B981', cursor: 'pointer' }}
-              onClick={() => handleChatClick(conv)}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                <span style={{ fontWeight: '700', fontSize: '12px' }}>{conv.senderId}</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  {isPaused && <span className="takeover-badge takeover-active">✋ Manual Reply</span>}
-                  <span style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>
-                    {lastMessage ? lastMessage.timestamp.toLocaleTimeString() : ''}
-                  </span>
-                </div>
-              </div>
-              <p style={{ margin: 0, color: 'var(--text-secondary)' }}>
-                {lastMessage ? lastMessage.text : 'No messages yet.'}
-              </p>
-              {!isPaused && aiReply && (
-                <div style={{ marginTop: '8px', fontSize: '11px', color: 'var(--primary-color)', fontWeight: '600' }}>{aiReply.text}</div>
-              )}
-              <button className="takeover-btn" onClick={(e) => { e.stopPropagation(); toggleTakeover(conv.id); }}>
-                {isPaused ? '▶️ Resume Assisted Replies' : '✋ Reply Manually'}
-              </button>
+      {activeTab === 'activity' && (
+        <>
+          {/* Quick Stats */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px' }}>
+            <div style={{ backgroundColor: 'var(--bg-secondary)', padding: '16px', borderRadius: '16px', border: '1px solid var(--border-color)', textAlign: 'center' }}>
+              <span style={{ fontSize: '24px', display: 'block', marginBottom: '4px' }}>💬</span>
+              <span style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-primary)' }}>{dmsHandled}</span>
+              <span style={{ display: 'block', fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>DMs Handled</span>
             </div>
-          );
-        })}
-      </div>
+            <div style={{ backgroundColor: 'var(--bg-accent)', padding: '16px', borderRadius: '16px', border: '1px solid var(--primary-color)', textAlign: 'center' }}>
+              <span style={{ fontSize: '24px', display: 'block', marginBottom: '4px' }}>📅</span>
+              <span style={{ fontSize: '20px', fontWeight: '800', color: 'var(--primary-color)' }}>{meetingsBooked}</span>
+              <span style={{ display: 'block', fontSize: '11px', color: 'var(--primary-color)', textTransform: 'uppercase', fontWeight: '700' }}>Meetings Booked</span>
+            </div>
+          </div>
 
-      {/* Knowledge Base Quick Action */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '24px' }}>
-        <button 
-          onClick={() => onNavigateTo('consultantLearning')}
-          style={{ 
-          padding: '16px', backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: '12px', color: 'var(--text-primary)', fontWeight: '600', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px'
-        }}>
-          <span style={{ fontSize: '24px' }}>📋</span>
-          <span style={{ fontSize: '12px' }}>Manage Learning Content</span>
-        </button>
         <button 
           onClick={onShowQR}
           style={{ 
@@ -207,7 +230,8 @@ const ChatAgentDashboard: React.FC<ChatAgentDashboardProps> = ({
           <span style={{ fontSize: '24px' }}>🏁</span>
           <span style={{ fontSize: '12px' }}>Get QR Code</span>
         </button>
-      </div>
+        </>
+      )}
     </div>
   );
 };

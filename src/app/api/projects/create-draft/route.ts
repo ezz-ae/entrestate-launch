@@ -1,9 +1,10 @@
 import { NextRequest } from 'next/server';
-import { requireRole } from '@/server/auth';
+import { requireRole } from '@/lib/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
 import { getAdminDb } from '@/server/firebase-admin';
 import { logError } from '@/lib/server/log';
 import { createRequestId, errorResponse, jsonWithRequestId } from '@/lib/server/request-id';
+import { handleApiError } from '@/lib/server/http-errors';
 
 const CLAMP = (value?: string, fallback = 'Untitled Project'): string =>
   (value?.trim()?.slice(0, 100) || fallback);
@@ -50,7 +51,6 @@ export async function POST(req: NextRequest) {
 
     return respond({ ok: true, data: { draftId: draftRef.id, draft }, requestId });
   } catch (error) {
-    logError(scope, error, { requestId });
-    return errorResponse(requestId, scope);
+    return handleApiError(error, requestId);
   }
 }

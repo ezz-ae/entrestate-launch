@@ -76,7 +76,7 @@ export function ProjectCard({ project, index = 0 }: ProjectCardProps) {
     : "Developer not shared";
 
   const handleCreateLandingPage = () => {
-    router.push(`/builder?prompt=Luxury landing page for ${project.name} by ${developerName} in ${project.location?.area}`);
+    router.push(`/builder?projectId=${project.id}`);
   };
 
   const handleCopyLink = async () => {

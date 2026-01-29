@@ -8,6 +8,7 @@ import Script from 'next/script';
 import { Inter } from 'next/font/google';
 import ClientLayout from './client-layout';
 import { BrochureProvider } from '@/context/BrochureContext';
+import { ApiErrorBoundary } from '@/components/ApiErrorBoundary';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -47,9 +48,11 @@ export default function RootLayout({
       <body className={`${inter.className} antialiased bg-black text-white selection:bg-white/20`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
           <BrochureProvider>
-            <ClientLayout>
-                {children}
-            </ClientLayout>
+            <ApiErrorBoundary>
+              <ClientLayout>
+                  {children}
+              </ClientLayout>
+            </ApiErrorBoundary>
           </BrochureProvider>
           <Toaster />
         </ThemeProvider>

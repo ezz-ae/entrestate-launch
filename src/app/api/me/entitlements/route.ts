@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { requireRole } from '@/server/auth';
+import { requireRole } from '@/lib/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
 import { getAdminDb } from '@/server/firebase-admin';
 import { logError } from '@/lib/server/log';
@@ -9,6 +9,7 @@ import {
   jsonWithRequestId,
 } from '@/lib/server/request-id';
 import { resolveEntitlementsForTenant } from '@/lib/server/entitlements';
+import { handleApiError } from '@/lib/server/http-errors';
 
 export async function GET(req: NextRequest) {
   const scope = 'api/me/entitlements';
@@ -22,7 +23,6 @@ export async function GET(req: NextRequest) {
     const entitlements = await resolveEntitlementsForTenant(db, tenantId);
     return respond({ ok: true, data: entitlements, requestId });
   } catch (error) {
-    logError(scope, error, { requestId, path: req.url });
-    return errorResponse(requestId, scope);
+    return handleApiError(error, requestId);
   }
 }

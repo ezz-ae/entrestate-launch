@@ -178,7 +178,6 @@ const AppContent: React.FC = () => {
         return (
           <ChatAgentDashboard
             onBack={() => navigateTo('dashboard')}
-            onUpdateKnowledge={() => navigateTo('knowledgeBase')}
             onShowQR={() => navigateTo('qrCode')}
             onViewChat={(chat) => {
               setSelectedChat(chat);
