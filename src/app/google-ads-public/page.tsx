@@ -1,6 +1,6 @@
 import React from 'react';
 import { FunnelShell } from '@/components/public/funnel-shell';
-import { GoogleAdsDashboard } from '@/components/google-ads-dashboard';
+import { GoogleAdsDashboard } from '@/components/GoogleAdsDashboard';
 
 const DEMO_PROJECTS = [
   {

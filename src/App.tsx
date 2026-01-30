@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import './mobile-styles.css';
 import { AuthProvider, useAuth } from './AuthContext';
+import { supabase } from '@/lib/supabase/client';
+import { updateChatAgentKnowledge } from '@/app/actions/chat-agent';
+import { triggerResendEmail } from '@/app/actions/supabase-functions';
 
 // Screens
 import LoginScreen from './LoginScreen';
@@ -178,6 +181,21 @@ const AppContent: React.FC = () => {
         return (
           <ChatAgentDashboard
             onBack={() => navigateTo('dashboard')}
+            onUpdateKnowledge={async (data) => {
+              if (!user?.id) return { success: false, errors: { global: ['User not authenticated'] } };
+              const result = await updateChatAgentKnowledge(user.id, data);
+              if (result.success) {
+                // Trigger the resend-email edge function after successful update
+                await triggerResendEmail({
+                  agentName: data.agentName || 'Sarah',
+                  companyName: data.companyName || 'Elite Properties',
+                  userEmail: user.email,
+                  timestamp: new Date().toISOString(),
+                  metadata: { style: data.communicationStyle, hasText: !!data.textData }
+                });
+              }
+              return result;
+            }}
             onShowQR={() => navigateTo('qrCode')}
             onViewChat={(chat) => {
               setSelectedChat(chat);

@@ -66,3 +66,10 @@ src/config/service-account.json
 src/config/service-account.json
 src/config/service-account.json
 .env*.local
+errors.txt
+Create
+full-build-errors.txt
+Link
+SETUP.MD
+Run
+resend.md.ignore

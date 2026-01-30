@@ -345,13 +345,19 @@ export async function exportLeadsByProjectAction(projectId: string) {
     .orderBy('createdAt', 'desc')
     .get();
 
-  const leads = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  const leads: any[] = snapshot.docs.map(doc => {
+    const data = doc.data() as Record<string, any>;
+    return {
+      id: doc.id,
+      ...data
+    };
+  });
   
   if (leads.length === 0) return { success: false, message: "No leads found for this project." };
 
   // Generate CSV content
   const headers = ["Name", "Email", "Phone", "Status", "Source", "Created At"];
-  const rows = leads.map(l => [
+  const rows = leads.map((l: any) => [
     `"${l.name || ""}"`,
     `"${l.email || ""}"`,
     `"${l.phone || ""}"`,

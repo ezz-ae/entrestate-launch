@@ -1,6 +1,7 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import { ProjectEditableView } from '@/components/project-editable-view';
+import { GoogleAdsDashboard } from '@/components/GoogleAdsDashboard';
 
 interface ProjectPageProps {
   params: {
@@ -25,5 +26,10 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
     notFound();
   }
 
-  return <ProjectEditableView project={project} />;
+  return (
+    <div className="flex flex-col gap-12 pb-20">
+      <ProjectEditableView project={project} />
+      <GoogleAdsDashboard projects={[project]} />
+    </div>
+  );
 }

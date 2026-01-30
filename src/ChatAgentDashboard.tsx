@@ -6,6 +6,9 @@ import './mobile-styles.css';
 import { getDbSafe } from '@/lib/firebase/client';
 import { collection, query, orderBy, onSnapshot, DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
 import ForgivingInput from './ForgivingInput';
+import { supabase } from '@/lib/supabase/client';
+import { useAuth } from './AuthContext';
+import * as tus from 'tus-js-client';
 
 export interface Message {
   role: 'user' | 'assistant';
@@ -23,7 +26,7 @@ export interface InstagramConversation {
 
 interface ChatAgentDashboardProps {
   onBack: () => void;
-  onUpdateKnowledge: () => void;
+  onUpdateKnowledge: (data: any) => Promise<{ success: boolean; errors?: Record<string, string[]> }>;
   onViewChat: (chat: InstagramConversation) => void;
   onShowQR: () => void;
   onTestSimulator: () => void;
@@ -38,8 +41,9 @@ const ChatAgentDashboard: React.FC<ChatAgentDashboardProps> = ({
   onTestSimulator,
   onNavigateTo,
 }) => {
+  const { user } = useAuth();
   const searchParams = useSearchParams();
-  const [isActive, setIsActive] = useState(true);
+  const [agentState, setAgentState] = useState<'draft' | 'configured' | 'active' | 'paused' | 'archived'>('draft');
   const [pausedChats, setPausedChats] = useState<string[]>([]); // Changed to string for senderId
   const [conversations, setConversations] = useState<InstagramConversation[]>([]);
   const [dmsHandled, setDmsHandled] = useState(0);
@@ -71,9 +75,86 @@ const ChatAgentDashboard: React.FC<ChatAgentDashboardProps> = ({
   const [exclusiveListing, setExclusiveListing] = useState('');
   const [contactDetails, setContactDetails] = useState('');
   const [textData, setTextData] = useState('');
+  const [versions, setVersions] = useState<any[]>([]);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [files, setFiles] = useState<File[]>([]);
+  const [existingFileUrls, setExistingFileUrls] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [formErrors, setFormErrors] = useState<Record<string, string[]>>({});
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const updateLocalState = (data: any) => {
+      if (!data) return;
+      setAgentName(data.name || 'Sarah');
+      setCompanyName(data.company_name || 'Elite Properties');
+      setCommunicationStyle(data.style || 'professional');
+      setCompanyDetails(data.profile?.details || '');
+      setExclusiveListing(data.listings?.[0] || '');
+      setContactDetails(data.contact?.info || '');
+      setTextData(data.system_prompt || '');
+      setExistingFileUrls(data.file_urls || []);
+      setAgentState(data.state || 'draft');
+    };
+
+    const fetchAgentData = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        supabase.realtime.setAuth(session.access_token);
+      }
+
+      const { data, error } = await supabase
+        .from('chat_agents')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching agent data:', error);
+        return;
+      }
+
+      if (data) {
+        updateLocalState(data);
+      }
+
+      // Fetch versions
+      const { data: versionData } = await supabase
+        .from('agent_versions')
+        .select('*')
+        .eq('agent_id', data?.id)
+        .order('version', { ascending: false });
+      if (versionData) setVersions(versionData);
+    };
+
+    fetchAgentData();
+
+    // Subscribe to real-time changes using Broadcast (via DB Trigger)
+    // This is more scalable than postgres_changes for high-traffic apps
+    const channel = supabase
+      .channel(`agent:${user.id}`, { config: { private: true } })
+      .on(
+        'broadcast',
+        { event: 'INSERT' },
+        ({ payload }) => {
+          updateLocalState(payload);
+        }
+      )
+      .on(
+        'broadcast',
+        { event: 'UPDATE' },
+        ({ payload }) => {
+          updateLocalState(payload);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
 
   useEffect(() => {
     const firestore = getDbSafe();
@@ -126,10 +207,74 @@ const ChatAgentDashboard: React.FC<ChatAgentDashboardProps> = ({
 
   const handleSave = async () => {
     setIsSaving(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setIsSaving(false);
-    alert('Settings saved successfully!');
+    setUploadProgress(0);
+    setFormErrors({});
+    try {
+      const uploadedUrls: string[] = [];
+      
+      // Multi-part Resumable Upload using TUS
+      let completedFiles = 0;
+      for (const file of files) {
+        const fileName = `${Date.now()}-${file.name}`;
+        const filePath = `${user?.id}/${fileName}`;
+        
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        await new Promise((resolve, reject) => {
+          const upload = new tus.Upload(file, {
+            endpoint: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/upload/resumable`,
+            retryDelays: [0, 3000, 5000, 10000, 20000],
+            headers: {
+              authorization: `Bearer ${session?.access_token}`,
+              'x-upsert': 'true',
+            },
+            metadata: {
+              bucketName: 'agent-knowledge',
+              objectName: filePath,
+              contentType: file.type,
+            },
+            chunkSize: 6 * 1024 * 1024, // 6MB chunks
+            onError: (error) => reject(error),
+            onProgress: (bytesUploaded, bytesTotal) => {
+              const fileProgress = (bytesUploaded / bytesTotal) * 100;
+              const totalProgress = ((completedFiles * 100) + fileProgress) / files.length;
+              setUploadProgress(Math.round(totalProgress));
+            },
+            onSuccess: () => {
+              const { data: { publicUrl } } = supabase.storage.from('agent-knowledge').getPublicUrl(filePath);
+              uploadedUrls.push(publicUrl);
+              completedFiles++;
+              resolve(null);
+            },
+          });
+          upload.start();
+        });
+      }
+
+      const result = await onUpdateKnowledge({
+        agentName,
+        companyName,
+        communicationStyle,
+        companyDetails,
+        exclusiveListing,
+        contactDetails,
+        textData,
+        state: agentState === 'paused' ? 'paused' : 'active',
+        fileUrls: [...existingFileUrls, ...uploadedUrls]
+      });
+
+      if (result.success) {
+        alert('Settings saved successfully!');
+        setFiles([]);
+      } else if (result.errors) {
+        setFormErrors(result.errors);
+      }
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Failed to save settings. Please try again.');
+    } finally {
+      setIsSaving(false);
+      setUploadProgress(0);
+    }
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -152,21 +297,21 @@ const ChatAgentDashboard: React.FC<ChatAgentDashboardProps> = ({
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <div>
             <span style={{ fontSize: '12px', opacity: 0.8, textTransform: 'uppercase', fontWeight: '700', letterSpacing: '1px' }}>Status</span>
-            <h2 style={{ margin: 0, fontSize: '28px', color: 'white' }}>{isActive ? 'Online 🟢' : 'Paused ⏸️'}</h2>
+            <h2 style={{ margin: 0, fontSize: '28px', color: 'white' }}>{agentState === 'active' ? 'Online 🟢' : 'Paused ⏸️'}</h2>
           </div>
           <div 
-            onClick={() => setIsActive(!isActive)}
+            onClick={() => setAgentState(agentState === 'active' ? 'paused' : 'active')}
             style={{
-              width: '60px', height: '32px', backgroundColor: isActive ? '#10B981' : '#4B5563', borderRadius: '16px', position: 'relative', cursor: 'pointer', transition: 'all 0.3s'
+              width: '60px', height: '32px', backgroundColor: agentState === 'active' ? '#10B981' : '#4B5563', borderRadius: '16px', position: 'relative', cursor: 'pointer', transition: 'all 0.3s'
             }}
           >
             <div style={{
-              width: '26px', height: '26px', backgroundColor: 'white', borderRadius: '50%', position: 'absolute', top: '3px', left: isActive ? '31px' : '3px', transition: 'all 0.3s', boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+              width: '26px', height: '26px', backgroundColor: 'white', borderRadius: '50%', position: 'absolute', top: '3px', left: agentState === 'active' ? '31px' : '3px', transition: 'all 0.3s', boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
             }} />
           </div>
         </div>
         <p style={{ margin: 0, fontSize: '14px', opacity: 0.9 }}>
-          {isActive ? 'Actively handling inquiries and booking meetings.' : 'Paused. Manual replies required.'}
+          {agentState === 'active' ? 'Actively handling inquiries and booking meetings.' : 'Paused. Manual replies required.'}
         </p>
         
         <button 
@@ -231,6 +376,170 @@ const ChatAgentDashboard: React.FC<ChatAgentDashboardProps> = ({
           <span style={{ fontSize: '12px' }}>Get QR Code</span>
         </button>
         </>
+      )}
+
+      {activeTab === 'identity' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <ForgivingInput 
+            label="Consultant Name" 
+            value={agentName} 
+            onChange={(e) => setAgentName(e.target.value)} 
+          />
+          {formErrors.agentName && <span style={{ color: 'var(--danger)', fontSize: '12px', marginTop: '-12px' }}>{formErrors.agentName[0]}</span>}
+          <ForgivingInput 
+            label="Company Name" 
+            value={companyName} 
+            onChange={(e) => setCompanyName(e.target.value)} 
+          />
+          {formErrors.companyName && <span style={{ color: 'var(--danger)', fontSize: '12px', marginTop: '-12px' }}>{formErrors.companyName[0]}</span>}
+          <div>
+            <label className="control-label" style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '700', color: 'var(--text-tertiary)' }}>Communication Style</label>
+            <select
+              value={communicationStyle}
+              onChange={(e) => setCommunicationStyle(e.target.value)}
+              className="setup-select"
+              style={{ width: '100%', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
+            >
+              <option value="professional">Professional</option>
+              <option value="friendly">Friendly</option>
+              <option value="direct">Direct</option>
+            </select>
+          </div>
+          <button 
+            onClick={handleSave}
+            disabled={isSaving}
+            className="primary-button"
+            style={{ marginTop: '12px' }}
+          >
+            {isSaving ? 'Saving...' : 'Save Identity Settings'}
+          </button>
+        </div>
+      )}
+
+      {activeTab === 'knowledge' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div style={{ display: 'flex', gap: '8px', backgroundColor: 'var(--bg-secondary)', padding: '4px', borderRadius: '8px' }}>
+            {(['structured', 'text', 'file'] as const).map(t => (
+              <button 
+                key={t}
+                onClick={() => setKnowledgeTab(t)}
+                style={{ 
+                  flex: 1, padding: '8px', borderRadius: '6px', border: 'none', fontSize: '12px',
+                  backgroundColor: knowledgeTab === t ? 'var(--bg-primary)' : 'transparent',
+                  color: knowledgeTab === t ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  fontWeight: '600'
+                }}
+              >
+                {t.charAt(0).toUpperCase() + t.slice(1)}
+              </button>
+            ))}
+          </div>
+
+          {knowledgeTab === 'structured' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <ForgivingInput label="Company Details" placeholder="What does your company do?" value={companyDetails} onChange={(e) => setCompanyDetails(e.target.value)} />
+              {formErrors.companyDetails && <span style={{ color: 'var(--danger)', fontSize: '12px', marginTop: '-8px' }}>{formErrors.companyDetails[0]}</span>}
+              <ForgivingInput label="Exclusive Listings" placeholder="Details about specific properties..." value={exclusiveListing} onChange={(e) => setExclusiveListing(e.target.value)} />
+              {formErrors.exclusiveListing && <span style={{ color: 'var(--danger)', fontSize: '12px', marginTop: '-8px' }}>{formErrors.exclusiveListing[0]}</span>}
+              <ForgivingInput label="Contact Info" placeholder="Phone, Email, Office Location..." value={contactDetails} onChange={(e) => setContactDetails(e.target.value)} />
+              {formErrors.contactDetails && <span style={{ color: 'var(--danger)', fontSize: '12px', marginTop: '-8px' }}>{formErrors.contactDetails[0]}</span>}
+            </div>
+          )}
+
+          {knowledgeTab === 'text' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: '700', color: 'var(--text-tertiary)', marginBottom: '8px' }}>System Prompt (Brain)</label>
+                <textarea 
+                  value={textData}
+                  onChange={(e) => setTextData(e.target.value)}
+                  placeholder="Define how your agent thinks and acts..."
+                  style={{ width: '100%', height: '150px', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '14px', outline: 'none', resize: 'none' }}
+                />
+              </div>
+              
+              <div style={{ backgroundColor: 'var(--bg-secondary)', borderRadius: '16px', padding: '16px', border: '1px solid var(--border-color)' }}>
+                <h4 style={{ margin: '0 0 12px 0', fontSize: '12px', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>Version History</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {versions.map((v) => (
+                    <div key={v.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', padding: '8px', backgroundColor: 'var(--bg-primary)', borderRadius: '8px' }}>
+                      <span style={{ fontWeight: '700' }}>v{v.version}</span>
+                      <span style={{ opacity: 0.6 }}>{new Date(v.created_at).toLocaleDateString()}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {knowledgeTab === 'text' && (
+            <div>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '700', color: 'var(--text-tertiary)', marginBottom: '8px' }}>Raw Knowledge Data</label>
+              <textarea 
+                value={textData}
+                onChange={(e) => setTextData(e.target.value)}
+                placeholder="Paste any additional text, FAQs, or notes here..."
+                style={{ width: '100%', height: '200px', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '14px', outline: 'none', resize: 'none' }}
+              />
+              {formErrors.textData && <span style={{ color: 'var(--danger)', fontSize: '12px', display: 'block', marginTop: '4px' }}>{formErrors.textData[0]}</span>}
+            </div>
+          )}
+
+          {knowledgeTab === 'file' && (
+            <div style={{ textAlign: 'center', padding: '32px', border: '2px dashed var(--border-color)', borderRadius: '16px' }}>
+              <input type="file" ref={fileInputRef} onChange={handleFileUpload} style={{ display: 'none' }} multiple accept=".pdf,.doc,.docx,.txt" />
+              <div style={{ fontSize: '32px', marginBottom: '12px' }}>📁</div>
+              <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '16px' }}>Upload brochures or floor plans (PDF, DOCX)</p>
+              <button 
+                onClick={() => fileInputRef.current?.click()}
+                style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--primary-color)', background: 'none', color: 'var(--primary-color)', fontWeight: '600' }}
+              >
+                Select Files
+              </button>
+              
+              {existingFileUrls.length > 0 && (
+                <div style={{ marginTop: '16px', textAlign: 'left' }}>
+                  <p style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)', marginBottom: '8px' }}>Existing Files:</p>
+                  {existingFileUrls.map((url, i) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: 'var(--text-primary)', padding: '4px 0' }}>
+                      <a href={url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary-color)', textDecoration: 'none' }}>
+                        • {url.split('/').pop()}
+                      </a>
+                      <button onClick={() => setExistingFileUrls(existingFileUrls.filter((_, idx) => idx !== i))} style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer' }}>Remove</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {files.length > 0 && (
+                <div style={{ marginTop: '16px', textAlign: 'left' }}>
+                  <p style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)', marginBottom: '8px' }}>New Files to Upload:</p>
+                  {files.map((f, i) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: 'var(--text-primary)', padding: '4px 0' }}>
+                      <span>• {f.name}</span>
+                      <button onClick={() => setFiles(files.filter((_, idx) => idx !== i))} style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer' }}>Remove</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {isSaving && uploadProgress > 0 && (
+            <div style={{ width: '100%', height: '8px', backgroundColor: 'var(--bg-tertiary)', borderRadius: '4px', overflow: 'hidden', marginBottom: '12px' }}>
+              <div style={{ width: `${uploadProgress}%`, height: '100%', backgroundColor: 'var(--primary-color)', transition: 'width 0.3s ease' }} />
+              <p style={{ fontSize: '10px', textAlign: 'center', marginTop: '4px', color: 'var(--text-secondary)' }}>Uploading files: {uploadProgress}%</p>
+            </div>
+          )}
+
+          <button 
+            onClick={handleSave}
+            disabled={isSaving}
+            className="primary-button"
+          >
+            {isSaving ? 'Processing...' : 'Update Knowledge Base'}
+          </button>
+        </div>
       )}
     </div>
   );
