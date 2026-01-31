@@ -3,7 +3,7 @@ import StickyFooter from './StickyFooter';
 import ForgivingInput from '@/components/ForgivingInput';
 
 
-const SettingsScreen = ({ onBack, onSave, theme, onToggleTheme, onNavigateTo }) => {
+const SettingsScreen = ({ onBack, onSave, theme, onToggleTheme, onNavigateTo, onSignOut }) => {
   const [profile, setProfile] = useState({
     name: 'Agent Name',
     email: 'agent@example.com',
@@ -15,6 +15,8 @@ const SettingsScreen = ({ onBack, onSave, theme, onToggleTheme, onNavigateTo }) 
     push: true,
     sms: false
   });
+
+  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
 
   const handleToggle = (key) => {
     setNotifications(prev => ({ ...prev, [key]: !prev[key] }));
@@ -114,6 +116,56 @@ const SettingsScreen = ({ onBack, onSave, theme, onToggleTheme, onNavigateTo }) 
         <ToggleRow label="Push Notifications" checked={notifications.push} onToggle={() => handleToggle('push')} />
         <ToggleRow label="SMS Alerts" checked={notifications.sms} onToggle={() => handleToggle('sms')} />
       </div>
+
+      {/* Danger Zone */}
+      <div className="settings-section-title" style={{ color: 'var(--danger)', marginTop: '32px' }}>Danger Zone</div>
+      <div style={{ backgroundColor: 'var(--bg-primary)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)', marginBottom: '24px' }}>
+        <button 
+          onClick={() => setShowSignOutConfirm(true)}
+          style={{ 
+            width: '100%', 
+            padding: '16px', 
+            borderRadius: '12px', 
+            backgroundColor: '#FEE2E2', 
+            color: '#DC2626', 
+            border: '1px solid #FCA5A5', 
+            fontWeight: '600',
+            fontSize: '16px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px'
+          }}
+        >
+          <span>🚪</span> Sign Out
+        </button>
+      </div>
+
+      {showSignOutConfirm && (
+        <div className="modal-overlay" style={{ zIndex: 3000 }}>
+          <div className="modal-content" style={{ padding: '24px', textAlign: 'center' }}>
+            <h3 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '12px', color: 'var(--text-primary)' }}>Sign Out?</h3>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', lineHeight: '1.5' }}>
+              Are you sure you want to log out? You will need to sign in again to access your command center.
+            </p>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button 
+                onClick={() => setShowSignOutConfirm(false)}
+                style={{ flex: 1, padding: '12px', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'none', color: 'var(--text-primary)', fontWeight: '600', cursor: 'pointer' }}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={() => { onSignOut(); setShowSignOutConfirm(false); }}
+                style={{ flex: 1, padding: '12px', borderRadius: '12px', background: 'var(--danger)', color: 'white', border: 'none', fontWeight: '600', cursor: 'pointer' }}
+              >
+                Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <StickyFooter label="Save Changes" onClick={() => onSave({ profile, notifications })} />
     </div>

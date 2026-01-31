@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from './useAuth';
 import MyProjectsScreen from './MyProjectsScreen';
 import UniversalInputsScreen from './UniversalInputsScreen';
 import LoadingScreen from './LoadingScreen';
@@ -54,18 +55,32 @@ const App = () => {
   const [selectedChat, setSelectedChat] = useState(null);
   const [selectedCampaign, setSelectedCampaign] = useState(null);
 
+  const { userProfile, session, signOut, loading, fetchProfile, signInWithOtp, verifyOtp, signUp } = useAuth();
+
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
   };
 
+  // --- Auth Navigation Logic ---
+  useEffect(() => {
+    if (loading) return;
+
+    if (!session) {
+      setCurrentScreen('login');
+    } else if (currentScreen === 'login') {
+      // Restore session to dashboard on initial load
+      setCurrentScreen('home');
+    }
+  }, [session, loading]);
+
   // --- Navigation Handlers ---
 
-  const handleLogin = (userData) => {
-    console.log("User Logged In:", userData);
-    setToast({ message: `Welcome, ${userData.name || 'Agent'}!` });
-    setCurrentScreen('intent'); // Go to Start Here screen
+  const handleLogin = async (user) => {
+    const profile = await fetchProfile(user.id);
+    setToast({ message: `Welcome, ${profile?.full_name || 'Agent'}!` });
+    setCurrentScreen('intent');
   };
 
   const handleStartNew = () => {
@@ -265,7 +280,14 @@ const App = () => {
   // --- Screen Router ---
 
   const screens = {
-    login: <LoginScreen onLogin={handleLogin} />,
+    login: (
+      <LoginScreen 
+        onLogin={handleLogin} 
+        authLoading={loading} 
+        signInWithOtp={signInWithOtp} 
+        verifyOtp={verifyOtp} 
+      />
+    ),
     home: (
       <MyProjectsScreen 
         onCreateNew={handleStartNew} 
@@ -296,6 +318,7 @@ const App = () => {
         theme={theme} 
         onToggleTheme={toggleTheme}
         onNavigateTo={setCurrentScreen}
+        onSignOut={signOut}
       />
     ),
     leadNurture: <LeadNurtureScreen lead={selectedLead} onBack={handleDashboard} />,

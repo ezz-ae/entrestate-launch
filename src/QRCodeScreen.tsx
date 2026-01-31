@@ -19,7 +19,7 @@ const QRCodeScreen: React.FC<QRCodeScreenProps> = ({ onBack }) => {
       </div>
 
       <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>
-        Scan to chat with my AI Agent instantly.
+        Scan to chat with my Digital Consultant instantly.
       </p>
 
       <div className="qr-card">

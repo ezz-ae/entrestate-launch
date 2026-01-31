@@ -1,8 +1,8 @@
 import React from 'react';
 import '../mobile-styles.css';
 
-const QuickReply = ({ onSelect }) => {
-  const templates = [
+const QuickReply = ({ onSelect, replies }) => {
+  const templates = replies || [
     "👋 Is this still available?",
     "📅 When can you view?",
     "📄 Sending info now.",

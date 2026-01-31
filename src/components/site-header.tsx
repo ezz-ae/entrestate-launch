@@ -25,53 +25,43 @@ import { useBrochure } from '@/context/BrochureContext';
 
 const PRODUCT_GROUPS = [
   {
-    title: 'SiteBuilder',
+    title: 'Inventory',
     items: [
-      { href: '/site-builder-landing', label: 'Landing Page' },
-      { href: '/builder?template=full-company', label: 'Brokerage Company Site' },
-      { href: '/builder?template=template-ads-launch', label: 'Listing Site' },
-      { href: '/builder?template=developer-focus', label: 'Developer Collection' },
-      { href: '/chat-agent-public', label: 'ChatAgent Site' },
-      { href: '/builder?template=template-roadshow', label: 'Launch Event Site' },
+      { href: '/discover', label: 'Market Inventory' },
+      { href: '/discover?filter=top', label: 'Top Projects' },
+      { href: '/discover?city=dubai', label: 'Dubai Market' },
+      { href: '/discover?city=abu-dhabi', label: 'Abu Dhabi Market' },
     ],
   },
   {
-    title: 'ChatAgent',
+    title: 'Builder',
     items: [
-      { href: '/instagram-assistant-public', label: 'Instagram DM' },
-      { href: '/instagram-assistant', label: 'Instagram Bio Link' },
-      { href: '/dashboard/chat-agent', label: 'Real Estate Expert' },
-      { href: '/dashboard/chat-agent/learning', label: 'Branding & Learning' },
+      { href: '/site-builder-landing', label: 'Site Builder' },
+      { href: '/builder?type=landing-page', label: 'Landing Pages' },
+      { href: '/builder?type=brokerage-site', label: 'Brokerage Sites' },
+      { href: '/builder?type=listing-site', label: 'Listing Sites' },
     ],
   },
   {
     title: 'Lead Generation',
     items: [
       { href: '/google-ads-public', label: 'Google Ads' },
-      { href: '/dashboard/meta-audience', label: 'Lookalike Audience' },
-      { href: '/dashboard/marketing', label: 'Smart Targeting' },
-      { href: '/dashboard/leads/cold-calling', label: 'Lead Cold Calling' },
-      { href: '/dashboard/leads', label: 'Lead Validating' },
-      { href: '/lead-pipeline-overview', label: 'Lead Pipe' },
+      { href: '/instagram-assistant-public', label: 'Instagram DM' },
+      { href: '/chat-agent-public', label: 'Chat Agent' },
     ],
   },
   {
-    title: 'Smart Sender',
+    title: 'Lead Intelligence',
     items: [
-      { href: '/dashboard/sms-marketing', label: 'SMS Sender' },
-      { href: '/dashboard/email-marketing', label: 'Email Campaign' },
-      { href: '/dashboard/email-marketing', label: 'Smart Email Plans' },
+      { href: '/lead-pipeline-overview', label: 'Lead Pipeline' },
+      { href: '/dashboard/leads', label: 'Lead Desk' },
     ],
   },
   {
-    title: 'Inventory',
+    title: 'Communication',
     items: [
-      { href: '/discover', label: 'Market Inventory' },
-      { href: '/discover', label: 'Top Marketing Projects' },
-      { href: '/discover', label: 'Dubai Market' },
-      { href: '/discover', label: 'Abu Dhabi Market' },
-      { href: '/discover', label: 'Investment Map' },
-      { href: '/discover', label: 'Market Overview' },
+      { href: '/dashboard/smart-sender', label: 'Smart Sender' },
+      { href: '/dashboard/chat-agent?tab=knowledge', label: 'Consultant Learning' },
     ],
   },
 ];
@@ -79,9 +69,9 @@ const PRODUCT_GROUPS = [
 const RESOURCE_LINKS = [
   { href: '/docs', label: 'Documentation', icon: Library },
   { href: '/support', label: 'Support', icon: LifeBuoy },
-  { href: '/status', label: 'Smart System', icon: Sparkles },
-  { href: '/blog', label: 'Articles', icon: Briefcase },
-  { href: '/trending', label: 'Market Updates', icon: TrendingUp },
+  { href: '/system', label: 'Smart System', icon: Sparkles },
+  { href: '/articles', label: 'Articles', icon: Briefcase },
+  { href: '/market-updates', label: 'Market Updates', icon: TrendingUp },
 ];
 
 export function SiteHeader() {

@@ -1,0 +1,79 @@
+#!/bin/bash
+# Semi-automatic smart merge: safe auto-merge + interactive review for critical files
+
+BASE_BRANCH="main"
+FEATURE_BRANCH="Gemini-29Jan"
+SAFE_BRANCH="merge-gemini-smart"
+
+echo "🚀 Creating safe merge branch from $BASE_BRANCH..."
+git checkout $BASE_BRANCH || exit
+git pull || exit
+git checkout -b $SAFE_BRANCH || exit
+
+echo "📋 Listing all changed files..."
+FILES=$(git diff --name-only $BASE_BRANCH..$FEATURE_BRANCH)
+echo "$FILES" > changed-files.txt
+
+# Arrays to track actions
+MERGED_FILES=()
+INTERACTIVE_FILES=()
+KEPT_MAIN=()
+
+echo "🔹 Processing files..."
+
+for FILE in $FILES; do
+    # Skip deleted/missing
+    if [ ! -f "$FILE" ] && [ ! -d "$FILE" ]; then
+        echo "⏭ Skipping deleted/missing: $FILE"
+        continue
+    fi
+
+    # Rules
+    if [[ "$FILE" == "env.example" ]]; then
+        echo "⏭ Keeping main version: $FILE"
+        KEPT_MAIN+=("$FILE")
+        continue
+    elif [[ "$FILE" == auth/* ]]; then
+        echo "⚠ Interactive review required (auth): $FILE"
+        git checkout -p $FEATURE_BRANCH -- "$FILE"
+        INTERACTIVE_FILES+=("$FILE")
+        continue
+    elif [[ "$FILE" == app/**/layout.tsx ]] || [[ "$FILE" == app/**/route.ts ]]; then
+        echo "⚠ Interactive review required (layout/route): $FILE"
+        git checkout -p $FEATURE_BRANCH -- "$FILE"
+        INTERACTIVE_FILES+=("$FILE")
+        continue
+    elif [[ "$FILE" == dashboards/** ]]; then
+        echo "✅ Auto-taking Gemini version (dashboard): $FILE"
+        git checkout $FEATURE_BRANCH -- "$FILE"
+        MERGED_FILES+=("$FILE")
+        continue
+    else
+        # Safe auto-merge for other files
+        echo "🔹 Auto-merging from Gemini if different: $FILE"
+        git checkout $FEATURE_BRANCH -- "$FILE"
+        MERGED_FILES+=("$FILE")
+    fi
+done
+
+echo
+echo "💾 Committing merged files..."
+git add .
+git commit -m "Smart merge: auto-merged safe files + interactive review for critical files"
+
+# Summary
+echo
+echo "===== MERGE SUMMARY ====="
+echo "✅ Auto-merged files:"
+for f in "${MERGED_FILES[@]}"; do echo " - $f"; done
+echo
+echo "🛠 Interactive review files:"
+for f in "${INTERACTIVE_FILES[@]}"; do echo " - $f"; done
+echo
+echo "⏭ Kept main version:"
+for f in "${KEPT_MAIN[@]}"; do echo " - $f"; done
+
+echo
+echo "🎯 Smart merge branch created: $SAFE_BRANCH"
+echo "Inspect interactive review files, then merge into main:"
+echo "git checkout main && git merge $SAFE_BRANCH"

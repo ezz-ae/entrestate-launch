@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { ENTRESTATE_INVENTORY } from '@/data/entrestate-inventory';
 import { useEntitlements } from '@/hooks/use-entitlements';
+import { SiteHeader } from '@/components/layout/site-header';
 
 const PROJECTS_PER_PAGE = 12;
 
@@ -164,10 +165,11 @@ export default function DiscoverPage() {
   const totalPages = Math.max(1, Math.ceil(totalProjects / PROJECTS_PER_PAGE));
   const showingCount = projects.length;
   const canLoadMore = !showingSample && Boolean(nextCursor);
-  const launchPackHref = '/start?intent=website';
+  const launchPackHref = '/builder-funnel';
 
   return (
     <main className="min-h-screen bg-black text-white flex flex-col font-sans selection:bg-blue-500/30">
+      <SiteHeader />
       
       {/* 1. DATA-DRIVEN HERO */}
       <section className="bg-zinc-950 border-b border-white/5 pt-24 sm:pt-28 md:pt-32 pb-16 sm:pb-20 relative overflow-hidden">
