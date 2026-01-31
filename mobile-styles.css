@@ -75,6 +75,27 @@
   100% { transform: rotate(360deg); }
 }
 
+/* Small Spinner for buttons */
+.spinner-small {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.5); /* Light grey background */
+  border-top: 2px solid white; /* White foreground */
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Shake Animation */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-5px); }
+  40%, 80% { transform: translateX(5px); }
+}
+
+.shake-animation {
+  animation: shake 0.5s ease-in-out;
+}
+
 /* Modal Styles */
 .modal-overlay {
   position: fixed;

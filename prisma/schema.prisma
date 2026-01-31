@@ -41,3 +41,14 @@ model AgentVersion {
 
   @@map("agent_versions")
 }
+
+model Lead {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String
+  phone     String?
+  email     String?
+  status    String   @default("new")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("leads")
+}

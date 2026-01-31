@@ -1,40 +1,77 @@
-import React from 'react';
-import { FunnelShell } from '@/components/public/funnel-shell';
-import { GoogleAdsDashboard } from '@/components/GoogleAdsDashboard';
+import { IntentCaptureDemo } from '@/components/marketing/demos/intent-capture-demo';
+import { SiteHeader } from '@/components/layout/site-header';
+import { Target, TrendingUp, ArrowRight } from 'lucide-react';
+import Link from 'next/link';
 
-const DEMO_PROJECTS = [
-  {
-    id: 'demo-project',
-    headline: 'Luxury Penthouse in Dubai Marina',
-    description: 'Experience the pinnacle of luxury living with breathtaking views of the Arabian Gulf and the Dubai skyline.'
-  }
-];
+export const dynamic = 'force-dynamic';
 
-const GoogleAdsPublicPage = () => {
+export default function GoogleAdsPage() {
   return (
-    <FunnelShell>
-      <section className="relative overflow-hidden min-h-screen">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(122,165,255,0.15),_transparent_45%),radial-gradient(circle_at_bottom,_rgba(255,154,213,0.1),_transparent_60%)]" />
-        <div className="relative mx-auto max-w-7xl px-6 py-12 lg:py-20">
-            <div className="text-center mb-12">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#7aa5ff]/10 border border-[#7aa5ff]/20 text-[#7aa5ff] text-[10px] font-bold uppercase tracking-widest mb-6">
-                Google Ads Intelligence
-              </div>
-              <h1 className="text-4xl md:text-6xl font-bold leading-[1.1] text-white mb-6">
-                  Controlled spend. <br/><span className="text-zinc-500">Predictable output.</span>
-              </h1>
-              <p className="text-lg text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-                  Ads should feel mechanical. You set the budget and duration, the plan shows the range. No agency pitch. Just inputs and a plan.
-              </p>
-            </div>
-            
-            <div className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-[2.5rem] p-4 md:p-8 shadow-2xl">
-              <GoogleAdsDashboard projects={DEMO_PROJECTS} readOnly={false} />
-            </div>
+    <main className="min-h-screen bg-slate-50 dark:bg-slate-950">
+      <SiteHeader />
+      <div className="container mx-auto px-4 py-12">
+        
+        <div className="mb-12 max-w-3xl">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-green-100 px-3 py-1 text-xs font-bold uppercase tracking-wider text-green-700 dark:bg-green-900/30 dark:text-green-400">
+            <Target className="h-4 w-4" />
+            <span>High Intent Capture</span>
+          </div>
+          <h1 className="mb-4 text-4xl font-black tracking-tight text-slate-900 dark:text-white sm:text-5xl">
+            Turn search intent into <br />
+            <span className="text-green-600">sold inventory.</span>
+          </h1>
+          <p className="text-lg text-slate-600 dark:text-slate-400">
+            Stop wasting budget on broad audiences. Our Intent Engine connects active searchers directly to your available units, filtering out low-quality traffic before you pay for it.
+          </p>
         </div>
-      </section>
-    </FunnelShell>
-  );
-};
 
-export default GoogleAdsPublicPage;
+        <IntentCaptureDemo />
+
+        <div className="mt-16 flex flex-col items-center justify-center gap-6 text-center">
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Ready to capture demand?</h2>
+          <Link 
+            href="/builder-funnel"
+            className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-8 py-4 text-sm font-bold text-white transition-all hover:bg-slate-800 hover:shadow-lg dark:bg-white dark:text-slate-900"
+          >
+            <TrendingUp className="h-4 w-4" /> Launch Campaign
+          </Link>
+
+          <div className="mt-8 grid w-full max-w-2xl grid-cols-1 gap-4 sm:grid-cols-2 text-left">
+            <Link 
+              href="/discover"
+              className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 transition-all hover:border-blue-500 hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="font-bold text-slate-900 dark:text-white">Market Feed</h3>
+                <ArrowRight className="h-4 w-4 text-slate-400 transition-transform group-hover:translate-x-1" />
+              </div>
+              <p className="mt-2 text-sm text-slate-500">Live inventory & market insights.</p>
+            </Link>
+
+            <Link 
+              href="/chat-agent-funnel"
+              className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 transition-all hover:border-blue-500 hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="font-bold text-slate-900 dark:text-white">AI Sales Agent</h3>
+                <ArrowRight className="h-4 w-4 text-slate-400 transition-transform group-hover:translate-x-1" />
+              </div>
+              <p className="mt-2 text-sm text-slate-500">24/7 lead qualification & booking.</p>
+            </Link>
+
+            <Link 
+              href="/docs"
+              className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 transition-all hover:border-blue-500 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 sm:col-span-2"
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="font-bold text-slate-900 dark:text-white">System Documentation</h3>
+                <ArrowRight className="h-4 w-4 text-slate-400 transition-transform group-hover:translate-x-1" />
+              </div>
+              <p className="mt-2 text-sm text-slate-500">Learn how the Entrestate Operating System works.</p>
+            </Link>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}

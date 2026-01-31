@@ -1,116 +1,60 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@/hooks/useAuth';
+import { SiteHeader } from '@/components/layout/site-header';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Loader2 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { EntrestateLogo } from '@/components/icons';
+import { ArrowRight } from 'lucide-react';
 
 export default function LoginPage() {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isRegister, setIsRegister] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const { logIn, signUp } = useAuth();
-  const router = useRouter();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    try {
-      if (isRegister) {
-        if (!name.trim()) {
-          setError('Please enter your name.');
-          setLoading(false);
-          return;
-        }
-        await signUp(email, password, name);
-      } else {
-        await logIn(email, password);
-      }
-      router.push('/dashboard');
-    } catch (err: any) {
-      setError(err.message || 'An unexpected error occurred.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black text-white p-4">
-      <Card className="w-full max-w-md bg-zinc-950 border-white/10 rounded-[2.5rem] p-6 shadow-2xl">
-        <CardHeader className="text-center space-y-3">
-          <div className="flex justify-center">
-            <EntrestateLogo showText={true} className="h-10 w-auto" />
+    <main className="min-h-screen bg-slate-50 dark:bg-slate-950">
+      <SiteHeader />
+      <div className="flex min-h-[calc(100vh-64px)] items-center justify-center px-4">
+        <div className="w-full max-w-md space-y-8 rounded-2xl border border-slate-200 bg-white p-8 shadow-xl dark:border-slate-800 dark:bg-slate-900">
+          <div className="text-center">
+            <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Welcome back</h2>
+            <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">Sign in to your Entrestate OS account</p>
           </div>
-          <CardTitle className="text-3xl font-bold mt-4">
-            {isRegister ? 'Create an Account' : 'Welcome Back!'}
-          </CardTitle>
-          <CardDescription className="text-zinc-400">
-            {isRegister ? 'Join Entrestate to manage your projects.' : 'Sign in to access your dashboard.'}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {isRegister && (
-              <div className="space-y-2">
-                <Label htmlFor="name" className="text-zinc-400">Name</Label>
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="Your Name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required={isRegister}
-                  className="h-12 bg-zinc-900 border-white/5 text-white"
-                />
-              </div>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-zinc-400">Email</Label>
-              <Input
+          
+          <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Email address</label>
+              <input
                 id="email"
+                name="email"
                 type="email"
+                autoComplete="email"
+                required
+                className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                 placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="h-12 bg-zinc-900 border-white/5 text-white"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-zinc-400">Password</Label>
-              <Input
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Password</label>
+              <input
                 id="password"
+                name="password"
                 type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
                 required
-                className="h-12 bg-zinc-900 border-white/5 text-white"
+                className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                placeholder="••••••••"
               />
             </div>
-            {error && <p className="text-red-500 text-sm">{error}</p>}
-            <Button type="submit" className="w-full h-12 text-lg font-bold bg-blue-600 hover:bg-blue-700 rounded-xl" disabled={loading}>
-              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : (isRegister ? 'Register' : 'Login')}
+            <Button className="w-full bg-blue-600 hover:bg-blue-700">
+              Sign in
+              <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </form>
-          <p className="mt-6 text-center text-sm text-zinc-500">
-            {isRegister ? 'Already have an account?' : "Don't have an account?"}{' '}
-            <Button variant="link" onClick={() => setIsRegister(!isRegister)} className="text-blue-500 hover:underline px-0">
-              {isRegister ? 'Login' : 'Register'}
-            </Button>
-          </p>
-        </CardContent>
-      </Card>
-    </div>
+          
+          <div className="text-center text-sm">
+            <span className="text-slate-500">Don't have an account? </span>
+            <Link href="/start" className="font-medium text-blue-600 hover:text-blue-500">
+              Get started
+            </Link>
+          </div>
+        </div>
+      </div>
+    </main>
   );
 }
