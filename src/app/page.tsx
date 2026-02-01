@@ -1,7 +1,8 @@
-import { PipelineDemo } from '@/components/marketing/demos/pipeline-demo';
-import { SiteHeader } from '@/components/layout/site-header';
+import { SiteHeader } from '@/components/site-header';
 import { GitPullRequest, Zap, BarChart3 } from 'lucide-react';
 import Link from 'next/link';
+
+// import { PipelineDemo } from '@/components/marketing/demos/pipeline-demo';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,7 +26,7 @@ export default function LeadPipelinePage() {
           </p>
         </div>
 
-        <PipelineDemo />
+        {/* <PipelineDemo /> */}
 
         <div className="mt-24 grid gap-8 md:grid-cols-3">
           <FeatureCard 

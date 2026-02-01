@@ -23,7 +23,7 @@ import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { ENTRESTATE_INVENTORY } from '@/data/entrestate-inventory';
 import { useEntitlements } from '@/hooks/use-entitlements';
-import { SiteHeader } from '@/components/layout/site-header';
+import { SiteHeader } from '@/components/site-header';
 
 const PROJECTS_PER_PAGE = 12;
 

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { SiteHeader } from '@/components/layout/site-header';
+import { SiteHeader } from '@/components/site-header';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 

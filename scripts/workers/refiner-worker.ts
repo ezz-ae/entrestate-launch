@@ -6,7 +6,7 @@ import {
   FieldValue,
 } from 'firebase-admin/firestore';
 import { applicationDefault, getApps, initializeApp } from 'firebase-admin/app';
-import type { SitePage, Block } from '@/lib/types';
+import type { SitePage, Block } from '@/lib/page-types';
 
 function initAdmin() {
   if (!getApps().length) {

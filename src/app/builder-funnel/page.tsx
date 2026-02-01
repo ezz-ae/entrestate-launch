@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-import { PipelineBuilder } from '@/components/builder/pipeline-builder';
-import { SiteHeader } from '@/components/layout/site-header';
+import { PipelineBuilder } from '@/components/marketing/pipeline-builder';
+import { SiteHeader } from '@/components/site-header';
 
 export default function BuilderFunnelPage() {
   return (

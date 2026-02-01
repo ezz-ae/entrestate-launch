@@ -1,5 +1,5 @@
-import { IntentCaptureDemo } from '@/components/marketing/demos/intent-capture-demo';
-import { SiteHeader } from '@/components/layout/site-header';
+import { IntentCaptureDemo } from '@/components/marketing/intent-capture-demo';
+import { SiteHeader } from '@/components/site-header';
 import { Target, TrendingUp, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 

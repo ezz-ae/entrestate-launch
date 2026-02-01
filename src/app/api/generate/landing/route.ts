@@ -9,22 +9,28 @@ import {
   PlanLimitError,
   planLimitErrorResponse,
 } from '@/lib/server/billing';
-import { SitePage, Block } from '@/lib/types';
+import { SitePage, Block } from '@/lib/page-types';
 
 export async function POST(req: NextRequest) {
     try {
         const { tenantId, uid } = await requireRole(req, ALL_ROLES);
-        const { projectId, extractedText, language } = await req.json();
+        const { projectId, snapshot, goal, location, notes } = (await req.json()) as {
+          projectId: string;
+          snapshot: SitePage;
+          goal: string;
+          location: string;
+          notes: string;
+        };
 
-        if (!projectId || !extractedText) {
-            return NextResponse.json({ error: 'projectId and extractedText are required' }, { status: 400 });
+        if (!projectId || !snapshot) {
+            return NextResponse.json({ error: 'projectId and snapshot are required' }, { status: 400 });
         }
 
-        const prompt = `Generate a landing page for a real estate project based on the following text. The language is ${language || 'en'}.\n\n${extractedText}`;
+        const prompt = `Generate a landing page for a real estate project based on the following text. The language is en.\n\n${notes}`;
 
         const { object: siteData } = await generateSiteStructure(prompt);
 
-        const newSite: SitePage = {
+        const newSite = {
             id: '',
             title: siteData.title,
             blocks: siteData.blocks.map((block: Omit<Block, 'blockId' | 'order'>, index: number) => ({

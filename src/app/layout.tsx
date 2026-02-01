@@ -1,14 +1,39 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
-import { ThemeProvider } from "@/components/theme-provider";
-import { SiteFooter } from "@/components/layout/site-footer";
 
-const inter = Inter({ subsets: ["latin"] });
+import type { Metadata } from 'next';
+import './globals.css';
+import '../../mobile-styles.css';
+import { Toaster } from '@/components/ui/toaster';
+import { ThemeProvider } from '@/components/theme-provider';
+import Script from 'next/script';
+import { Inter } from 'next/font/google';
+import ClientLayout from './client-layout';
+import { BrochureProvider } from '@/context/BrochureContext';
+
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+});
 
 export const metadata: Metadata = {
-  title: "Entrestate OS",
-  description: "The operating system for modern real estate entrepreneurs.",
+  title: 'Entrestate',
+  description:
+    'All-in-one real estate platform to launch websites, generate leads, and manage your pipeline in one place.',
+  metadataBase: new URL('https://entrestate.com'),
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://entrestate.com',
+    siteName: 'Entrestate',
+    images: [
+      {
+        url: '/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Entrestate',
+      },
+    ],
+  },
 };
 
 export default function RootLayout({
@@ -16,18 +41,53 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const facebookAppId = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID;
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-          <SiteFooter />
+    <html lang="en" suppressHydrationWarning className="dark">
+      <body className={`${inter.className} antialiased bg-black text-white selection:bg-white/20`}>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+          <BrochureProvider>
+            <ClientLayout>
+                {children}
+            </ClientLayout>
+          </BrochureProvider>
+          <Toaster />
         </ThemeProvider>
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-CJB38JEN7J"
+          strategy="afterInteractive"
+        />
+        <Script id="gtag-init" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'G-CJB38JEN7J');
+          `}
+        </Script>
+        {facebookAppId && (
+          <Script id="fb-sdk" strategy="afterInteractive">
+          {`
+            window.fbAsyncInit = function() {
+              FB.init({
+                appId      : '${facebookAppId}',
+                cookie     : true,
+                xfbml      : true,
+                version    : 'v19.0'
+              });
+              FB.AppEvents.logPageView();
+            };
+            (function(d, s, id){
+               var js, fjs = d.getElementsByTagName(s)[0];
+               if (d.getElementById(id)) {return;}
+               js = d.createElement(s); js.id = id;
+               js.src = "https://connect.facebook.net/en_US/sdk.js";
+               fjs.parentNode.insertBefore(js, fjs);
+             }(document, 'script', 'facebook-jssdk'));
+          `}
+        </Script>
+        )}
       </body>
     </html>
   );

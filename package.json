@@ -22,7 +22,7 @@
   "scripts": {
     "dev": "next dev -p 3000",
     "prebuild": "node scripts/check-mobile-imports.mjs",
-    "build": "NEXT_DISABLE_TURBOPACK=1 NEXT_TURBOPACK=0 TURBOPACK=0 next build",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx --ignore-pattern gemini-app/",
     "test:dev": "tsx scripts/test/dev-sends-smoke.ts",

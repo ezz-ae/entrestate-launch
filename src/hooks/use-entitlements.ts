@@ -7,6 +7,14 @@ export function useEntitlements() {
         inventoryAccess: {
           allowed: true,
           reason: ''
+        },
+        builderPublish: {
+          allowed: true,
+          reason: ''
+        },
+        senders: {
+          allowed: true,
+          reason: ''
         }
       }
     },

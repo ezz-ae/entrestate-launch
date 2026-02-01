@@ -1,37 +1,350 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { NextRequest } from 'next/server';
+import { z } from 'zod';
+import { FieldValue } from 'firebase-admin/firestore';
+import type { Firestore } from 'firebase-admin/firestore';
+import { getAdminDb } from '@/server/firebase-admin';
+import { CAP } from '@/lib/capabilities';
+import { sendLeadEmail } from '@/lib/notifications/email';
+import { sendLeadSMS } from '@/lib/notifications/sms';
+import { upsertHubspotLead } from '@/lib/integrations/hubspot-leads';
+import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
+import { ALL_ROLES } from '@/lib/server/roles';
+import { createApiLogger } from '@/lib/logger';
+import {
+  enforceUsageLimit,
+  PlanLimitError,
+  planLimitErrorResponse,
+} from '@/lib/server/billing';
+import { enforceRateLimit, getRequestIp } from '@/lib/server/rateLimit';
+import { getPublishedSite } from '@/server/publish-service';
+import { logError } from '@/lib/server/log';
+import {
+  createRequestId,
+  errorResponse,
+  jsonWithRequestId,
+} from '@/lib/server/request-id';
+import {
+  buildLeadTouchUpdate,
+  findExistingLead,
+  normalizeEmail,
+  normalizePhone,
+} from '@/lib/server/lead-dedupe';
 
-export async function POST(request: NextRequest) {
+const NOTIFY_EMAIL_TO = process.env.NOTIFY_EMAIL_TO;
+const NOTIFY_SMS_TO = process.env.NOTIFY_SMS_TO;
+
+const payloadSchema = z.object({
+  name: z.string().optional(),
+  email: z.string().email().optional(),
+  phone: z.string().optional(),
+  message: z.string().optional(),
+  source: z.string().optional(),
+  project: z.string().optional(),
+  projectId: z.string().optional(),
+  pageSlug: z.string().optional(),
+  honeypot: z.string().optional(),
+  context: z.record(z.any()).optional(),
+  attribution: z.record(z.any()).optional(),
+  metadata: z.record(z.any()).optional(),
+  siteId: z.string().optional(),
+});
+
+type LeadPayload = z.infer<typeof payloadSchema>;
+
+const parseEmailList = (value?: string | null) => {
+  if (!value) return [];
+  return value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+};
+
+async function resolvePublicTenant(payload: LeadPayload) {
+  const siteKey =
+    payload.siteId ||
+    payload.pageSlug ||
+    (payload.metadata?.pageSlug as string | undefined) ||
+    (payload.context?.pageSlug as string | undefined);
+  if (!siteKey) return null;
+  const publishedSite = await getPublishedSite(siteKey);
+  if (!publishedSite?.published) return null;
+  const tenantId = publishedSite.tenantId || publishedSite.ownerUid || null;
+  if (!tenantId) return null;
+  return { tenantId, siteId: publishedSite.id };
+}
+
+export async function POST(req: NextRequest) {
+  const scope = 'api/leads';
+  const requestId = createRequestId();
+  const path = req.url;
+  const respond = (body: unknown, init?: ResponseInit) =>
+    jsonWithRequestId(requestId, body, init);
+  const logger = createApiLogger(req, { route: 'POST /api/leads' });
   try {
-    const body = await request.json();
-    const { name, email, phone, project_id, source } = body;
-
-    // Basic validation
-    if (!project_id) {
-      return NextResponse.json(
-        { error: 'Missing required field: project_id' },
+    const payload = payloadSchema.parse(await req.json());
+    if (!payload.email && !payload.phone && !payload.message) {
+      return respond(
+        { ok: false, error: 'Provide at least an email, phone, or message.', requestId },
         { status: 400 }
       );
     }
+    const db = getAdminDb();
+    const ip = getRequestIp(req);
 
-    const supabase = await createSupabaseServerClient();
-
-    // Insert lead into Supabase
-    const { data, error } = await supabase.from('leads').insert({
-      project_id,
-      name: name || 'Unknown Lead',
-      email: email || null,
-      phone: phone || null,
-      status: 'new',
-      source: source || 'external_webhook'
-    }).select();
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    // Public lead capture is allowed only for published sites; tenantId is never accepted from client input.
+    let context: Awaited<ReturnType<typeof requireRole>> | null = null;
+    const authHeader = req.headers.get('authorization') || '';
+    if (authHeader.startsWith('Bearer ')) {
+      context = await requireRole(req, ALL_ROLES);
     }
 
-    return NextResponse.json({ success: true, lead: data });
+    const honeypot =
+      payload.honeypot ||
+      (payload.metadata?.honeypot as string | undefined) ||
+      (payload.metadata?.website as string | undefined) ||
+      (payload.context?.honeypot as string | undefined) ||
+      (payload.context?.website as string | undefined);
+    if (honeypot && String(honeypot).trim()) {
+      return respond({ ok: false, error: 'Invalid submission', requestId }, { status: 400 });
+    }
+    const elapsedMs = Number(payload.metadata?.elapsedMs || payload.metadata?.timeOnPageMs || 0);
+    if (elapsedMs && elapsedMs < 800) {
+      return respond({ ok: false, error: 'Invalid submission', requestId }, { status: 400 });
+    }
+
+    if (!context) {
+      if (!(await enforceRateLimit(`leads:public:${ip}`, 8, 60_000))) {
+        return respond({ ok: false, error: 'Rate limit exceeded', requestId }, { status: 429 });
+      }
+    }
+
+    let tenantId = context?.tenantId || null;
+    let siteId = payload.siteId || null;
+    if (!tenantId) {
+      const resolved = await resolvePublicTenant(payload);
+      if (!resolved) {
+        return respond(
+          { ok: false, error: 'Published site not found', requestId },
+          { status: 404 }
+        );
+      }
+      tenantId = resolved.tenantId;
+      siteId = resolved.siteId;
+    }
+    if (!tenantId) {
+      return respond(
+        { ok: false, error: 'Tenant resolution failed', requestId },
+        { status: 400 }
+      );
+    }
+    const agentEmail = context?.email ?? null;
+
+    logger.setTenant(tenantId);
+    if (context?.uid) {
+      logger.setActor(context.uid);
+    }
+
+    if (context && siteId) {
+      const siteSnap = await db.collection('sites').doc(siteId).get();
+      if (siteSnap.exists) {
+        const siteData = siteSnap.data() || {};
+        const siteTenant = siteData.tenantId as string | undefined;
+        const siteOwner = siteData.ownerUid as string | undefined;
+        if (siteTenant && siteTenant !== tenantId) {
+          return respond({ ok: false, error: 'Forbidden', requestId }, { status: 403 });
+        }
+        if (!siteTenant && siteOwner && siteOwner !== context.uid) {
+          return respond({ ok: false, error: 'Forbidden', requestId }, { status: 403 });
+        }
+      } else {
+        siteId = null;
+      }
+    }
+
+    const emailNormalized = normalizeEmail(payload.email);
+    const phoneNormalized = normalizePhone(payload.phone);
+    const existingLead = await findExistingLead(db, tenantId, {
+      email: emailNormalized,
+      phone: phoneNormalized,
+    });
+
+    if (existingLead) {
+      await existingLead.ref.update(
+        buildLeadTouchUpdate({
+          name: payload.name || null,
+          email: payload.email || null,
+          phone: payload.phone || null,
+          message: payload.message || null,
+          source: payload.source || payload.context?.service || 'Website',
+        })
+      );
+
+      logger.logSuccess(200, { leadId: existingLead.id, deduped: true });
+      return respond({
+        ok: true,
+        data: { id: existingLead.id, tenantId, deduped: true },
+        requestId,
+      });
+    }
+
+    await enforceUsageLimit(db, tenantId, 'leads', 1);
+
+    const leadData = {
+      tenantId,
+      siteId,
+      project: payload.project || null,
+      projectId: payload.projectId || null,
+      pageSlug: payload.pageSlug || null,
+      name: payload.name || null,
+      email: payload.email || null,
+      emailNormalized,
+      phone: payload.phone || null,
+      phoneNormalized,
+      message: payload.message || null,
+      source: payload.source || payload.context?.service || 'Website',
+      context: payload.context || null,
+      attribution: payload.attribution || null,
+      metadata: payload.metadata || null,
+      status: 'New',
+      priority: 'Warm',
+      touches: 1,
+      lastSeenAt: FieldValue.serverTimestamp(),
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    };
+
+    const leadRef = await db
+      .collection('tenants')
+      .doc(tenantId)
+      .collection('leads')
+      .add(leadData);
+
+    // Optional notifications + CRM webhook
+    const settingsSnap = await db
+      .collection('tenants')
+      .doc(tenantId)
+      .collection('settings')
+      .doc('leads')
+      .get();
+    const settings = settingsSnap.exists ? settingsSnap.data() : null;
+
+    const notificationEmail = settings?.notificationEmail as string | undefined;
+    const crmWebhookUrl = settings?.crmWebhookUrl as string | undefined;
+    const crmProvider =
+      (settings?.crmProvider as string | undefined) ||
+      (crmWebhookUrl ? 'custom' : 'hubspot');
+
+    const brokerEmails = parseEmailList(notificationEmail || NOTIFY_EMAIL_TO);
+    const recipientSet = new Set<string>(brokerEmails);
+    if (agentEmail) {
+      recipientSet.add(agentEmail);
+    }
+    const emailRecipients = Array.from(recipientSet);
+
+    if (emailRecipients.length && CAP.resend) {
+      try {
+        await sendLeadEmail(
+          emailRecipients,
+          `New lead${payload.project ? ` · ${payload.project}` : ''}`,
+          `
+            <div style="font-family: sans-serif; line-height: 1.6; color: #111;">
+              <h2 style="margin: 0 0 12px;">New Lead</h2>
+              <p><strong>Name:</strong> ${payload.name || 'Not shared'}</p>
+              <p><strong>Email:</strong> ${payload.email || 'Not shared'}</p>
+              <p><strong>Phone:</strong> ${payload.phone || 'Not shared'}</p>
+              <p><strong>Project:</strong> ${payload.project || 'General Inquiry'}</p>
+              <p><strong>Source:</strong> ${payload.source || payload.context?.service || 'Website'}</p>
+              ${payload.message ? `<p><strong>Message:</strong> ${payload.message}</p>` : ''}
+            </div>
+          `
+        );
+      } catch (error) {
+        console.error('[leads] notification email failed', error);
+      }
+    }
+
+    const notificationPhone =
+      (settings?.notificationPhone as string | undefined) || NOTIFY_SMS_TO;
+    if (notificationPhone && CAP.twilio) {
+      try {
+        const smsBody = [
+          'New Entrestate lead',
+          payload.name ? `Name: ${payload.name}` : null,
+          payload.phone ? `Phone: ${payload.phone}` : null,
+          payload.email ? `Email: ${payload.email}` : null,
+          payload.project ? `Project: ${payload.project}` : null,
+        ]
+          .filter(Boolean)
+          .join(' | ');
+        await sendLeadSMS(notificationPhone, smsBody);
+      } catch (error) {
+        console.error('[leads] notification SMS failed', error);
+      }
+    }
+
+    if (crmProvider === 'hubspot' && CAP.hubspot) {
+      try {
+        const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'entrestate.com';
+        const pageUrl =
+          payload.metadata?.pageUrl ||
+          payload.context?.pageUrl ||
+          payload.attribution?.pageUrl ||
+          (payload.pageSlug ? `https://${rootDomain}/p/${payload.pageSlug}` : undefined);
+        await upsertHubspotLead({
+          email: payload.email || undefined,
+          phone: payload.phone || undefined,
+          name: payload.name || undefined,
+          message: payload.message || undefined,
+          pageUrl,
+        });
+      } catch (error) {
+        console.error('[leads] hubspot sync failed', error);
+      }
+    }
+
+    if (crmProvider === 'custom' && crmWebhookUrl) {
+      try {
+        await fetch(crmWebhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: leadRef.id, ...leadData }),
+        });
+      } catch (error) {
+        console.error('[leads] webhook failed', error);
+      }
+    }
+
+    logger.logSuccess(201, { leadId: leadRef.id, siteId });
+    return respond(
+      { ok: true, data: { id: leadRef.id, tenantId, deduped: false }, requestId },
+      { status: 201 }
+    );
   } catch (error) {
-    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    console.error('[leads] capture error', error);
+    logError(scope, error, { requestId, path });
+    if (error instanceof PlanLimitError) {
+      logger.logError(error, 402, { metric: error.metric, limit: error.limit });
+      return respond(
+        { ok: false, requestId, ...planLimitErrorResponse(error) },
+        { status: 402 }
+      );
+    }
+    if (error instanceof z.ZodError) {
+      logger.logError(error, 400, { validation_errors: error.errors });
+      return respond(
+        { ok: false, error: 'Invalid payload', details: error.errors, requestId },
+        { status: 400 }
+      );
+    }
+    if (error instanceof UnauthorizedError) {
+      logger.logError(error, 401);
+      return respond({ ok: false, error: 'Unauthorized', requestId }, { status: 401 });
+    }
+    if (error instanceof ForbiddenError) {
+      logger.logError(error, 403);
+      return respond({ ok: false, error: 'Forbidden', requestId }, { status: 403 });
+    }
+    logger.logError(error, 500);
+    return errorResponse(requestId, scope);
   }
 }
