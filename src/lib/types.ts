@@ -1,132 +1,95 @@
-export interface User {
-  profile: {
-    name: string;
-    email: string;
-    role: 'developer' | 'agent' | 'admin';
-  };
-  brandKit: {
-    colors: {
-      primary: string;
-      secondary: string;
-    };
-    fonts: string;
-    logoUrl: string;
-  };
-  subscriptions: any[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface ProjectData {
-  id: string;
-  name: string;
-  developer: string;
-  location: {
-    city: string;
-    area: string;
-    mapQuery: string;
-  };
-  handover: {
-      quarter: number;
-      year: number;
-  } | null;
-  deliveryYear?: number;
-  status?: string;
-  description: {
-    full: string;
-    short: string;
-  };
-  features: string[];
-  price: {
-    from: number;
-    label: string;
-    sqftAvg?: number;
-  };
-  performance: {
-    roi: number;             // Expected annual yield %
-    capitalAppreciation: number; // Expected value growth %
-    rentalYield: number;     // Annual rent %
-    marketTrend: 'up' | 'stable' | 'down';
-    priceHistory: { year: number, avgPrice: number }[];
-  };
-  availability: 'Available' | 'Sold Out' | 'Coming Soon';
-  images: string[];
-  bedrooms?: {
-    min: number;
-    max: number;
-    label: string;
-  };
-  areaSqft?: {
-    min: number;
-    max: number;
-    label: string;
-  };
-  tags?: string[];
-  publicUrl?: string;
-  unitsStockUpdatedAt?: string;
-  brochureUrl?: string;
-}
-
-
 export interface Block {
   blockId: string;
-  type: 'hero' | 'listing-grid' | 'cta-form' | 'header' | 'footer' | 'chat-agent' | 'sms-lead' | 'chat-widget' | string;
-  data: Record<string, any>;
+  type: string;
   order: number;
+  data: any;
 }
 
 export interface SitePage {
   id: string;
   title: string;
+  slug: string;
   blocks: Block[];
-  canonicalListings: string[];
-  brochureUrl: string;
-  ownerUid?: string;
-  tenantId?: string;
-  refinerStatus?: 'queued' | 'running' | 'review' | 'done' | 'error';
-  lastRefinedAt?: string | Date;
-  lastRefinerJobId?: string;
-  refinerBaseSnapshot?: SitePage;
-  refinerDraftSnapshot?: SitePage;
-  refinerDraftHtml?: string;
-  refinerPreviewUrl?: string;
-  published?: boolean;
-  publishedUrl?: string;
-  subdomain?: string;
-  customDomain?: string;
-  lastPublishedAt?: string | Date;
-  seo: {
-    title: string;
-    description: string;
-    keywords: string[];
+  seo?: {
+    title?: string;
+    description?: string;
+    keywords?: string[];
   };
-  createdAt: string;
-  updatedAt: string;
+  lastRefinedAt?: string;
+  canonicalListings?: any[];
+  brochureUrl?: string;
+  tenantId?: string;
+  refinerStatus?: string;
+  refinerDraftSnapshot?: any;
+  refinerDraftHtml?: string;
+  ownerUid?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-export interface ProjectFilter {
-  city?: string;
-  developer?: string;
-  minPrice?: number;
-  maxPrice?: number;
-  bedrooms?: number;
-  availability?: 'Available' | 'Sold Out' | 'Coming Soon';
-}
-
-export interface SiteTemplate {
+export interface ProjectData {
   id: string;
   name: string;
-  siteType: 'roadshow' | 'developer-focus' | 'partner-launch' | 'full-company' | 'freelancer' | 'map-focused' | 'ads-launch' | 'ready-made' | 'agent-portfolio' | 'custom';
-  pages: SitePage[];
-  thumbnail?: string;
-  description?: string;
+  developer?: string;
+  status?: string;
+  price?: {
+    label: string;
+    value?: number;
+    from?: number;
+    sqftAvg?: number;
+  };
+  location?: {
+    city: string;
+    area: string;
+    mapQuery?: string;
+  };
+  images?: string[];
+  performance?: {
+    roi?: number;
+    capitalAppreciation?: number;
+    rentalYield?: number;
+    marketTrend?: 'up' | 'down' | 'stable';
+    priceHistory?: { year: number, avgPrice: number }[];
+  };
+  handover?: {
+    quarter: number;
+    year: number;
+  };
+  description?: {
+    short: string;
+    full: string;
+  };
+  brochureUrl?: string;
+  publicUrl?: string;
+  features?: string[];
+  tags?: string[];
+  availability?: string;
+  bedrooms?: {
+    label: string;
+    value: number;
+  };
+  areaSqft?: {
+    label: string;
+    value: number;
+  };
+  unitsStockUpdatedAt?: string;
 }
 
 export interface BlockConfig {
   type: string;
   name: string;
   description: string;
-  icon: any;
-  category: 'hero' | 'content' | 'listings' | 'forms' | 'data' | 'social' | 'ai' | 'finance' | 'info' | 'marketing' | 'search';
-  defaultData: Record<string, any>;
+  category: 'hero' | 'content' | 'cta' | 'data' | 'listings' | 'finance' | 'social' | 'info' | 'forms' | 'layout' | 'ai';
+  icon: React.ComponentType<any>;
+  badge?: string;
+  defaultData?: any;
+}
+
+export interface SiteTemplate {
+  id: string;
+  name: string;
+  description: string;
+  siteType: 'developer-landing' | 'project-launch' | 'brokerage-firm' | 'investment-vehicle' | 'private-advisory' | 'roadshow-event' | 'building-landing' | 'custom' | 'roadshow' | 'developer-focus' | 'partner-launch' | 'full-company' | 'freelancer' | 'map-focused' | 'ads-launch' | 'ready-made' | 'agent-portfolio';
+  pages: SitePage[];
+  thumbnail?: string;
 }

@@ -1,4 +1,5 @@
 import React from 'react';
+import './mobile-styles.css';
 
 interface BudgetCalculatorProps {
   value: string | number;

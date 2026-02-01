@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { authorizedFetch } from '@/lib/auth-fetch';
-import { useAuth } from '@/AuthContext';
+import { useAuth } from '@/lib/AuthContext';
 import { FIREBASE_AUTH_DISABLED } from '@/lib/firebase/client';
 
 interface AddLeadDialogProps {

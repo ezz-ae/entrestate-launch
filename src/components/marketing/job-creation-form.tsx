@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useJobPolling } from '@/hooks/use-job-polling';
-import { useAuth } from '@/AuthContext';
+import { useAuth } from '@/lib/AuthContext';
 import { FIREBASE_AUTH_DISABLED } from '@/lib/firebase/client';
 
 type JobType = 'WRITE_COPY' | 'DESIGN_IMAGE' | 'CREATE_CAMPAIGN';

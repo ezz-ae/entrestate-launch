@@ -5,7 +5,7 @@ import { Zap, Mail, MessageSquare, Loader2, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { triggerCampaign } from '@/app/actions/leads';
 
-export function CampaignTriggers() {
+export function CampaignTriggers({ leadIds, text, projectId }: { leadIds: string[], text: string, projectId: string }) {
   const [loading, setLoading] = useState<'email' | 'sms' | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -13,7 +13,7 @@ export function CampaignTriggers() {
     setLoading(type);
     setMessage(null);
     try {
-      const result = await triggerCampaign(type);
+      const result = await triggerCampaign(type, text, leadIds, projectId);
       if (result.success) {
         setMessage(result.message);
         // Clear message after 3 seconds
@@ -49,14 +49,14 @@ export function CampaignTriggers() {
       <div className="grid grid-cols-2 gap-3 mt-auto">
         <Button 
           onClick={() => handleTrigger('email')}
-          disabled={!!loading}
+          disabled={!!loading || !leadIds || leadIds.length === 0}
           className="w-full bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 border border-blue-500/50"
         >
            {loading === 'email' ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Mail className="mr-2 h-4 w-4" /> Email</>}
         </Button>
         <Button 
           onClick={() => handleTrigger('sms')}
-          disabled={!!loading}
+          disabled={!!loading || !leadIds || leadIds.length === 0}
           className="w-full bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 border border-blue-500/50"
         >
            {loading === 'sms' ? <Loader2 className="h-4 w-4 animate-spin" /> : <><MessageSquare className="mr-2 h-4 w-4" /> SMS</>}

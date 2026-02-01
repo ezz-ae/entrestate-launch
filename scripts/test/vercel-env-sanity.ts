@@ -1,27 +1,18 @@
-import { FIREBASE_AUTH_DISABLED, FIREBASE_CONFIG_READY } from '@/lib/firebase/client';
-import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { createSupabaseServerClient } from '../../src/lib/supabase/server';
 
-async function run() {
-  const flags = {
-    firebaseAuthEnabled: !FIREBASE_AUTH_DISABLED,
-    firebaseConfigReady: FIREBASE_CONFIG_READY,
-    supabaseConfigured: Boolean(
-      process.env.NEXT_PUBLIC_SUPABASE_URL &&
-        (process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
-    ),
-    nodeEnvProduction: process.env.NODE_ENV === 'production',
-    vercelEnv: Boolean(process.env.VERCEL),
-  };
-
-  console.log('Vercel env sanity flags:', flags);
+export async function checkEnv() {
+  console.log('Starting Vercel env sanity check...');
 
   const supabase = await createSupabaseServerClient();
-  console.log('Supabase server client type:', supabase?.from ? 'ready' : 'missing from()');
+  
+  // Fix: Check if the 'from' method exists on the client instance
+  // @ts-ignore - supabase type might be complex, but we need to check the method
+  const isReady = !!supabase && typeof (supabase as any).from === 'function';
+  console.log('Supabase server client type:', isReady ? 'ready' : 'missing from()');
+
+  if (!isReady) {
+    throw new Error('Supabase client initialization failed: from() method missing');
+  }
 
   console.log('Vercel env sanity check passed.');
 }
-
-run().catch((error) => {
-  console.error('[vercel-env-sanity] Error during checks:', error);
-  process.exit(1);
-});

@@ -51,7 +51,7 @@ export function ProjectCard({ project, index = 0 }: ProjectCardProps) {
                        project.images.length > 0 && 
                        project.images[0] !== DEFAULT_INGEST_IMAGE;
                        
-  const displayImage = hasRealImage ? project.images[0] : MAP_TEXTURE_IMAGE;
+  const displayImage = hasRealImage ? project.images?.[0] : MAP_TEXTURE_IMAGE;
 
   const capitalGainValue = project.performance?.capitalAppreciation && project.performance.capitalAppreciation > 0
     ? project.performance.capitalAppreciation
@@ -76,7 +76,7 @@ export function ProjectCard({ project, index = 0 }: ProjectCardProps) {
     : "Developer not shared";
 
   const handleCreateLandingPage = () => {
-    router.push(`/builder?prompt=Luxury landing page for ${project.name} by ${developerName} in ${project.location?.area}`);
+    router.push(`/builder?projectId=${project.id}`);
   };
 
   const handleCopyLink = async () => {

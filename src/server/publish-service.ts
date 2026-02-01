@@ -13,6 +13,9 @@ function normalizeSite(doc: DocumentSnapshot) {
   const data = doc.data() || {};
   return {
     id: doc.id,
+    title: data.title,
+    slug: data.slug,
+    blocks: data.blocks,
     ...data,
     createdAt: normalizeTimestamp(data.createdAt),
     updatedAt: normalizeTimestamp(data.updatedAt),

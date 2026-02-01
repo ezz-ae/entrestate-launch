@@ -3,7 +3,7 @@ import EmptyState from './EmptyState';
 import StickyFooter from './StickyFooter';
 import DashboardStats from './DashboardStats';
 import LeadDetailsModal from './LeadDetailsModal';
-import AgentSuccessWidget from './AgentSuccessWidget';
+import AgentSuccessWidget from '@/components/AgentSuccessWidget';
 
 interface Project {
   id: number;

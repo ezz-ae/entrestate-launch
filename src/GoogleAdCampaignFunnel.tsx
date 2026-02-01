@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import StickyFooter from './StickyFooter';
-import ProgressBar from '../ProgressBar';
+import ProgressBar from '@/components/ProgressBar';
 import ForgivingInput from './ForgivingInput';
 import AdCampaignPlanner from './SmartAdPlanner'; // Budget/keyword logic
 import './mobile-styles.css';

@@ -95,10 +95,12 @@ export async function handleOnboarding(data: any, setBrandColor: (color: string)
         const customTemplate: SiteTemplate = {
             id: `ai-gen-\${Date.now()}`,
             name: targetProject ? targetProject.name : 'AI Custom Build',
+            description: 'AI Custom Build',
             siteType: 'custom',
             pages: [{
                 id: 'home',
                 title: 'Home',
+                slug: 'home',
                 blocks: dynamicBlocks.map((b, i) => ({
                     blockId: `ai-block-\${i}`,
                     type: b.type,

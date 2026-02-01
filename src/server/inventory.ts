@@ -189,7 +189,7 @@ export function normalizeProjectData(raw: any, id: string): ProjectData {
       : 'stable';
 
   const handoverRaw = raw.handover || raw.handoverDate || raw.delivery?.handover;
-  let handover: ProjectData['handover'] = null;
+  let handover: ProjectData['handover'] = undefined;
   if (handoverRaw && typeof handoverRaw === 'object') {
     const quarter = normalizeNumber(handoverRaw.quarter || handoverRaw.q);
     const year = normalizeNumber(handoverRaw.year || handoverRaw.y);
@@ -219,8 +219,7 @@ export function normalizeProjectData(raw: any, id: string): ProjectData {
   const bedrooms =
     bedroomMin || bedroomMax
       ? {
-          min: bedroomMin || bedroomMax,
-          max: bedroomMax || bedroomMin,
+          value: bedroomMin || bedroomMax,
           label: normalizeString(
             bedroomsRaw.label,
             bedroomMin && bedroomMax ? `${bedroomMin}-${bedroomMax}` : `${bedroomMin || bedroomMax}`
@@ -234,8 +233,7 @@ export function normalizeProjectData(raw: any, id: string): ProjectData {
   const areaSqft =
     areaMin || areaMax
       ? {
-          min: areaMin || areaMax,
-          max: areaMax || areaMin,
+          value: areaMin || areaMax,
           label: normalizeString(
             areaRaw.label,
             areaMin && areaMax ? `${areaMin}-${areaMax} sqft` : `${areaMin || areaMax} sqft`
@@ -255,7 +253,6 @@ export function normalizeProjectData(raw: any, id: string): ProjectData {
       mapQuery,
     },
     handover,
-    deliveryYear: normalizeNumber(raw.deliveryYear) || undefined,
     status: normalizeString(raw.status || raw.availabilityStatus),
     description: {
       full: descriptionFull || descriptionFallback,

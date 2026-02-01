@@ -19,7 +19,7 @@ const ROLE_RANK = new Map<Role, number>(ROLE_PRIORITY.map((role, index) => [role
 
 const isDevEnvironment = process.env.NODE_ENV !== 'production';
 export const SESSION_COOKIE_NAME = 'entrestate_auth_token';
-const anonymousClaims = {
+export const anonymousClaims = {
   uid: 'anonymous',
   tenantId: 'public',
   roles: ['public'],
@@ -153,7 +153,11 @@ function getSessionToken(req: NextRequest | Request) {
     return headerToken;
   }
   const cookieHeader = req.headers.get('cookie');
-  return parseCookieValue(cookieHeader, SESSION_COOKIE_NAME);
+  return (
+    parseCookieValue(cookieHeader, SESSION_COOKIE_NAME) ||
+    parseCookieValue(cookieHeader, '__session') ||
+    parseCookieValue(cookieHeader, 'session')
+  );
 }
 
 async function loadUserProfile(uid: string) {
@@ -186,6 +190,11 @@ function getClaimsRoles(claims: DecodedIdToken) {
 export async function verifyFirebaseIdToken(req: NextRequest | Request) {
   try {
     const devContext = buildDevContext(req);
+    const tokenString = getSessionToken(req);
+
+    if (process.env.LOG_AUTH_DEBUG === 'true') {
+      console.debug(`[auth] verifyFirebaseIdToken: FIREBASE_AUTH_ENABLED=${FIREBASE_AUTH_ENABLED}, tokenFound=${!!tokenString}`);
+    }
 
     if (!FIREBASE_AUTH_ENABLED) {
       if (devContext) {
@@ -204,7 +213,6 @@ export async function verifyFirebaseIdToken(req: NextRequest | Request) {
       return devContext;
     }
 
-    const tokenString = getSessionToken(req);
     if (!tokenString) {
       throw new UnauthorizedError('Missing Authorization token');
     }
@@ -212,7 +220,13 @@ export async function verifyFirebaseIdToken(req: NextRequest | Request) {
     const claims = await auth.verifyIdToken(tokenString);
     return { uid: claims.uid, email: claims.email ?? null, claims };
   } catch (error) {
-    console.error('[auth] token verification failed', error);
+    if (error instanceof UnauthorizedError) {
+      if (process.env.LOG_AUTH_DEBUG === 'true') {
+        console.debug('[auth] unauthorized:', error.message);
+      }
+    } else {
+      console.error('[auth] token verification failed', error);
+    }
     throw new UnauthorizedError('Invalid token');
   }
 }
@@ -245,10 +259,47 @@ async function resolveTenantAndRoles(claims: DecodedIdToken) {
   }
 
   if (!roles.length) {
-    roles = tenantId === claims.uid ? ['agency_admin'] : ['agent'];
+    // Fallback for super admin via UID or Email
+    const isAdminUid = process.env.ADMIN_UID === claims.uid;
+    const isAdminEmail = claims.email === (process.env.ADMIN_EMAIL || 'm-ezz@outlook.com');
+
+    if (isAdminUid || isAdminEmail) {
+      roles = ['super_admin'];
+    } else {
+      roles = tenantId === claims.uid ? ['agency_admin'] : ['agent'];
+    }
   }
 
   return { tenantId: tenantId || claims.uid, roles };
+}
+
+export async function resolveOptionalAuth(req: NextRequest | Request): Promise<AuthContext> {
+  try {
+    const token = getSessionToken(req);
+    if (!token) {
+      return {
+        uid: 'anonymous',
+        email: null,
+        tenantId: 'public',
+        role: 'public',
+        roles: ['public'],
+        claims: anonymousClaims,
+      };
+    }
+    return await requireAuth(req);
+  } catch (error) {
+    if (process.env.LOG_AUTH_DEBUG === 'true') {
+      console.debug('[auth] optional auth failed, treating as anonymous', error);
+    }
+    return {
+      uid: 'anonymous',
+      email: null,
+      tenantId: 'public',
+      role: 'public',
+      roles: ['public'],
+      claims: anonymousClaims,
+    };
+  }
 }
 
 export async function requireAuth(req: NextRequest | Request): Promise<AuthContext> {
