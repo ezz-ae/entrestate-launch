@@ -20,12 +20,12 @@ const SuccessScreen = ({ publishedUrl, onDashboardClick, onNextStepClick }) => {
       {showShare && <ShareModal url={publishedUrl} onClose={() => setShowShare(false)} />}
       
       {/* Success Icon / Animation Placeholder */}
-      <div style={{ fontSize: '64px', marginBottom: '24px', marginTop: '40px' }}>🎉</div>
+      <div style={{ fontSize: '64px', marginBottom: '24px', marginTop: '40px' }}>🛡️</div>
 
-      <h1 className="screen-title" style={{ color: '#10B981' }}>You're Live!</h1>
+      <h1 className="screen-title" style={{ color: '#111827' }}>Unit Operational</h1>
       
       <p style={{ color: '#6B7280', marginBottom: '32px', fontSize: '16px', lineHeight: '1.5' }}>
-        Your project has been successfully published and is ready for visitors.
+        The execution unit has been successfully deployed to the production environment.
       </p>
 
       {/* Published URL Card - Highlighting the win */}
@@ -38,7 +38,7 @@ const SuccessScreen = ({ publishedUrl, onDashboardClick, onNextStepClick }) => {
           marginBottom: '32px'
         }}>
           <span style={{ display: 'block', fontSize: '12px', color: '#15803D', fontWeight: '700', marginBottom: '4px', textTransform: 'uppercase' }}>
-            Published URL
+            Live Endpoint
           </span>
           <a href={publishedUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: '18px', color: '#15803D', fontWeight: '600', textDecoration: 'underline', wordBreak: 'break-all' }}>
             {publishedUrl}
@@ -64,14 +64,14 @@ const SuccessScreen = ({ publishedUrl, onDashboardClick, onNextStepClick }) => {
               cursor: 'pointer'
             }}
           >
-            <span>📤 Share Project</span>
+            <span>📤 Distribute Endpoint</span>
           </button>
         </div>
       )}
 
       {/* Next Steps Section - Upsell the next feature immediately */}
       <div style={{ textAlign: 'left' }}>
-        <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '16px', color: '#111827' }}>What's Next?</h3>
+        <h3 style={{ fontSize: '14px', fontWeight: '800', marginBottom: '16px', color: '#9CA3AF', textTransform: 'uppercase' }}>Scale Protocol</h3>
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <button 
@@ -91,7 +91,7 @@ const SuccessScreen = ({ publishedUrl, onDashboardClick, onNextStepClick }) => {
                 boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
               }}
             >
-              <span>🚀 Run Facebook Ads</span>
+              <span>🚀 Activate Meta Demand Gen</span>
               <span style={{ color: '#9CA3AF' }}>→</span>
             </button>
             
@@ -112,13 +112,13 @@ const SuccessScreen = ({ publishedUrl, onDashboardClick, onNextStepClick }) => {
                 boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
               }}
             >
-              <span>🔍 Run Google Ads</span>
+              <span>🔍 Activate Google Intent Capture</span>
               <span style={{ color: '#9CA3AF' }}>→</span>
             </button>
         </div>
       </div>
 
-      <StickyFooter label="Go to Dashboard" onClick={onDashboardClick} />
+      <StickyFooter label="Return to Command Center" onClick={onDashboardClick} />
     </div>
   );
 };

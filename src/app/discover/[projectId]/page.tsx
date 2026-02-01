@@ -172,7 +172,9 @@ const ProjectDetailPage: NextPage = () => {
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-black italic uppercase tracking-tighter">{project.name}</h1>
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-3 sm:mt-2 text-zinc-300 text-sm sm:text-base">
                 <div className="flex items-center gap-2"><Building className="h-4 w-4 sm:h-5 sm:w-5"/><span>{project.developer}</span></div>
-                <div className="flex items-center gap-2"><MapPin className="h-4 w-4 sm:h-5 sm:w-5"/><span>{project.location.area}, {project.location.city}</span></div>
+                {project.location && (
+                  <div className="flex items-center gap-2"><MapPin className="h-4 w-4 sm:h-5 sm:w-5"/><span>{project.location.area}, {project.location.city}</span></div>
+                )}
             </div>
         </div>
       </div>
@@ -209,7 +211,7 @@ const ProjectDetailPage: NextPage = () => {
                     </CardHeader>
                     <CardContent>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-zinc-300">
-                        {project.features.map((feature) => (
+                        {project.features && project.features.map((feature) => (
                           <div key={feature} className="flex items-center gap-2">
                             <CheckCircle2 className="h-4 w-4 text-blue-500" />
                             <span>{feature}</span>
@@ -242,7 +244,7 @@ const ProjectDetailPage: NextPage = () => {
                     </CardHeader>
                     <CardContent>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-zinc-300">
-                        {project.performance.priceHistory.map((entry) => (
+                        {project.performance && project.performance.priceHistory && project.performance.priceHistory.map((entry) => (
                           <InfoRow
                             key={entry.year}
                             label={String(entry.year)}

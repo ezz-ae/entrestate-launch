@@ -143,7 +143,11 @@ export default function LeadsClient() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <AudienceGenerator />
-          <CampaignTriggers />
+          <CampaignTriggers
+            leadIds={sortedLeads.map(lead => lead.id)}
+            text="Hello, this is a test campaign."
+            projectId="default-project"
+          />
           <SyncCrmButton />
         </div>
 

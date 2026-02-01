@@ -4,7 +4,7 @@ import { runRefiner } from '@/modules/googleAds/refiner';
 import { guardGoogleAdsEnabled, handleGoogleAdsError, requireGoogleAdsAccess } from '@/modules/googleAds/api';
 import { saveRefinerResult, FirestoreUnavailableError } from '@/server/googleAds/repo';
 import { tryGetAdminDb } from '@/server/firebase-admin';
-import type { SitePage } from '@/lib/types';
+import type { SitePage } from '@/lib/page-types';
 
 const requestSchema = z.object({
   siteId: z.string().min(1),

@@ -42,7 +42,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from '@/lib/utils';
 import { getUserSites } from '@/lib/firestore-service';
-import type { SitePage } from '@/lib/types';
+import type { SitePage } from '@/lib/page-types';
 import { useRouter } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
 import { fetchSiteStats, type SiteStatsMap } from '@/lib/sites';

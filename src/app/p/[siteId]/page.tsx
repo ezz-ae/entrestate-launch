@@ -39,7 +39,7 @@ export default async function PublishedPage({ params, searchParams }: Props) {
   }
 
   const shouldUseRefined = variant === 'refined';
-  const refinedSnapshot = shouldUseRefined ? page.refinerDraftSnapshot : undefined;
+  const refinedSnapshot = shouldUseRefined ? undefined : undefined;
   const refinedHtml = shouldUseRefined && !refinedSnapshot ? page.refinerDraftHtml : undefined;
   const pageToRender = refinedSnapshot ? { ...refinedSnapshot, id: refinedSnapshot.id || page.id } : page;
 

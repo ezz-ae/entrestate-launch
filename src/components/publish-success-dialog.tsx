@@ -163,7 +163,7 @@ export function PublishSuccessDialog({
                                     This project is ready for traffic. Start a launch campaign with a small daily budget to get more views.
                                 </p>
                                 <Button size="sm" className="mt-4 h-9 rounded-lg bg-white text-black font-bold text-xs px-6" asChild>
-                                    <Link href="/dashboard/google-ads">Start Ad Plan</Link>
+                                    <Link href="/dashboard/google-ads">Launch Campaign</Link>
                                 </Button>
                             </div>
                         </div>

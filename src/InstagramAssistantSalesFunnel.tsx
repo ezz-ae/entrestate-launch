@@ -17,13 +17,22 @@ const InstagramAssistantSalesFunnel: React.FC<InstagramAssistantSalesFunnelProps
   return (
     <div className="screen-container" style={{ padding: '24px', paddingBottom: '100px' }}>
       {/* 1) Hero Section */}
-      <div className="hero-section" style={{ textAlign: 'center', marginBottom: '48px', paddingTop: '24px' }}>
-        <h1 className="screen-title" style={{ fontSize: '36px', marginBottom: '16px', fontWeight: '800' }}>Unlock Your Digital Consultant: Instant Buyer Engagement, Constant Lead Flow.</h1>
-        <p style={{ fontSize: '18px', color: 'var(--text-secondary)', marginBottom: '32px', lineHeight: '1.5' }}>
-          Your dedicated Digital Consultant for Instagram handles inquiries, qualifies leads, and books meetings—seamlessly, 24/7.
+      <div className="hero-section" style={{ textAlign: 'center', marginBottom: '64px', paddingTop: '24px' }}>
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-pink-500/10 border border-pink-500/20 text-pink-500 text-[10px] font-bold uppercase tracking-widest mb-6">
+          <Instagram size={12} /> Instagram DM Assistant
+        </div>
+        <h1 className="screen-title" style={{ fontSize: '32px', marginBottom: '16px', fontWeight: '800', color: 'white' }}>Turn DMs into Deals.</h1>
+        <p style={{ fontSize: '16px', color: 'var(--text-secondary)', marginBottom: '40px', lineHeight: '1.5', maxWidth: '320px', margin: '0 auto 40px' }}>
+          Your AI assistant replies to inquiries, qualifies buyers, and books viewings 24/7.
         </p>
-        <button className="primary-button" onClick={onActivateConsultant}>Activate Your Consultant Today</button>
-        <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '12px' }}>No long-term contracts. Cancel anytime.</p>
+        
+        {/* Interactive Demo Placeholder - Visual First */}
+        <div style={{ backgroundColor: 'var(--bg-secondary)', borderRadius: '24px', padding: '24px', border: '1px solid var(--border-color)', marginBottom: '32px', textAlign: 'left', boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
+           <ChatMessage sender="Buyer" message="Is the 2BR in Creek Harbour still available?" type="incoming" />
+           <ChatMessage sender="Assistant" message="Yes! We have 3 units left. Starting from AED 2.1M. Would you like the floor plans?" type="outgoing" />
+        </div>
+
+        <button className="primary-button" onClick={onActivateConsultant}>Connect Instagram</button>
       </div>
 
       {/* 2) 3-step “How it works” */}

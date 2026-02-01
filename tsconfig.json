@@ -25,9 +25,15 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"],
-      "@mobile/*": ["./src/mobile/*"],
-      "@shared/*": ["./src/shared/*"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@mobile/*": [
+        "./src/mobile/*"
+      ],
+      "@shared/*": [
+        "./src/shared/*"
+      ]
     },
     "typeRoots": [
       "./types",
@@ -42,6 +48,7 @@
     ".next/dev/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "supabase"
   ]
 }

@@ -3,18 +3,18 @@ import EmptyState from '@/components/EmptyState';
 import StickyFooter from './StickyFooter';
 import DashboardStats from '@/components/DashboardStats';
 import LeadDetailsModal from '@/components/LeadDetailsModal';
-import AgentSuccessWidget from '@/components/AgentSuccessWidget';
-
 
 const MyProjectsScreen = ({ onCreateNew, onSettings, onLeadSelect, onNotifications, onOpenMarketing, onVoiceAssistant, onScanDocument }) => {
-  // 1. This would normally come from your database or API
-  // We initialize it with data so you can see the stats and swipe action
-  const [projects, setProjects] = useState([
-    { id: 1, name: "Downtown Luxury Loft", type: "website", status: "Live", views: 1240, leads: 45 },
-    { id: 2, name: "October Newsletter", type: "email", status: "Sent", views: 560, leads: 12 },
-    { id: 3, name: "Marina 2-Bed", type: "website", status: "Live", views: 850, leads: 12 },
-    { id: 4, name: "SMS Blast - Leads", type: "sms", status: "Completed", views: 980, leads: 5 }
-  ]); 
+  // Refactored to "Execution Units" with Operational Metadata
+  const [executionUnits, setExecutionUnits] = useState([
+    { id: 1, name: "Downtown Luxury Loft", type: "inventory", subType: "website", status: "Active", intensity: 0.85, throughput: 45, health: 'optimal' },
+    { id: 2, name: "October Intent Capture", type: "acquisition", subType: "googleAds", status: "Scaling", intensity: 0.62, throughput: 12, health: 'warning' },
+    { id: 3, name: "Marina 2-Bed Operator", type: "operator", subType: "chat", status: "Monitoring", intensity: 0.94, throughput: 12, health: 'optimal' },
+    { id: 4, name: "SMS Retention Protocol", type: "acquisition", subType: "sms", status: "Completed", intensity: 0.40, throughput: 5, health: 'idle' }
+  ]);
+
+  const inventoryUnits = executionUnits.filter(u => u.type === 'inventory');
+  const acquisitionUnits = executionUnits.filter(u => u.type === 'acquisition' || u.type === 'operator');
 
   const [selectedProject, setSelectedProject] = useState(null);
 
@@ -45,7 +45,7 @@ const MyProjectsScreen = ({ onCreateNew, onSettings, onLeadSelect, onNotificatio
       setPullHeight(60); // Snap to loading height
       // Simulate Refresh API Call
       setTimeout(() => {
-        setProjects(prev => prev.map(p => ({
+        setExecutionUnits(prev => prev.map(p => ({
           ...p,
           views: p.views + Math.floor(Math.random() * 50),
           leads: p.leads + (Math.random() > 0.8 ? 1 : 0)
@@ -60,11 +60,11 @@ const MyProjectsScreen = ({ onCreateNew, onSettings, onLeadSelect, onNotificatio
   };
 
   // Calculate total stats
-  const totalViews = projects.reduce((acc, p) => acc + (p.views || 0), 0);
-  const totalLeads = projects.reduce((acc, p) => acc + (p.leads || 0), 0);
+  const totalThroughput = executionUnits.reduce((acc, p) => acc + (p.throughput || 0), 0);
+  const avgIntensity = (executionUnits.reduce((acc, p) => acc + (p.intensity || 0), 0) / executionUnits.length).toFixed(2);
 
   const handleDelete = (id) => {
-    setProjects(projects.filter(p => p.id !== id));
+    setExecutionUnits(executionUnits.filter(p => p.id !== id));
   };
 
   const handleProjectClick = (project) => {
@@ -77,12 +77,12 @@ const MyProjectsScreen = ({ onCreateNew, onSettings, onLeadSelect, onNotificatio
 
   // 2. The "Empty State" Logic
   // If the agent has no work saved, we guide them immediately to the action.
-  if (projects.length === 0) {
+  if (executionUnits.length === 0) {
     return (
       <EmptyState 
-        title="No Projects Yet"
-        message="You haven't started any campaigns. Tap the button below to create your first website or ad."
-        actionLabel="Start New Project"
+        title="System Idle"
+        message="No active execution units detected. Deploy a new operational unit to begin intent capture."
+        actionLabel="Deploy Execution Unit"
         onAction={onCreateNew}
       />
     );
@@ -114,7 +114,7 @@ const MyProjectsScreen = ({ onCreateNew, onSettings, onLeadSelect, onNotificatio
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <h1 className="screen-title" style={{ marginBottom: 0 }}>My Projects</h1>
+        <h1 className="screen-title" style={{ marginBottom: 0 }}>Command Center</h1>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button 
             onClick={onScanDocument}
@@ -189,19 +189,37 @@ const MyProjectsScreen = ({ onCreateNew, onSettings, onLeadSelect, onNotificatio
         </div>
       </div>
       
-      <AgentSuccessWidget onAction={() => alert('Navigating to Sarah Miller...')} />
-
-      <DashboardStats views={totalViews} leads={totalLeads} />
+      {/* Situational Awareness Layer */}
+      <DashboardStats views={avgIntensity} leads={totalThroughput} label1="Avg Intensity" label2="Total Throughput" />
       
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        {projects.map((project) => (
-          <SwipeableProjectItem 
-            key={project.id} 
-            project={project} 
-            onDelete={handleDelete} 
-            onSelect={() => handleProjectClick(project)}
-          />
-        ))}
+      <div style={{ marginTop: '32px' }}>
+        <h2 style={{ fontSize: '12px', fontWeight: '800', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '16px' }}>
+          Inventory Command
+        </h2>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+          {inventoryUnits.map((unit) => (
+            <SwipeableProjectItem 
+              key={unit.id} 
+              project={unit} 
+              onDelete={handleDelete} 
+              onSelect={() => handleProjectClick(unit)}
+            />
+          ))}
+        </div>
+
+        <h2 style={{ fontSize: '12px', fontWeight: '800', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '16px' }}>
+          Demand & Operator Governance
+        </h2>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {acquisitionUnits.map((unit) => (
+            <SwipeableProjectItem 
+              key={unit.id} 
+              project={unit} 
+              onDelete={handleDelete} 
+              onSelect={() => handleProjectClick(unit)}
+            />
+          ))}
+        </div>
       </div>
 
       {selectedProject && (
@@ -211,7 +229,7 @@ const MyProjectsScreen = ({ onCreateNew, onSettings, onLeadSelect, onNotificatio
           onLeadSelect={onLeadSelect}
         />
       )}
-      <StickyFooter label="Start New Project" onClick={onCreateNew} />
+      <StickyFooter label="Deploy New Operational Unit" onClick={onCreateNew} />
     </div>
   );
 };
@@ -263,13 +281,23 @@ const SwipeableProjectItem = ({ project, onDelete, onSelect }) => {
          onTouchEnd={handleTouchEnd}
          onClick={handleClick}
        >
-          <h3 style={{ fontSize: '18px', fontWeight: '700', margin: '0 0 8px 0' }}>{project.name}</h3>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '14px', color: '#6B7280' }}>{project.status}</span>
-            {project.views > 0 && (
-              <span style={{ fontSize: '12px', fontWeight: '600', color: '#007AFF' }}>
-                {project.views} views
-              </span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <h3 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 4px 0', color: '#111827' }}>{project.name}</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '11px', fontWeight: '700', padding: '2px 6px', borderRadius: '4px', backgroundColor: '#F3F4F6', color: '#4B5563', textTransform: 'uppercase' }}>
+                  {project.subType}
+                </span>
+                <span style={{ fontSize: '12px', color: project.health === 'optimal' ? '#10B981' : '#F59E0B' }}>
+                  ● {project.status}
+                </span>
+              </div>
+            </div>
+            {project.intensity && (
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '18px', fontWeight: '800', color: '#111827' }}>{(project.intensity * 100).toFixed(0)}%</div>
+                <div style={{ fontSize: '10px', color: '#9CA3AF', fontWeight: '600', textTransform: 'uppercase' }}>Intensity</div>
+              </div>
             )}
           </div>
        </div>

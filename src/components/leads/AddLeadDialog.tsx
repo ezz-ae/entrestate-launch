@@ -107,7 +107,7 @@ export function AddLeadDialog({ open, onOpenChange, onLeadAdded }: AddLeadDialog
             {error && <p className="text-red-500 text-sm" role="alert">{error}</p>}
           </div>
           <DialogFooter className="mt-6">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button type="button" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button type="submit" disabled={submitting} className="w-full h-12 font-bold text-lg">

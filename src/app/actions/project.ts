@@ -4,6 +4,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { sendLeadNotification } from '@/lib/notifications';
+import { screenLeadData, enrichLeadWithApollo } from './leads';
 
 export async function deleteProject(id: string) {
   const supabase = await createSupabaseServerClient();
@@ -63,13 +64,18 @@ export async function submitLead(projectId: string, formData: FormData) {
   const email = formData.get('email') as string;
   const phone = formData.get('phone') as string;
 
+  // Trigger Smart Screening
+  const screeningResults = await screenLeadData(email, phone);
+  const enrichment = await enrichLeadWithApollo(email);
+
   const { error } = await supabase.from('leads').insert({
     project_id: projectId,
     name,
     email,
     phone,
     status: 'new',
-    source: 'landing_page'
+    source: 'landing_page',
+    screening_data: { ...screeningResults, enrichment }
   });
 
   if (error) throw new Error('Failed to capture lead');

@@ -20,37 +20,38 @@ export interface User {
 export interface ProjectData {
   id: string;
   name: string;
-  developer: string;
-  location: {
-    city: string;
-    area: string;
-    mapQuery: string;
-  };
-  handover: {
-      quarter: number;
-      year: number;
-  } | null;
-  deliveryYear?: number;
+  developer?: string;
   status?: string;
-  description: {
-    full: string;
-    short: string;
-  };
-  features: string[];
-  price: {
+  price?: {
     from: number;
     label: string;
     sqftAvg?: number;
   };
-  performance: {
-    roi: number;             // Expected annual yield %
-    capitalAppreciation: number; // Expected value growth %
-    rentalYield: number;     // Annual rent %
-    marketTrend: 'up' | 'stable' | 'down';
-    priceHistory: { year: number, avgPrice: number }[];
+  location?: {
+    city: string;
+    area: string;
+    mapQuery?: string;
   };
-  availability: 'Available' | 'Sold Out' | 'Coming Soon';
-  images: string[];
+  images?: string[];
+  performance?: {
+    roi?: number;
+    capitalAppreciation?: number;
+    rentalYield?: number;
+    marketTrend?: 'up' | 'stable' | 'down';
+    priceHistory?: { year: number; avgPrice: number }[];
+  };
+  handover?: {
+    quarter: number;
+    year: number;
+  };
+  description?: {
+    short?: string;
+    full?: string;
+  };
+  brochureUrl?: string;
+  publicUrl?: string;
+  features?: string[];
+  tags?: string[];
   bedrooms?: {
     min: number;
     max: number;
@@ -61,47 +62,34 @@ export interface ProjectData {
     max: number;
     label: string;
   };
-  tags?: string[];
-  publicUrl?: string;
+  availability?: 'Available' | 'Sold Out' | 'Coming Soon';
   unitsStockUpdatedAt?: string;
-  brochureUrl?: string;
 }
-
 
 export interface Block {
   blockId: string;
-  type: 'hero' | 'listing-grid' | 'cta-form' | 'header' | 'footer' | 'chat-agent' | 'sms-lead' | 'chat-widget' | string;
-  data: Record<string, any>;
+  type: string;
   order: number;
+  data: any;
 }
 
 export interface SitePage {
   id: string;
   title: string;
+  brochureUrl: string;
   blocks: Block[];
   canonicalListings: string[];
-  brochureUrl: string;
-  ownerUid?: string;
-  tenantId?: string;
-  refinerStatus?: 'queued' | 'running' | 'review' | 'done' | 'error';
-  lastRefinedAt?: string | Date;
-  lastRefinerJobId?: string;
-  refinerBaseSnapshot?: SitePage;
-  refinerDraftSnapshot?: SitePage;
-  refinerDraftHtml?: string;
-  refinerPreviewUrl?: string;
-  published?: boolean;
-  publishedUrl?: string;
-  subdomain?: string;
-  customDomain?: string;
-  lastPublishedAt?: string | Date;
+  createdAt: string;
+  updatedAt: string;
   seo: {
     title: string;
     description: string;
     keywords: string[];
   };
-  createdAt: string;
-  updatedAt: string;
+  language?: string;
+  published?: boolean;
+  tenantId?: string;
+  ownerUid?: string;
 }
 
 export interface ProjectFilter {

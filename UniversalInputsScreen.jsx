@@ -62,11 +62,11 @@ const UniversalInputsScreen = ({ onNext, onBack, serviceType }) => {
   // Dynamic Title based on Service
   const getTitle = () => {
     switch(serviceType) {
-      case 'website': return 'Website Details';
-      case 'googleAds': return 'Google Ads Setup';
-      case 'metaLeadGen': return 'Meta Campaign';
-      case 'smsCampaign': return 'SMS Blast Config';
-      default: return 'Quick Details';
+      case 'website': return 'Asset Deployment: Web';
+      case 'googleAds': return 'Intent Capture: Google';
+      case 'metaLeadGen': return 'Demand Gen: Meta';
+      case 'smsCampaign': return 'Retention: SMS Operator';
+      default: return 'Operational Parameters';
     }
   };
 
@@ -89,13 +89,27 @@ const UniversalInputsScreen = ({ onNext, onBack, serviceType }) => {
         </button>
         <h1 className="screen-title" style={{ marginBottom: 0 }}>{getTitle()}</h1>
       </div>
-      <p style={{ color: 'var(--text-secondary)', marginBottom: '32px', fontSize: '16px', lineHeight: '1.5' }}>
-        Help us write your content.
-      </p>
 
-      {/* 1. Market Input (Text) */}
+      {/* Problem/Logic Block */}
+      <div style={{ backgroundColor: '#F9FAFB', padding: '16px', borderRadius: '12px', marginBottom: '32px', borderLeft: '4px solid #111827' }}>
+        <h4 style={{ margin: '0 0 4px 0', fontSize: '14px', fontWeight: '700' }}>Revenue Bottleneck: Lead Decay</h4>
+        <p style={{ margin: 0, fontSize: '13px', color: '#4B5563', lineHeight: '1.4' }}>
+          90% of real estate leads die in the first 5 minutes. This unit automates the "Context Anchoring" phase to ensure zero-latency response.
+        </p>
+      </div>
+
+      {/* Logic Flow Visualization */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '32px', padding: '0 8px' }}>
+        <div style={{ flex: 1, height: '4px', backgroundColor: '#111827', borderRadius: '2px' }}></div>
+        <span style={{ fontSize: '10px', fontWeight: '800', color: '#111827' }}>INPUT</span>
+        <div style={{ flex: 2, height: '4px', backgroundColor: '#E5E7EB', borderRadius: '2px' }}></div>
+        <span style={{ fontSize: '10px', fontWeight: '800', color: '#9CA3AF' }}>LOGIC</span>
+        <div style={{ flex: 1, height: '4px', backgroundColor: '#E5E7EB', borderRadius: '2px' }}></div>
+        <span style={{ fontSize: '10px', fontWeight: '800', color: '#9CA3AF' }}>RESULT</span>
+      </div>
+
       <ForgivingInput 
-        label="Target City/Area"
+        label="Operational Territory"
         placeholder="e.g. Downtown Dubai"
         helperText="Where is the property located?"
         value={formData.market}
@@ -106,7 +120,7 @@ const UniversalInputsScreen = ({ onNext, onBack, serviceType }) => {
       {serviceType === 'website' && (
         <>
           <ForgivingInput 
-            label="Website Name"
+            label="Unit Identifier (Site Name)"
             placeholder="e.g. Luxury Living Dubai"
             value={formData.siteName}
             onChange={(e) => handleChange('siteName', e.target.value)}
@@ -142,20 +156,20 @@ const UniversalInputsScreen = ({ onNext, onBack, serviceType }) => {
       {renderSelect("Who are you targeting?", "audience", ["Home Buyers", "Investors/B2B"])}
 
       {/* 3. Goal (Select) */}
-      {renderSelect("Main Goal", "goal", ["Get Leads", "Get Calls", "WhatsApp Chats", "Bookings", "File Downloads"])}
+      {renderSelect("Primary Conversion Event", "goal", ["Lead Capture", "Direct Call", "WhatsApp Protocol", "Booking", "Asset Download"])}
 
       {/* 4. Language (Select) */}
       {renderSelect("Language", "language", ["English", "Arabic", "Both"])}
 
       {/* 5. Persona Selector */}
-      <PersonaSelector 
+      <PersonaSelector
         selectedPersona={formData.persona} 
         onSelect={(p) => handleChange('persona', p)} 
       />
 
       {/* Sticky Footer - Only enabled if they typed a market */}
       <StickyFooter 
-        label="Generate Blueprint" 
+        label="Assemble Execution Unit" 
         onClick={() => onNext(formData)}
         disabled={!formData.market || formData.market.length < 2}
       />
