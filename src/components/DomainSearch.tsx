@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import './mobile-styles.css';
 
 interface DomainSearchProps {
   onSelect: (domain: string) => void;

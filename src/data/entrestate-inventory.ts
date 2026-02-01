@@ -11,7 +11,7 @@ export const ENTRESTATE_INVENTORY: ProjectData[] = [
     images: ['https://images.unsplash.com/photo-1613490493576-7fde63acd811?q=80&w=1600&auto=format&fit=crop'],
     performance: { roi: 6.5, capitalAppreciation: 12 },
     handover: { quarter: 4, year: 2025 },
-    description: 'Luxury villas surrounding an 18-hole championship golf course.'
+    description: { short: 'Luxury villas surrounding an 18-hole championship golf course.', full: 'Luxury villas surrounding an 18-hole championship golf course.' }
   },
   {
     id: 'p2',
@@ -23,7 +23,7 @@ export const ENTRESTATE_INVENTORY: ProjectData[] = [
     images: ['https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=1600&auto=format&fit=crop'],
     performance: { roi: 5.2, capitalAppreciation: 8 },
     handover: { quarter: 2, year: 2024 },
-    description: 'Exclusive beachfront living on the world-famous archipelago.'
+    description: { short: 'Exclusive beachfront living on the world-famous archipelago.', full: 'Exclusive beachfront living on the world-famous archipelago.' }
   },
   {
     id: 'p3',
@@ -35,6 +35,6 @@ export const ENTRESTATE_INVENTORY: ProjectData[] = [
     images: ['https://images.unsplash.com/photo-1582407947304-fd86f028f716?q=80&w=1600&auto=format&fit=crop'],
     performance: { roi: 7.1, capitalAppreciation: 5 },
     handover: { quarter: 1, year: 2026 },
-    description: 'High-rise apartments with direct access to Dubai Mall.'
+    description: { short: 'High-rise apartments with direct access to Dubai Mall.', full: 'High-rise apartments with direct access to Dubai Mall.' }
   }
 ];

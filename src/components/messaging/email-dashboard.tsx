@@ -8,9 +8,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Mail, Upload, Loader2, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { ImportContactsDialog } from './import-contacts-dialog';
+import { ImportContactsDialog } from '@/components/messaging/import-contacts-dialog';
 import { authorizedFetch } from '@/lib/auth-fetch';
-import { useAuth } from '@/AuthContext';
+import { useAuth } from '@/lib/AuthContext';
 import { FIREBASE_AUTH_DISABLED } from '@/lib/firebase/client';
 
 const DEFAULT_SUBJECT = 'New project update from Entrestate';

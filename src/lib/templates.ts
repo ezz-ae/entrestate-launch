@@ -1,24 +1,5 @@
-
-import type { SitePage, Block } from './types';
-
-export interface SiteTemplate {
-  id: string;
-  name: string;
-  siteType:
-    | 'roadshow'
-    | 'developer-focus'
-    | 'partner-launch'
-    | 'full-company'
-    | 'freelancer'
-    | 'map-focused'
-    | 'ads-launch'
-    | 'ready-made'
-    | 'agent-portfolio'
-    | 'custom';
-  pages: SitePage[];
-  thumbnail?: string;
-  description?: string;
-}
+import type { SitePage, Block, SiteTemplate } from './types';
+export type { SiteTemplate };
 
 const defaultBlocks: Record<string, Omit<Block, 'blockId' | 'order'>> = {
   hero: {
@@ -295,6 +276,7 @@ const createPage = (
     return {
         id: `page-${id}`,
         title: title,
+        slug: title.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, ''),
         blocks: blocks.map((blockDef, index) => {
             const type = typeof blockDef === 'string' ? blockDef : blockDef.type;
             const overrides = typeof blockDef === 'string' ? {} : blockDef.overrides;
@@ -319,6 +301,7 @@ const createPage = (
 export const roadshowTemplate: SiteTemplate = {
   id: 'template-roadshow',
   name: 'Dubai Roadshow Page',
+  description: 'A template for roadshow events.',
   siteType: 'roadshow',
   pages: [
     createPage('home', 'Event Details', [
@@ -337,6 +320,7 @@ export const roadshowTemplate: SiteTemplate = {
 export const developerFocusTemplate: SiteTemplate = {
     id: 'template-dev-focus',
     name: 'Abu Dhabi Developer',
+    description: 'A template for developer focus.',
     siteType: 'developer-focus',
     pages: [
       createPage('home', 'Home', [
@@ -358,6 +342,7 @@ export const developerFocusTemplate: SiteTemplate = {
 export const partnerLaunchTemplate: SiteTemplate = {
     id: 'template-partner-launch',
     name: 'RAK Partner Launch',
+    description: 'A template for partner launch.',
     siteType: 'partner-launch',
     pages: [
         createPage('home', 'Launch Home', [
@@ -372,6 +357,7 @@ export const partnerLaunchTemplate: SiteTemplate = {
 export const fullCompanyTemplate: SiteTemplate = {
     id: 'full-company',
     name: 'Full Real Estate Company',
+    description: 'A template for a full real estate company.',
     siteType: 'full-company',
     pages: [
         createPage('home', 'Home', [
@@ -389,6 +375,7 @@ export const fullCompanyTemplate: SiteTemplate = {
 export const freelancerTemplate: SiteTemplate = {
     id: 'template-freelancer',
     name: 'Freelancer Agent',
+    description: 'A template for a freelancer agent.',
     siteType: 'freelancer',
     pages: [
         createPage('home', 'Home', [
@@ -402,6 +389,7 @@ export const freelancerTemplate: SiteTemplate = {
 export const mapFocusedTemplate: SiteTemplate = {
     id: 'template-map-focused',
     name: 'Map-First Search',
+    description: 'A template for a map-first search.',
     siteType: 'map-focused',
     pages: [
         createPage('home', 'Map Search', [
@@ -416,6 +404,7 @@ export const mapFocusedTemplate: SiteTemplate = {
 export const adsQuickLaunchTemplate: SiteTemplate = {
     id: 'template-ads-launch',
     name: 'Landing Page + Ads',
+    description: 'A template for a landing page with ads.',
     siteType: 'ads-launch',
     pages: [
         createPage('home', 'Landing Page', [

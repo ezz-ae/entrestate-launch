@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import StickyFooter from './StickyFooter';
-import ProgressBar from '../ProgressBar';
+import ProgressBar from '@/components/ProgressBar';
 import './mobile-styles.css';
 import { Database, FileText, LayoutTemplate, Square } from 'lucide-react';
 import ForgivingInput from './ForgivingInput';

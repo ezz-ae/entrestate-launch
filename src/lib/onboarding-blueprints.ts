@@ -22,6 +22,7 @@ export const BLUEPRINT_TEMPLATES: Record<string, SitePage> = {
   portfolio: {
     id: '',
     title: 'Agent Portfolio',
+    slug: 'agent-portfolio',
     blocks: [
       HERO_BLOCK('Your Dubai Real Estate Partner', 'Showcase experience, listings, and proof'),
       {
@@ -51,6 +52,7 @@ export const BLUEPRINT_TEMPLATES: Record<string, SitePage> = {
   launch: {
     id: '',
     title: 'Launch Blueprint',
+    slug: 'launch-blueprint',
     blocks: [
       HERO_BLOCK('Project Launch', 'Countdown + offer summary'),
       {
@@ -86,6 +88,7 @@ export const BLUEPRINT_TEMPLATES: Record<string, SitePage> = {
   advisory: {
     id: '',
     title: 'Advisory Blueprint',
+    slug: 'advisory-blueprint',
     blocks: [
       HERO_BLOCK('Private Advisory', 'Services, proof, booking CTA'),
       {

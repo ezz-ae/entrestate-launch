@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import BudgetCalculator from './BudgetCalculator';
+import './mobile-styles.css';
 
 interface SmartAdPlannerProps {
   market: string;

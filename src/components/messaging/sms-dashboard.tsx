@@ -10,7 +10,7 @@ import { Loader2, MessageSquare, Send, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ImportSmsContactsDialog } from './sms-import-contacts-dialog';
 import { authorizedFetch } from '@/lib/auth-fetch';
-import { useAuth } from '@/AuthContext';
+import { useAuth } from '@/lib/AuthContext';
 import { FIREBASE_AUTH_DISABLED } from '@/lib/firebase/client';
 
 export function SmsCampaignDashboard() {

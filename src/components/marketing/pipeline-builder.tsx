@@ -3,9 +3,9 @@
 import React, { useState } from 'react';
 import { DndContext, DragOverlay, defaultDropAnimationSideEffects, DragStartEvent, DragEndEvent } from '@dnd-kit/core';
 import { Building, Bot, Play, RotateCcw, GripVertical, X } from 'lucide-react';
-import { DraggableItem } from '@/components/builder/draggable-item';
-import { DropZone } from '@/components/builder/drop-zone';
-import { SimulationPanel } from '@/components/builder/simulation-panel';
+import { DraggableItem } from './draggable-item';
+import { DropZone } from './drop-zone';
+import { SimulationPanel } from './simulation-panel';
 import { cn } from '@/lib/utils';
 
 const RESOURCES = {

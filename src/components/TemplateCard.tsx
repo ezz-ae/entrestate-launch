@@ -1,4 +1,5 @@
 import React, { useRef } from 'react';
+import Image from 'next/image';
 
 interface TemplateCardProps {
   title: string;
@@ -51,6 +52,7 @@ const TemplateCard: React.FC<TemplateCardProps> = ({ title, category, image, onS
     >
       {/* Image Placeholder Area */}
       <div style={{ 
+        position: 'relative',
         height: '200px', 
         backgroundColor: '#F3F4F6', 
         display: 'flex', 
@@ -59,7 +61,7 @@ const TemplateCard: React.FC<TemplateCardProps> = ({ title, category, image, onS
         color: '#9CA3AF',
         fontSize: '14px'
       }}>
-        {image ? <img src={image} alt={title} style={{width:'100%', height:'100%', objectFit:'cover'}} /> : '📷 Template Preview'}
+        {image ? <Image src={image} alt={title} layout="fill" objectFit="cover" /> : '📷 Template Preview'}
       </div>
 
       <div style={{ padding: '16px' }}>

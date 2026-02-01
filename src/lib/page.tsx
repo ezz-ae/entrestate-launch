@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { SiteHeader } from '@/components/layout/site-header';
+import { SiteHeader } from '@/components/site-header';
 import { ARTICLES } from '@/lib/articles-content';
 import { ArrowRight, BookOpen, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';

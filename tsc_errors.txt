@@ -1,0 +1,535 @@
+[96mapp/api/generate/landing/route.ts[0m:[93m36[0m:[93m13[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'canonicalListings' does not exist in type 'SitePage'.
+
+[7m36[0m             canonicalListings: [],
+[7m  [0m [91m            ~~~~~~~~~~~~~~~~~[0m
+
+[96mapp/builder/builder-client.tsx[0m:[93m76[0m:[93m5[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'brochureUrl' does not exist in type 'SitePage'.
+
+[7m76[0m     brochureUrl: project.brochureUrl || '',
+[7m  [0m [91m    ~~~~~~~~~~~[0m
+
+[96mapp/builder/builder-client.tsx[0m:[93m187[0m:[93m55[0m - [91merror[0m[90m TS2339: [0mProperty 'builderPublish' does not exist on type '{ inventoryAccess: { allowed: boolean; reason: string; }; }'.
+
+[7m187[0m   const builderPublishLocked = entitlements?.features.builderPublish.allowed === false;
+[7m   [0m [91m                                                      ~~~~~~~~~~~~~~[0m
+
+[96mapp/builder/builder-client.tsx[0m:[93m189[0m:[93m28[0m - [91merror[0m[90m TS2339: [0mProperty 'builderPublish' does not exist on type '{ inventoryAccess: { allowed: boolean; reason: string; }; }'.
+
+[7m189[0m     entitlements?.features.builderPublish.reason ||
+[7m   [0m [91m                           ~~~~~~~~~~~~~~[0m
+
+[96mapp/builder/builder-client.tsx[0m:[93m528[0m:[93m26[0m - [91merror[0m[90m TS2345: [0mArgument of type 'SiteTemplate' is not assignable to parameter of type 'SetStateAction<SiteTemplate | null>'.
+  Type 'import("/Users/mahmoudezz/Documents/GitHub/entrestate-launch/src/lib/types").SiteTemplate' is not assignable to type 'import("/Users/mahmoudezz/Documents/GitHub/entrestate-launch/src/lib/templates").SiteTemplate'.
+    Types of property 'siteType' are incompatible.
+      Type '"developer-landing" | "project-launch" | "brokerage-firm" | "investment-vehicle" | "private-advisory" | "roadshow-event" | "building-landing"' is not assignable to type '"roadshow" | "developer-focus" | "partner-launch" | "full-company" | "freelancer" | "map-focused" | "ads-launch" | "ready-made" | "agent-portfolio" | "custom"'.
+        Type '"developer-landing"' is not assignable to type '"roadshow" | "developer-focus" | "partner-launch" | "full-company" | "freelancer" | "map-focused" | "ads-launch" | "ready-made" | "agent-portfolio" | "custom"'.
+
+[7m528[0m       setBuilderTemplate(template);
+[7m   [0m [91m                         ~~~~~~~~[0m
+
+[96mapp/dashboard/leads/LeadsClient.tsx[0m:[93m119[0m:[93m48[0m - [91merror[0m[90m TS2339: [0mProperty 'senders' does not exist on type '{ inventoryAccess: { allowed: boolean; reason: string; }; }'.
+
+[7m119[0m   const sendersLocked = entitlements?.features.senders.allowed === false;
+[7m   [0m [91m                                               ~~~~~~~[0m
+
+[96mapp/dashboard/leads/LeadsClient.tsx[0m:[93m121[0m:[93m28[0m - [91merror[0m[90m TS2339: [0mProperty 'senders' does not exist on type '{ inventoryAccess: { allowed: boolean; reason: string; }; }'.
+
+[7m121[0m     entitlements?.features.senders.reason || 'Upgrade to unlock email and SMS senders.';
+[7m   [0m [91m                           ~~~~~~~[0m
+
+[96mapp/dashboard/sites/page.tsx[0m:[93m64[0m:[93m23[0m - [91merror[0m[90m TS2339: [0mProperty 'refinerStatus' does not exist on type 'SitePage'.
+
+[7m64[0m   const status = site.refinerStatus;
+[7m  [0m [91m                      ~~~~~~~~~~~~~[0m
+
+[96mapp/dashboard/sites/page.tsx[0m:[93m119[0m:[93m7[0m - [91merror[0m[90m TS2358: [0mThe left-hand side of an 'instanceof' expression must be of type 'any', an object type or a type parameter.
+
+[7m119[0m   if (value instanceof Date) return value;
+[7m   [0m [91m      ~~~~~[0m
+
+[96mapp/discover/[projectId]/page.tsx[0m:[93m175[0m:[93m108[0m - [91merror[0m[90m TS18048: [0m'project.location' is possibly 'undefined'.
+
+[7m175[0m                 <div className="flex items-center gap-2"><MapPin className="h-4 w-4 sm:h-5 sm:w-5"/><span>{project.location.area}, {project.location.city}</span></div>
+[7m   [0m [91m                                                                                                           ~~~~~~~~~~~~~~~~[0m
+
+[96mapp/discover/[projectId]/page.tsx[0m:[93m175[0m:[93m133[0m - [91merror[0m[90m TS18048: [0m'project.location' is possibly 'undefined'.
+
+[7m175[0m                 <div className="flex items-center gap-2"><MapPin className="h-4 w-4 sm:h-5 sm:w-5"/><span>{project.location.area}, {project.location.city}</span></div>
+[7m   [0m [91m                                                                                                                                    ~~~~~~~~~~~~~~~~[0m
+
+[96mapp/discover/[projectId]/page.tsx[0m:[93m212[0m:[93m26[0m - [91merror[0m[90m TS18048: [0m'project.features' is possibly 'undefined'.
+
+[7m212[0m                         {project.features.map((feature) => (
+[7m   [0m [91m                         ~~~~~~~~~~~~~~~~[0m
+
+[96mapp/discover/[projectId]/page.tsx[0m:[93m245[0m:[93m26[0m - [91merror[0m[90m TS18048: [0m'project.performance' is possibly 'undefined'.
+
+[7m245[0m                         {project.performance.priceHistory.map((entry) => (
+[7m   [0m [91m                         ~~~~~~~~~~~~~~~~~~~[0m
+
+[96mapp/discover/[projectId]/page.tsx[0m:[93m245[0m:[93m26[0m - [91merror[0m[90m TS18048: [0m'project.performance.priceHistory' is possibly 'undefined'.
+
+[7m245[0m                         {project.performance.priceHistory.map((entry) => (
+[7m   [0m [91m                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96mapp/p/[siteId]/page.tsx[0m:[93m42[0m:[93m51[0m - [91merror[0m[90m TS2339: [0mProperty 'refinerDraftSnapshot' does not exist on type 'SitePage'.
+
+[7m42[0m   const refinedSnapshot = shouldUseRefined ? page.refinerDraftSnapshot : undefined;
+[7m  [0m [91m                                                  ~~~~~~~~~~~~~~~~~~~~[0m
+
+[96mapp/p/[siteId]/page.tsx[0m:[93m43[0m:[93m67[0m - [91merror[0m[90m TS2339: [0mProperty 'refinerDraftHtml' does not exist on type 'SitePage'.
+
+[7m43[0m   const refinedHtml = shouldUseRefined && !refinedSnapshot ? page.refinerDraftHtml : undefined;
+[7m  [0m [91m                                                                  ~~~~~~~~~~~~~~~~[0m
+
+[96mapp/pipeline-demo.tsx[0m:[93m36[0m:[93m20[0m - [91merror[0m[90m TS2367: [0mThis comparison appears to be unintentional because the types '"negotiation"' and '"closed"' have no overlap.
+
+[7m36[0m                if (lead.stage !== 'closed') {
+[7m  [0m [91m                   ~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/components/ChatAgentDashboard.tsx[0m:[93m10[0m:[93m25[0m - [91merror[0m[90m TS2307: [0mCannot find module './AuthContext' or its corresponding type declarations.
+
+[7m10[0m import { useAuth } from './AuthContext';
+[7m  [0m [91m                        ~~~~~~~~~~~~~~~[0m
+
+[96msrc/components/ChatAgentSetup.tsx[0m:[93m4[0m:[93m25[0m - [91merror[0m[90m TS2307: [0mCannot find module '../ProgressBar' or its corresponding type declarations.
+
+[7m4[0m import ProgressBar from '../ProgressBar';
+[7m [0m [91m                        ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/components/editor/sidebar/panels/theme-panel.tsx[0m:[93m5[0m:[93m10[0m - [91merror[0m[90m TS2305: [0mModule '"@/components/theme-provider"' has no exported member 'useTheme'.
+
+[7m5[0m import { useTheme } from '@/components/theme-provider';
+[7m [0m [91m         ~~~~~~~~[0m
+
+[96msrc/components/export-leads-button.tsx[0m:[93m12[0m:[93m52[0m - [91merror[0m[90m TS2339: [0mProperty 'leadExports' does not exist on type '{ inventoryAccess: { allowed: boolean; reason: string; }; }'.
+
+[7m12[0m   const leadExportsLocked = entitlements?.features.leadExports.allowed === false;
+[7m  [0m [91m                                                   ~~~~~~~~~~~[0m
+
+[96msrc/components/export-leads-button.tsx[0m:[93m14[0m:[93m28[0m - [91merror[0m[90m TS2339: [0mProperty 'leadExports' does not exist on type '{ inventoryAccess: { allowed: boolean; reason: string; }; }'.
+
+[7m14[0m     entitlements?.features.leadExports.reason || 'Upgrade to unlock lead exports.';
+[7m  [0m [91m                           ~~~~~~~~~~~[0m
+
+[96msrc/components/messaging/email-dashboard.tsx[0m:[93m10[0m:[93m26[0m - [91merror[0m[90m TS2307: [0mCannot find module '@/src/hooks/use-toast' or its corresponding type declarations.
+
+[7m10[0m import { useToast } from '@/src/hooks/use-toast';
+[7m  [0m [91m                         ~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/components/messaging/email-dashboard.tsx[0m:[93m11[0m:[93m38[0m - [91merror[0m[90m TS2307: [0mCannot find module '@/src/components/messaging/import-contacts-dialog' or its corresponding type declarations.
+
+[7m11[0m import { ImportContactsDialog } from '@/src/components/messaging/import-contacts-dialog';
+[7m  [0m [91m                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/components/messaging/email-dashboard.tsx[0m:[93m12[0m:[93m33[0m - [91merror[0m[90m TS2307: [0mCannot find module '@/src/lib/auth-fetch' or its corresponding type declarations.
+
+[7m12[0m import { authorizedFetch } from '@/src/lib/auth-fetch';
+[7m  [0m [91m                                ~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/components/messaging/email-dashboard.tsx[0m:[93m13[0m:[93m25[0m - [91merror[0m[90m TS2307: [0mCannot find module '@/src/lib/AuthContext' or its corresponding type declarations.
+
+[7m13[0m import { useAuth } from '@/src/lib/AuthContext';
+[7m  [0m [91m                        ~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/components/messaging/email-dashboard.tsx[0m:[93m14[0m:[93m40[0m - [91merror[0m[90m TS2307: [0mCannot find module '@/src/lib/firebase/client' or its corresponding type declarations.
+
+[7m14[0m import { FIREBASE_AUTH_DISABLED } from '@/src/lib/firebase/client';
+[7m  [0m [91m                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/components/page-builder.tsx[0m:[93m293[0m:[93m20[0m - [91merror[0m[90m TS2339: [0mProperty 'tenantId' does not exist on type 'SitePage'.
+
+[7m293[0m     tenantId: page.tenantId || 'public',
+[7m   [0m [91m                   ~~~~~~~~[0m
+
+[96msrc/components/page-builder.tsx[0m:[93m296[0m:[93m22[0m - [91merror[0m[90m TS2339: [0mProperty 'tenantId' does not exist on type 'SitePage'.
+
+[7m296[0m   }), [page.id, page.tenantId, page.title]);
+[7m   [0m [91m                     ~~~~~~~~[0m
+
+[96msrc/components/page-renderer.tsx[0m:[93m119[0m:[93m32[0m - [91merror[0m[90m TS2339: [0mProperty 'tenantId' does not exist on type 'SitePage'.
+
+[7m119[0m     tenantId: tenantId || page.tenantId || 'public',
+[7m   [0m [91m                               ~~~~~~~~[0m
+
+[96msrc/components/project-card.tsx[0m:[93m54[0m:[93m39[0m - [91merror[0m[90m TS18048: [0m'project.images' is possibly 'undefined'.
+
+[7m54[0m   const displayImage = hasRealImage ? project.images[0] : MAP_TEXTURE_IMAGE;
+[7m  [0m [91m                                      ~~~~~~~~~~~~~~[0m
+
+[96msrc/components/seo-settings-dialog.tsx[0m:[93m30[0m:[93m38[0m - [91merror[0m[90m TS18048: [0m'page.seo' is possibly 'undefined'.
+
+[7m30[0m   const [title, setTitle] = useState(page.seo.title);
+[7m  [0m [91m                                     ~~~~~~~~[0m
+
+[96msrc/components/seo-settings-dialog.tsx[0m:[93m31[0m:[93m50[0m - [91merror[0m[90m TS18048: [0m'page.seo' is possibly 'undefined'.
+
+[7m31[0m   const [description, setDescription] = useState(page.seo.description);
+[7m  [0m [91m                                                 ~~~~~~~~[0m
+
+[96msrc/components/seo-settings-dialog.tsx[0m:[93m32[0m:[93m54[0m - [91merror[0m[90m TS18048: [0m'page.seo' is possibly 'undefined'.
+
+[7m32[0m   const [keywords, setKeywords] = useState<string[]>(page.seo.keywords || []);
+[7m  [0m [91m                                                     ~~~~~~~~[0m
+
+[96msrc/components/seo-settings-dialog.tsx[0m:[93m37[0m:[93m14[0m - [91merror[0m[90m TS18048: [0m'page.seo' is possibly 'undefined'.
+
+[7m37[0m     setTitle(page.seo.title);
+[7m  [0m [91m             ~~~~~~~~[0m
+
+[96msrc/components/seo-settings-dialog.tsx[0m:[93m38[0m:[93m20[0m - [91merror[0m[90m TS18048: [0m'page.seo' is possibly 'undefined'.
+
+[7m38[0m     setDescription(page.seo.description);
+[7m  [0m [91m                   ~~~~~~~~[0m
+
+[96msrc/components/seo-settings-dialog.tsx[0m:[93m39[0m:[93m17[0m - [91merror[0m[90m TS18048: [0m'page.seo' is possibly 'undefined'.
+
+[7m39[0m     setKeywords(page.seo.keywords || []);
+[7m  [0m [91m                ~~~~~~~~[0m
+
+[96msrc/components/seo-settings-dialog.tsx[0m:[93m95[0m:[93m61[0m - [91merror[0m[90m TS18048: [0m'title' is possibly 'undefined'.
+
+[7m95[0m                             Recommended: 50-60 characters ({title.length})
+[7m  [0m [91m                                                            ~~~~~[0m
+
+[96msrc/components/seo-settings-dialog.tsx[0m:[93m108[0m:[93m63[0m - [91merror[0m[90m TS18048: [0m'description' is possibly 'undefined'.
+
+[7m108[0m                             Recommended: 150-160 characters ({description.length})
+[7m   [0m [91m                                                              ~~~~~~~~~~~[0m
+
+[96msrc/components/seo-settings-dialog.tsx[0m:[93m156[0m:[93m39[0m - [91merror[0m[90m TS2322: [0mType 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+
+[7m156[0m                     <GoogleAdsManager pageTitle={title} pageDescription={description} />
+[7m   [0m [91m                                      ~~~~~~~~~[0m
+
+  [96msrc/components/ads/google-ads-manager.tsx[0m:[93m41[0m:[93m3[0m
+    [7m41[0m   pageTitle: string;
+    [7m  [0m [96m  ~~~~~~~~~[0m
+    The expected type comes from property 'pageTitle' which is declared here on type 'IntrinsicAttributes & GoogleAdsManagerProps'
+
+[96msrc/components/seo-settings-dialog.tsx[0m:[93m156[0m:[93m57[0m - [91merror[0m[90m TS2322: [0mType 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+
+[7m156[0m                     <GoogleAdsManager pageTitle={title} pageDescription={description} />
+[7m   [0m [91m                                                        ~~~~~~~~~~~~~~~[0m
+
+  [96msrc/components/ads/google-ads-manager.tsx[0m:[93m42[0m:[93m3[0m
+    [7m42[0m   pageDescription: string;
+    [7m  [0m [96m  ~~~~~~~~~~~~~~~[0m
+    The expected type comes from property 'pageDescription' which is declared here on type 'IntrinsicAttributes & GoogleAdsManagerProps'
+
+[96msrc/ConversationViewScreen.tsx[0m:[93m3[0m:[93m48[0m - [91merror[0m[90m TS2307: [0mCannot find module './ChatAgentDashboard' or its corresponding type declarations.
+
+[7m3[0m import { InstagramConversation, Message } from './ChatAgentDashboard'; // Import updated interfaces
+[7m [0m [91m                                               ~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/data/entrestate-inventory.ts[0m:[93m14[0m:[93m5[0m - [91merror[0m[90m TS2322: [0mType 'string' is not assignable to type '{ short: string; full: string; }'.
+
+[7m14[0m     description: 'Luxury villas surrounding an 18-hole championship golf course.'
+[7m  [0m [91m    ~~~~~~~~~~~[0m
+
+  [96msrc/lib/types.ts[0m:[93m49[0m:[93m3[0m
+    [7m49[0m   description?: {
+    [7m  [0m [96m  ~~~~~~~~~~~[0m
+    The expected type comes from property 'description' which is declared here on type 'ProjectData'
+
+[96msrc/data/entrestate-inventory.ts[0m:[93m26[0m:[93m5[0m - [91merror[0m[90m TS2322: [0mType 'string' is not assignable to type '{ short: string; full: string; }'.
+
+[7m26[0m     description: 'Exclusive beachfront living on the world-famous archipelago.'
+[7m  [0m [91m    ~~~~~~~~~~~[0m
+
+  [96msrc/lib/types.ts[0m:[93m49[0m:[93m3[0m
+    [7m49[0m   description?: {
+    [7m  [0m [96m  ~~~~~~~~~~~[0m
+    The expected type comes from property 'description' which is declared here on type 'ProjectData'
+
+[96msrc/data/entrestate-inventory.ts[0m:[93m38[0m:[93m5[0m - [91merror[0m[90m TS2322: [0mType 'string' is not assignable to type '{ short: string; full: string; }'.
+
+[7m38[0m     description: 'High-rise apartments with direct access to Dubai Mall.'
+[7m  [0m [91m    ~~~~~~~~~~~[0m
+
+  [96msrc/lib/types.ts[0m:[93m49[0m:[93m3[0m
+    [7m49[0m   description?: {
+    [7m  [0m [96m  ~~~~~~~~~~~[0m
+    The expected type comes from property 'description' which is declared here on type 'ProjectData'
+
+[96msrc/GoogleAdCampaignFunnel.tsx[0m:[93m3[0m:[93m25[0m - [91merror[0m[90m TS2307: [0mCannot find module '../ProgressBar' or its corresponding type declarations.
+
+[7m3[0m import ProgressBar from '../ProgressBar';
+[7m [0m [91m                        ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/hooks/use-project.ts[0m:[93m11[0m:[93m72[0m - [91merror[0m[90m TS2345: [0mArgument of type 'SiteTemplate' is not assignable to parameter of type 'SiteTemplate | (() => SiteTemplate)'.
+  Type 'import("/Users/mahmoudezz/Documents/GitHub/entrestate-launch/src/lib/templates").SiteTemplate' is not assignable to type 'import("/Users/mahmoudezz/Documents/GitHub/entrestate-launch/src/lib/types").SiteTemplate'.
+    Types of property 'description' are incompatible.
+      Type 'string | undefined' is not assignable to type 'string'.
+        Type 'undefined' is not assignable to type 'string'.
+
+[7m11[0m   const [currentTemplate, setCurrentTemplate] = useState<SiteTemplate>(availableTemplates[0]);
+[7m  [0m [91m                                                                       ~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/lib/ai-orchestration.ts[0m:[93m30[0m:[93m9[0m - [91merror[0m[90m TS2322: [0mType '"custom"' is not assignable to type '"developer-landing" | "project-launch" | "brokerage-firm" | "investment-vehicle" | "private-advisory" | "roadshow-event" | "building-landing"'.
+
+[7m30[0m         siteType: 'custom',
+[7m  [0m [91m        ~~~~~~~~[0m
+
+  [96msrc/lib/types.ts[0m:[93m82[0m:[93m3[0m
+    [7m82[0m   siteType: 'developer-landing' | 'project-launch' | 'brokerage-firm' | 'investment-vehicle' | 'private-advisory' | 'roadshow-event' | 'building-landing';
+    [7m  [0m [96m  ~~~~~~~~[0m
+    The expected type comes from property 'siteType' which is declared here on type 'SiteTemplate'
+
+[96msrc/lib/ai-orchestration.ts[0m:[93m36[0m:[93m13[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'canonicalListings' does not exist in type 'SitePage'.
+
+[7m36[0m             canonicalListings: [],
+[7m  [0m [91m            ~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/lib/AuthContext.tsx[0m:[93m2[0m:[93m27[0m - [91merror[0m[90m TS2307: [0mCannot find module './mobile/AuthContext' or its corresponding type declarations.
+
+[7m2[0m export type { User } from './mobile/AuthContext';
+[7m [0m [91m                          ~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/lib/blocks.ts[0m:[93m13[0m:[93m9[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'defaultData' does not exist in type 'BlockConfig'.
+
+[7m13[0m         defaultData: {
+[7m  [0m [91m        ~~~~~~~~~~~[0m
+
+[96msrc/lib/blocks.ts[0m:[93m26[0m:[93m9[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'defaultData' does not exist in type 'BlockConfig'.
+
+[7m26[0m         defaultData: {
+[7m  [0m [91m        ~~~~~~~~~~~[0m
+
+[96msrc/lib/blocks.ts[0m:[93m39[0m:[93m9[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'defaultData' does not exist in type 'BlockConfig'.
+
+[7m39[0m         defaultData: {
+[7m  [0m [91m        ~~~~~~~~~~~[0m
+
+[96msrc/lib/blocks.ts[0m:[93m50[0m:[93m9[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'defaultData' does not exist in type 'BlockConfig'.
+
+[7m50[0m         defaultData: {}
+[7m  [0m [91m        ~~~~~~~~~~~[0m
+
+[96msrc/lib/blocks.ts[0m:[93m58[0m:[93m9[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'defaultData' does not exist in type 'BlockConfig'.
+
+[7m58[0m         defaultData: {
+[7m  [0m [91m        ~~~~~~~~~~~[0m
+
+[96msrc/lib/blocks.ts[0m:[93m68[0m:[93m9[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'defaultData' does not exist in type 'BlockConfig'.
+
+[7m68[0m         defaultData: {
+[7m  [0m [91m        ~~~~~~~~~~~[0m
+
+[96msrc/lib/blocks.ts[0m:[93m78[0m:[93m9[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'defaultData' does not exist in type 'BlockConfig'.
+
+[7m78[0m         defaultData: {
+[7m  [0m [91m        ~~~~~~~~~~~[0m
+
+[96msrc/lib/blocks.ts[0m:[93m88[0m:[93m9[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'defaultData' does not exist in type 'BlockConfig'.
+
+[7m88[0m         defaultData: {}
+[7m  [0m [91m        ~~~~~~~~~~~[0m
+
+[96msrc/lib/blocks.ts[0m:[93m94[0m:[93m9[0m - [91merror[0m[90m TS2322: [0mType '"ai"' is not assignable to type '"hero" | "content" | "cta" | "data" | "listings" | "finance" | "social" | "info" | "forms" | "layout"'.
+
+[7m94[0m         category: 'ai',
+[7m  [0m [91m        ~~~~~~~~[0m
+
+  [96msrc/lib/types.ts[0m:[93m73[0m:[93m3[0m
+    [7m73[0m   category: 'hero' | 'content' | 'cta' | 'data' | 'listings' | 'finance' | 'social' | 'info' | 'forms' | 'layout';
+    [7m  [0m [96m  ~~~~~~~~[0m
+    The expected type comes from property 'category' which is declared here on type 'BlockConfig'
+
+[96msrc/lib/onboarding-blueprints.ts[0m:[93m46[0m:[93m5[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'canonicalListings' does not exist in type 'SitePage'.
+
+[7m46[0m     canonicalListings: [],
+[7m  [0m [91m    ~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/lib/onboarding-blueprints.ts[0m:[93m81[0m:[93m5[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'canonicalListings' does not exist in type 'SitePage'.
+
+[7m81[0m     canonicalListings: [],
+[7m  [0m [91m    ~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/lib/onboarding-blueprints.ts[0m:[93m110[0m:[93m5[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'canonicalListings' does not exist in type 'SitePage'.
+
+[7m110[0m     canonicalListings: [],
+[7m   [0m [91m    ~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/lib/onboarding-blueprints.ts[0m:[93m123[0m:[93m5[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'createdAt' does not exist in type 'SitePage'.
+
+[7m123[0m     createdAt: new Date().toISOString(),
+[7m   [0m [91m    ~~~~~~~~~[0m
+
+[96msrc/lib/onboarding-handler.ts[0m:[93m98[0m:[93m13[0m - [91merror[0m[90m TS2322: [0mType '"custom"' is not assignable to type '"developer-landing" | "project-launch" | "brokerage-firm" | "investment-vehicle" | "private-advisory" | "roadshow-event" | "building-landing"'.
+
+[7m98[0m             siteType: 'custom',
+[7m  [0m [91m            ~~~~~~~~[0m
+
+  [96msrc/lib/types.ts[0m:[93m82[0m:[93m3[0m
+    [7m82[0m   siteType: 'developer-landing' | 'project-launch' | 'brokerage-firm' | 'investment-vehicle' | 'private-advisory' | 'roadshow-event' | 'building-landing';
+    [7m  [0m [96m  ~~~~~~~~[0m
+    The expected type comes from property 'siteType' which is declared here on type 'SiteTemplate'
+
+[96msrc/lib/onboarding-handler.ts[0m:[93m108[0m:[93m17[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'canonicalListings' does not exist in type 'SitePage'.
+
+[7m108[0m                 canonicalListings: [],
+[7m   [0m [91m                ~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/lib/onboarding-handler.ts[0m:[93m129[0m:[93m9[0m - [91merror[0m[90m TS2322: [0mType 'import("/Users/mahmoudezz/Documents/GitHub/entrestate-launch/src/lib/templates").SiteTemplate' is not assignable to type 'import("/Users/mahmoudezz/Documents/GitHub/entrestate-launch/src/lib/types").SiteTemplate'.
+  Types of property 'description' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+
+[7m129[0m         return selectedTemplate;
+[7m   [0m [91m        ~~~~~~[0m
+
+[96msrc/lib/page.tsx[0m:[93m5[0m:[93m28[0m - [91merror[0m[90m TS2307: [0mCannot find module '@/components/layout/site-header' or its corresponding type declarations.
+
+[7m5[0m import { SiteHeader } from '@/components/layout/site-header';
+[7m [0m [91m                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/lib/prisma.ts[0m:[93m1[0m:[93m10[0m - [91merror[0m[90m TS2305: [0mModule '"@prisma/client"' has no exported member 'PrismaClient'.
+
+[7m1[0m import { PrismaClient } from '@prisma/client'
+[7m [0m [91m         ~~~~~~~~~~~~[0m
+
+[96msrc/lib/projects/filter.ts[0m:[93m32[0m:[93m9[0m - [91merror[0m[90m TS18048: [0m'project.developer' is possibly 'undefined'.
+
+[7m32[0m         project.developer.toLowerCase().includes(query) ||
+[7m  [0m [91m        ~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/lib/projects/filter.ts[0m:[93m33[0m:[93m9[0m - [91merror[0m[90m TS18048: [0m'project.location' is possibly 'undefined'.
+
+[7m33[0m         project.location.city.toLowerCase().includes(query) ||
+[7m  [0m [91m        ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/lib/projects/filter.ts[0m:[93m34[0m:[93m9[0m - [91merror[0m[90m TS18048: [0m'project.location' is possibly 'undefined'.
+
+[7m34[0m         project.location.area.toLowerCase().includes(query);
+[7m  [0m [91m        ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/lib/projects/filter.ts[0m:[93m40[0m:[93m56[0m - [91merror[0m[90m TS18048: [0m'project.location' is possibly 'undefined'.
+
+[7m40[0m     if (filters.city && city !== 'all' && normalizeKey(project.location.city) !== city) {
+[7m  [0m [91m                                                       ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/lib/projects/filter.ts[0m:[93m44[0m:[93m23[0m - [91merror[0m[90m TS18048: [0m'project.developer' is possibly 'undefined'.
+
+[7m44[0m     if (developer && !project.developer.toLowerCase().includes(developer)) {
+[7m  [0m [91m                      ~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/lib/projects/filter.ts[0m:[93m48[0m:[93m39[0m - [91merror[0m[90m TS18048: [0m'project.availability' is possibly 'undefined'.
+
+[7m48[0m     if (status && status !== 'all' && project.availability.toLowerCase() !== status) {
+[7m  [0m [91m                                      ~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/lib/templates.ts[0m:[93m304[0m:[93m9[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'canonicalListings' does not exist in type 'SitePage'.
+
+[7m304[0m         canonicalListings: [],
+[7m   [0m [91m        ~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/ListingBuilderFunnel.tsx[0m:[93m3[0m:[93m25[0m - [91merror[0m[90m TS2307: [0mCannot find module '../ProgressBar' or its corresponding type declarations.
+
+[7m3[0m import ProgressBar from '../ProgressBar';
+[7m [0m [91m                        ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/LoginScreen.tsx[0m:[93m4[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module './AuthContext' or its corresponding type declarations.
+
+[7m4[0m import { useAuth, User } from './AuthContext';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~[0m
+
+[96msrc/MyProjectsScreen.tsx[0m:[93m6[0m:[93m32[0m - [91merror[0m[90m TS2307: [0mCannot find module './AgentSuccessWidget' or its corresponding type declarations.
+
+[7m6[0m import AgentSuccessWidget from './AgentSuccessWidget';
+[7m [0m [91m                               ~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/server/inventory.ts[0m:[93m192[0m:[93m7[0m - [91merror[0m[90m TS2322: [0mType 'null' is not assignable to type '{ quarter: number; year: number; } | undefined'.
+
+[7m192[0m   let handover: ProjectData['handover'] = null;
+[7m   [0m [91m      ~~~~~~~~[0m
+
+[96msrc/server/inventory.ts[0m:[93m283[0m:[93m5[0m - [91merror[0m[90m TS2322: [0mType '{ min: number; max: number; label: string; } | undefined' is not assignable to type '{ label: string; value: number; } | undefined'.
+  Property 'value' is missing in type '{ min: number; max: number; label: string; }' but required in type '{ label: string; value: number; }'.
+
+[7m283[0m     bedrooms,
+[7m   [0m [91m    ~~~~~~~~[0m
+
+  [96msrc/lib/types.ts[0m:[93m60[0m:[93m5[0m
+    [7m60[0m     value: number;
+    [7m  [0m [96m    ~~~~~[0m
+    'value' is declared here.
+  [96msrc/lib/types.ts[0m:[93m58[0m:[93m3[0m
+    [7m58[0m   bedrooms?: {
+    [7m  [0m [96m  ~~~~~~~~[0m
+    The expected type comes from property 'bedrooms' which is declared here on type 'ProjectData'
+
+[96msrc/server/inventory.ts[0m:[93m284[0m:[93m5[0m - [91merror[0m[90m TS2322: [0mType '{ min: number; max: number; label: string; } | undefined' is not assignable to type '{ label: string; value: number; } | undefined'.
+  Property 'value' is missing in type '{ min: number; max: number; label: string; }' but required in type '{ label: string; value: number; }'.
+
+[7m284[0m     areaSqft,
+[7m   [0m [91m    ~~~~~~~~[0m
+
+  [96msrc/lib/types.ts[0m:[93m64[0m:[93m5[0m
+    [7m64[0m     value: number;
+    [7m  [0m [96m    ~~~~~[0m
+    'value' is declared here.
+  [96msrc/lib/types.ts[0m:[93m62[0m:[93m3[0m
+    [7m62[0m   areaSqft?: {
+    [7m  [0m [96m  ~~~~~~~~[0m
+    The expected type comes from property 'areaSqft' which is declared here on type 'ProjectData'
+
+[96msrc/server/publish-service.ts[0m:[93m14[0m:[93m10[0m - [91merror[0m[90m TS2352: [0mConversion of type '{ createdAt: any; updatedAt: any; lastPublishedAt: any; id: string; }' to type 'SitePage' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type '{ createdAt: any; updatedAt: any; lastPublishedAt: any; id: string; }' is missing the following properties from type 'SitePage': title, slug, blocks
+
+[7m 14[0m   return {
+[7m   [0m [91m         ~[0m
+[7m 15[0m     id: doc.id,
+[7m   [0m [91m~~~~~~~~~~~~~~~[0m
+[7m...[0m 
+[7m 19[0m     lastPublishedAt: normalizeTimestamp(data.lastPublishedAt),
+[7m   [0m [91m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[7m 20[0m   } as SitePage;
+[7m   [0m [91m~~~~~~~~~~~~~~~[0m
+
+[96msrc/SettingsScreen.tsx[0m:[93m4[0m:[93m25[0m - [91merror[0m[90m TS2307: [0mCannot find module './AuthContext' or its corresponding type declarations.
+
+[7m4[0m import { useAuth } from './AuthContext';
+[7m [0m [91m                        ~~~~~~~~~~~~~~~[0m
+
+
+Found 83 errors in 35 files.
+
+Errors  Files
+     1  app/api/generate/landing/route.ts[90m:36[0m
+     4  app/builder/builder-client.tsx[90m:76[0m
+     2  app/dashboard/leads/LeadsClient.tsx[90m:119[0m
+     2  app/dashboard/sites/page.tsx[90m:64[0m
+     5  app/discover/[projectId]/page.tsx[90m:175[0m
+     2  app/p/[siteId]/page.tsx[90m:42[0m
+     1  app/pipeline-demo.tsx[90m:36[0m
+     1  src/components/ChatAgentDashboard.tsx[90m:10[0m
+     1  src/components/ChatAgentSetup.tsx[90m:4[0m
+     1  src/components/editor/sidebar/panels/theme-panel.tsx[90m:5[0m
+     2  src/components/export-leads-button.tsx[90m:12[0m
+     5  src/components/messaging/email-dashboard.tsx[90m:10[0m
+     2  src/components/page-builder.tsx[90m:293[0m
+     1  src/components/page-renderer.tsx[90m:119[0m
+     1  src/components/project-card.tsx[90m:54[0m
+    10  src/components/seo-settings-dialog.tsx[90m:30[0m
+     1  src/ConversationViewScreen.tsx[90m:3[0m
+     3  src/data/entrestate-inventory.ts[90m:14[0m
+     1  src/GoogleAdCampaignFunnel.tsx[90m:3[0m
+     1  src/hooks/use-project.ts[90m:11[0m
+     2  src/lib/ai-orchestration.ts[90m:30[0m
+     1  src/lib/AuthContext.tsx[90m:2[0m
+     9  src/lib/blocks.ts[90m:13[0m
+     4  src/lib/onboarding-blueprints.ts[90m:46[0m
+     3  src/lib/onboarding-handler.ts[90m:98[0m
+     1  src/lib/page.tsx[90m:5[0m
+     1  src/lib/prisma.ts[90m:1[0m
+     6  src/lib/projects/filter.ts[90m:32[0m
+     1  src/lib/templates.ts[90m:304[0m
+     1  src/ListingBuilderFunnel.tsx[90m:3[0m
+     1  src/LoginScreen.tsx[90m:4[0m
+     1  src/MyProjectsScreen.tsx[90m:6[0m
+     3  src/server/inventory.ts[90m:192[0m
+     1  src/server/publish-service.ts[90m:14[0m
+     1  src/SettingsScreen.tsx[90m:4[0m

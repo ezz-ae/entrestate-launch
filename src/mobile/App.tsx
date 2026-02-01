@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './mobile-styles.css';
-import { AuthProvider, useAuth } from './AuthContext';
+import { AuthProvider, useAuth } from '@/lib/AuthContext';
 
 // Screens
 import LoginScreen from './LoginScreen';
