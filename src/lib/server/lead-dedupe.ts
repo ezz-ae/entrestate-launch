@@ -67,6 +67,8 @@ export function buildLeadTouchUpdate(payload: {
   intentReasoning?: string | null;
   intentProjectIds?: string[] | null;
   intentNextAction?: string | null;
+  siteId?: string | null;
+  metadata?: Record<string, any> | null;
 }) {
   return {
     lastSeenAt: FieldValue.serverTimestamp(),
@@ -82,5 +84,7 @@ export function buildLeadTouchUpdate(payload: {
     intentReasoning: payload.intentReasoning ?? null,
     intentProjectIds: payload.intentProjectIds ?? null,
     intentNextAction: payload.intentNextAction ?? null,
+    siteId: payload.siteId ?? null,
+    metadata: payload.metadata ?? null,
   };
 }

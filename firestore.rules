@@ -11,7 +11,7 @@ service cloud.firestore {
     }
 
     function hasRole(allowedRoles) {
-      return request.auth != null && (
+      return isSignedIn() && (
         (request.auth.token.role != null && request.auth.token.role in allowedRoles) ||
         (request.auth.token.roles != null && request.auth.token.roles.hasAny(allowedRoles))
       );

@@ -17,6 +17,8 @@ type MockTableState = {
 
 let hasLoggedMockSupabase = false;
 
+const sanitizeEnv = (val?: string) => val?.split('#')[0].trim();
+
 function logMockSupabase(shouldLog: boolean) {
   if (shouldLog && !hasLoggedMockSupabase) {
     console.warn(
@@ -222,10 +224,12 @@ export async function createSupabaseServerClient() {
     };
   }
 
-  const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const SUPABASE_PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY;
-  const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const SUPABASE_URL = sanitizeEnv(process.env.NEXT_PUBLIC_SUPABASE_URL);
+  const SUPABASE_PUBLISHABLE_KEY = sanitizeEnv(process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY);
+  const SUPABASE_ANON_KEY = sanitizeEnv(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
   const SUPABASE_KEY = SUPABASE_PUBLISHABLE_KEY || SUPABASE_ANON_KEY;
+  
+  const isEnabled = sanitizeEnv(process.env.NEXT_PUBLIC_ENABLE_SUPABASE) !== 'false';
 
   let urlValid = false;
   try {
@@ -235,7 +239,7 @@ export async function createSupabaseServerClient() {
     urlValid = false;
   }
 
-  if (!urlValid) {
+  if (!urlValid || !isEnabled) {
     return createMockSupabaseClient({ shouldLog: process.env.NODE_ENV !== 'production' });
   }
 

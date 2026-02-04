@@ -9,23 +9,22 @@ export class AuthError extends Error {
 }
 
 export const authorizedFetch = async (url: string, options: RequestInit = {}) => {
-  // If Firebase auth is disabled, allow unauthenticated requests for dev/smoke runs.
+  const headers = new Headers(options.headers || {});
+  const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
+  
+  if (!isFormData && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
+
+  // If Firebase auth is disabled or bypassed, skip token injection.
   if (FIREBASE_AUTH_DISABLED) {
-    const headers = new Headers(options.headers || {});
-    const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
-    if (!isFormData && !headers.has('Content-Type')) {
-      headers.set('Content-Type', 'application/json');
-    }
+    // Signal to the server that this is an intentional bypass
+    headers.set('x-dev-auth-bypass', 'true');
     return fetch(url, { ...options, headers });
   }
 
   const activeAuth = getAuthSafe();
   if (!activeAuth) {
-    const headers = new Headers(options.headers || {});
-    const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
-    if (!isFormData && !headers.has('Content-Type')) {
-      headers.set('Content-Type', 'application/json');
-    }
     return fetch(url, { ...options, headers });
   }
 
@@ -35,13 +34,7 @@ export const authorizedFetch = async (url: string, options: RequestInit = {}) =>
   }
 
   const token = await user.getIdToken();
-  const headers = new Headers(options.headers || {});
   headers.set('Authorization', `Bearer ${token}`);
-
-  const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
-  if (!isFormData && !headers.has('Content-Type')) {
-    headers.set('Content-Type', 'application/json');
-  }
 
   const response = await fetch(url, { ...options, headers });
 

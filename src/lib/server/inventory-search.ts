@@ -13,13 +13,19 @@ export async function fetchRelevantProjects(
     const headers = new Headers();
     const authHeader = req.headers.get('authorization');
     if (authHeader) headers.set('authorization', authHeader);
+    const bypassHeader = req.headers.get('x-dev-auth-bypass');
+    if (bypassHeader) headers.set('x-dev-auth-bypass', bypassHeader);
     const response = await fetch(url.toString(), {
       cache: 'no-store',
       headers,
     });
     const payload = await response.json().catch(() => null);
-    if (!response.ok || !payload?.ok) return [];
-    const items = Array.isArray(payload?.data?.items) ? payload.data.items : [];
+    if (!response.ok) return [];
+
+    // Support both direct array in 'data' or nested in 'data.items'
+    const data = payload?.data;
+    const items = Array.isArray(data) ? data : (Array.isArray(data?.items) ? data.items : []);
+
     return items.slice(0, limit);
   } catch (error) {
     console.error('[inventory-search] fetch failed', error);

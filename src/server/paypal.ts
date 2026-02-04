@@ -51,6 +51,11 @@ export async function paypalRequest(path: string, init: RequestInit = {}) {
     headers.set('Content-Type', 'application/json');
   }
 
+  // Debug log to verify price and SKU during development
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`[PayPal API] ${init.method || 'GET'} ${path}`, init.body ? JSON.parse(init.body as string) : 'No Body');
+  }
+
   const response = await fetch(`${PAYPAL_BASE_URL}${path}`, {
     ...init,
     headers,

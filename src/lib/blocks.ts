@@ -89,12 +89,17 @@ export const availableBlocks: BlockConfig[] = [
     },
     {
         type: 'chat-widget',
-        name: 'Chat Widget',
-        description: 'AI-powered chat assistant for visitors.',
+        name: 'AI Chat Agent',
+        description: '25-year expert UAE real estate assistant with deep market knowledge and lead capture.',
         category: 'ai',
         icon: MessageCircle,
         defaultData: {
-            welcomeMessage: 'How can I help you today?',
+            welcomeMessage: 'Hi! I am your UAE real estate expert with 25 years of market experience. How can I help you find the perfect investment or home today?',
+            agentName: 'Real Estate Advisor',
+            companyName: 'Entrestate',
+            focusedProjectId: null,
+            specialOffer: '',
+            collectLeads: true
         }
     },
 ];

@@ -6,6 +6,8 @@ import { verifyFirebaseIdToken } from '@/lib/server/auth';
 
 const DEV_COOKIE_NAMES = ['dev_user', 'dev_uid'];
 
+const sanitizeEnv = (val?: string) => val?.split('#')[0].trim().replace(/^["']|["']$/g, '');
+
 type DashboardCookieStore = Awaited<ReturnType<typeof cookies>>;
 
 function buildCookieHeader(cookieStore: DashboardCookieStore) {
@@ -17,6 +19,11 @@ export async function requireDashboardAuth() {
     const cookieStore = await cookies();
     const hasDevCookie = DEV_COOKIE_NAMES.some((name) => Boolean(cookieStore.get(name)?.value));
     const isDevEnvironment = process.env.NODE_ENV !== 'production';
+
+    const isBypassEnabled = sanitizeEnv(process.env.NEXT_PUBLIC_ENABLE_DEV_AUTH_BYPASS) === 'true';
+    if (isDevEnvironment && isBypassEnabled) {
+        return;
+    }
 
     if (hasDevCookie && (isDevEnvironment || !FIREBASE_AUTH_ENABLED)) {
         return;

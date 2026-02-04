@@ -20,6 +20,7 @@ export type BillingAddOns = {
   leads?: number;
   domains?: number;
   sms_sends?: number;
+  ai_agents?: number;
 };
 
 export type TrialState = {
@@ -47,7 +48,8 @@ export type BillingSku =
   | 'addon_ai_conversations_1000'
   | 'addon_leads_500'
   | 'addon_domain_1'
-  | 'addon_sms_bundle';
+  | 'addon_sms_bundle'
+  | 'addon_chat_agent';
 
 type MetricPeriod = 'monthly' | 'total';
 
@@ -133,6 +135,12 @@ export const BILLING_SKUS: Record<
     priceAed: 99,
     label: 'SMS bundle',
     addOns: { sms_sends: 1000 },
+  },
+  addon_chat_agent: {
+    type: 'addon',
+    priceAed: 45,
+    label: 'AI Chat Agent',
+    addOns: { ai_agents: 1 },
   },
 };
 
@@ -270,6 +278,7 @@ function normalizeAddOns(value: any): BillingAddOns {
     leads: Number(value.leads || 0),
     domains: Number(value.domains || 0),
     sms_sends: Number(value.sms_sends || 0),
+    ai_agents: Number(value.ai_agents || 0),
   };
 }
 

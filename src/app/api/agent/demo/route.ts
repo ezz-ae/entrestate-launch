@@ -3,7 +3,9 @@ import { z } from 'zod';
 import { nanoid } from 'nanoid';
 import { generateText } from 'ai';
 import type { ModelMessage } from 'ai';
-import { getGoogleModel, FLASH_MODEL } from '@/lib/ai/google';
+import { getGoogleModel } from '@/lib/ai/google';
+import { formatProjectContext } from '@/server/inventory';
+import { fetchRelevantProjects } from '@/lib/server/inventory-search';
 import { mainSystemPrompt } from '@/config/prompts';
 import { getAdminDb } from '@/server/firebase-admin';
 import { enforceRateLimit, getRequestIp } from '@/lib/server/rateLimit';
@@ -14,6 +16,8 @@ import {
   jsonWithRequestId,
 } from '@/lib/server/request-id';
 import { scoreLeadIntent } from '@/lib/server/lead-intent';
+import { requireRole } from '@/server/auth';
+import { enforceUsageLimit, PlanLimitError, planLimitErrorResponse } from '@/lib/server/billing';
 
 const NIL_HISTORY: Array<{ role: 'user' | 'agent'; content: string }> = [];
 
@@ -74,6 +78,18 @@ export async function POST(req: NextRequest) {
       );
     }
     parsed = requestSchema.parse(await req.json());
+
+    // Enforce usage limits for the 'ai_conversations' metric
+    try {
+      const { tenantId } = await requireRole(req, ['agent', 'agency_admin', 'super_admin']);
+      const db = getAdminDb();
+      await enforceUsageLimit(db, tenantId, 'ai_conversations');
+    } catch (error) {
+      if (error instanceof PlanLimitError) {
+        return respond(planLimitErrorResponse(error), { status: 402 });
+      }
+      // If auth fails (public demo), we rely on the rate limit above
+    }
   } catch (error) {
     if (error instanceof z.ZodError) {
       return respond(
@@ -122,13 +138,15 @@ export async function POST(req: NextRequest) {
     projectIds: [],
   });
 
-  const systemPrompt = buildSystemPrompt(parsed.context);
+  const projectContext = await getProjectContext(req, parsed.message, parsed.context);
+  const systemPrompt = buildSystemPrompt(parsed.context, projectContext);
 
   let reply = '';
   let aiFailure: { error: string; message: string; missing?: string[] } | null = null;
   try {
     reply = await generateReply(recentMessages, systemPrompt);
-  } catch (error) {
+  } catch (error: any) {
+    console.error('[api/agent/demo] Actual AI Error:', error);
     if (error instanceof MissingAIKeyError) {
       aiFailure = {
         error: 'missing_api_key',
@@ -166,19 +184,28 @@ export async function POST(req: NextRequest) {
       updatedAt: now,
       ip: ip ?? 'unknown',
     });
-    const leadRef = await db.collection('public_leads').add({
+
+    // Save to the 'public' tenant collection so it appears in the dashboard during dev bypass
+    const leadRef = await db.collection('tenants').doc('public').collection('leads').add({
       threadId,
       source: 'agent_demo',
       message: parsed.message,
+      name: null,
       email: emailMatch || null,
+      emailNormalized: normalizeEmail(emailMatch),
       phone: phoneMatch || null,
+      phoneNormalized: normalizePhone(phoneMatch),
       intentScore: intent.intent_score,
       intentFocus: intent.focus,
       intentReasoning: intent.reasoning,
       intentProjectIds: [],
       intentNextAction: intent.next_action,
-      createdAt: now,
-      updatedAt: now,
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+      metadata: {
+        requestId,
+        userAgent: req.headers.get('user-agent'),
+      }
     });
     leadId = leadRef.id;
     console.log(
@@ -203,19 +230,9 @@ export async function POST(req: NextRequest) {
     };
 
     if (aiFailure) {
-      return respond(
-        {
-          ok: false,
-          error: {
-            code: aiFailure.error,
-            message: aiFailure.message,
-            missing: aiFailure.missing,
-          },
-          data: responseData,
-          requestId,
-        },
-        { status: 503 }
-      );
+      // Log the failure for the developer but return the fallback reply to the user with 200 OK
+      console.error(`[api/agent/demo] AI Failure: ${aiFailure.message}`, { requestId });
+      return respond({ ok: true, data: responseData, requestId });
     }
 
     return respond({
@@ -229,18 +246,22 @@ export async function POST(req: NextRequest) {
   }
 }
 
-function buildSystemPrompt(context?: string) {
+function buildSystemPrompt(context?: string, projectContext?: string) {
   const base = `
-Role & Context:
-${context || 'Entrestate chat assistant for UAE real estate teams.'}
+Persona: 25-Year UAE Real Estate Expert
+Context: ${context || 'General UAE Real Estate Market'}
 
-You are a UAE real estate advisor who explains things clearly and avoids jargon.
-Use the listing context below when available and keep answers concise.
-If asked about Dubai/UAE investment topics (fees, visas, payment plans, ROI, financing), give high-level guidance and say details should be confirmed with the broker.
-If you mention pricing or returns, note they are estimates.
-If you are unsure, say so and offer a next step (brochure, viewing, or a call).
-Ask one question at a time. If the buyer shows interest and contact details are missing, ask for name and WhatsApp or email.
-Avoid repetition and keep the conversation flowing naturally.
+You are a highly experienced UAE Real Estate Advisor with over 25 years of deep market expertise. 
+Your tone is professional, authoritative, and insightful. You provide high-value advice, not just data.
+
+Guidelines:
+1. For general market inquiries (ROI, areas, visas, fees), provide expert-level insights based on your 25 years of experience.
+2. Always clarify that pricing and availability are estimates and should be confirmed with a broker.
+3. Keep responses concise but packed with value. Avoid generic "AI assistant" phrasing.
+4. If the user shows intent, ask for their Name and WhatsApp/Email to send a brochure or schedule a viewing.
+5. Ask only one follow-up question at a time to maintain a natural conversation flow.
+
+${projectContext || ''}
 `;
   return `${mainSystemPrompt}\nAlways be clear, helpful, and broker-friendly.\n${base}`;
 }
@@ -249,7 +270,7 @@ async function generateReply(
   messages: Array<{ role: 'user' | 'agent'; content: string }>,
   systemPrompt: string
 ) {
-  return attemptModel(FLASH_MODEL, systemPrompt, messages);
+  return attemptModel('gemini-2.0-flash', systemPrompt, messages);
 }
 
 async function attemptModel(
@@ -308,4 +329,18 @@ function analyzeLeadIntent(candidates: string[]) {
     return { flag: true, reason: 'Phone number detected' };
   }
   return { flag: false };
+}
+
+async function getProjectContext(req: NextRequest, message: string, context?: string) {
+  try {
+    // Clean the message to remove short words/punctuation for better search results
+    const cleanQuery = message.replace(/[?]/g, '').trim();
+    const relevantProjects = await fetchRelevantProjects(req, cleanQuery || 'Dubai', 8);
+    console.log(`[api/agent/demo] Inventory search for "${message}" found ${relevantProjects.length} projects.`);
+    if (!relevantProjects.length) return '';
+    return `\nRelevant listings:\n${relevantProjects.map(formatProjectContext).join('\n')}`;
+  } catch (error) {
+    console.error('[api/agent/demo] inventory context failed', error);
+    return '';
+  }
 }

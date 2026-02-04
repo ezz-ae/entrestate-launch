@@ -32,6 +32,7 @@ export function ProjectDiscoveryClient({ initialProjects }: Props) {
   const [totalResults, setTotalResults] = useState(initialProjects.length);
   const [page, setPage] = useState(1);
   const [cityOptions, setCityOptions] = useState<string[]>(['Dubai', 'Abu Dhabi', 'Sharjah']);
+  const [mounted, setMounted] = useState(false);
 
   const mergeProjects = (existing: ProjectData[], incoming: ProjectData[]) => {
     const map = new Map<string, ProjectData>();
@@ -88,6 +89,10 @@ export function ProjectDiscoveryClient({ initialProjects }: Props) {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     fetchProjects(1);
@@ -154,6 +159,15 @@ export function ProjectDiscoveryClient({ initialProjects }: Props) {
             </div>
         </div>
 
+        {!mounted ? (
+            <div className="h-[600px] flex flex-col items-center justify-center gap-6">
+                <div className="relative">
+                    <Loader2 className="h-12 w-12 text-blue-500 animate-spin" />
+                </div>
+                <p className="text-zinc-500 font-mono text-xs uppercase tracking-[0.3em]">Initializing...</p>
+            </div>
+        ) : (
+          <>
         <div className="mb-12 sm:mb-16 md:mb-20">
             <div className="bg-zinc-900/50 backdrop-blur-3xl border border-white/10 p-2 rounded-[2rem] sm:rounded-[2.5rem] flex flex-col lg:flex-row gap-2 max-w-6xl mx-auto shadow-2xl">
                 <div className="flex-1 flex items-center px-4 sm:px-6 gap-3 sm:gap-4 border-b lg:border-b-0 lg:border-r border-white/5 py-4 lg:py-0">
@@ -246,6 +260,8 @@ export function ProjectDiscoveryClient({ initialProjects }: Props) {
               Load 12 More
             </Button>
           </div>
+        )}
+          </>
         )}
       </div>
     </section>

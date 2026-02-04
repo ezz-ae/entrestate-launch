@@ -195,7 +195,12 @@ backgroundImage: 'https://images.unsplash.com/photo-1582407947817-21ed67d4e68e?q
   'chat-widget': {
       type: 'chat-widget',
       data: {
-          agentName: "Sarah - Support"
+          welcomeMessage: 'Hi! I am your UAE real estate expert. How can I help you today?',
+          agentName: "Sarah - Support",
+          companyName: "Entrestate",
+          focusedProjectId: null,
+          specialOffer: '',
+          collectLeads: true
       }
   },
   'blog-grid': {

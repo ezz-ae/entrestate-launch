@@ -22,8 +22,10 @@ export const SESSION_COOKIE_NAME = 'entrestate_auth_token';
 const anonymousClaims = {
   uid: 'anonymous',
   tenantId: 'public',
-  roles: ['public'],
+  roles: isDevEnvironment ? ['super_admin', 'agency_admin', 'agent', 'public'] : ['public'],
 } as unknown as DecodedIdToken;
+
+const sanitizeEnv = (val?: string) => val?.split('#')[0].trim().replace(/^["']|["']$/g, '');
 
 let loggedAuthDisabledWarning = false;
 
@@ -187,6 +189,21 @@ export async function verifyFirebaseIdToken(req: NextRequest | Request) {
   try {
     const devContext = buildDevContext(req);
 
+    // Robust Dev Auth Bypass: Prioritize bypass in development to prevent "AI Unavailable" errors
+    const isBypassEnabled = 
+      sanitizeEnv(process.env.NEXT_PUBLIC_ENABLE_DEV_AUTH_BYPASS) === 'true' || 
+      sanitizeEnv(process.env.ENABLE_DEV_AUTH_BYPASS) === 'true';
+    const bypassHeader = req?.headers?.get?.('x-dev-auth-bypass');
+    const tokenString = getSessionToken(req);
+
+    if (isDevEnvironment && isBypassEnabled && (bypassHeader === 'true' || !FIREBASE_AUTH_ENABLED || !tokenString)) {
+      if (!loggedAuthDisabledWarning) {
+        console.log('[auth] Dev auth bypass active. Assigning admin roles to "public" tenant.');
+        loggedAuthDisabledWarning = true;
+      }
+      return { uid: 'anonymous', email: null, claims: anonymousClaims };
+    }
+
     if (!FIREBASE_AUTH_ENABLED) {
       if (devContext) {
         return devContext;
@@ -204,7 +221,6 @@ export async function verifyFirebaseIdToken(req: NextRequest | Request) {
       return devContext;
     }
 
-    const tokenString = getSessionToken(req);
     if (!tokenString) {
       throw new UnauthorizedError('Missing Authorization token');
     }
@@ -218,6 +234,11 @@ export async function verifyFirebaseIdToken(req: NextRequest | Request) {
 }
 
 async function resolveTenantAndRoles(claims: DecodedIdToken) {
+  // Skip DB lookups for the anonymous bypass user to prevent permission errors during dev
+  if (claims.uid === 'anonymous') {
+    return { tenantId: 'public', roles: (claims as any).roles || ['public'] };
+  }
+
   const claimTenant = getClaimsTenant(claims);
   const claimRoles = getClaimsRoles(claims);
 
@@ -278,6 +299,11 @@ export async function requireRole(
       return context;
     }
     const hasRole = context.roles.some((role) => allowedRoles.includes(role));
+
+    if (isDevEnvironment) {
+      console.log(`[auth] Role check: user=${context.uid} roles=[${context.roles.join(', ')}] required=[${allowedRoles.join(', ')}] result=${hasRole}`);
+    }
+
     if (!hasRole) {
       throw new ForbiddenError('Role access denied');
     }

@@ -1,6 +1,8 @@
 import { cert, getApps, initializeApp, type App, type ServiceAccount } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
+import fs from 'fs';
+import path from 'path';
 
 type AdminCredentials = {
   projectId: string;
@@ -24,6 +26,8 @@ const isDebugMode = !isProductionLike || process.env.DEBUG_ENV === 'true';
 let cachedCredentials: AdminCredentials | null = null;
 let adminApp: App | null = null;
 
+const sanitizeEnv = (val?: string) => val?.split('#')[0].trim().replace(/^["']|["']$/g, '');
+
 function normalizePrivateKey(value?: string) {
   return value?.replace(/\\n/g, '\n');
 }
@@ -35,7 +39,8 @@ function logDebug(message: string) {
 }
 
 function parseJsonCredentials(raw?: string): AdminCredentials {
-  const trimmed = raw?.trim();
+  // Remove trailing comments before parsing JSON
+  const trimmed = raw?.split('#')[0].trim().replace(/^["']|["']$/g, '');
   if (!trimmed) {
     throw new Error('Empty FIREBASE_ADMIN_CREDENTIALS payload.');
   }
@@ -60,8 +65,33 @@ function readCredentials(): AdminCredentials | null {
     return cachedCredentials;
   }
 
+  // --- NEW: Scan for local service-account.json file ---
+  try {
+    const rootFiles = fs.readdirSync(process.cwd()).filter(f => f.endsWith('.json'));
+    for (const file of rootFiles) {
+      try {
+        const filePath = path.resolve(process.cwd(), file);
+        const content = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+        if (content.type === 'service_account' && content.project_id && content.private_key) {
+          logDebug(`[firebase-admin] Auto-detected service account file: ${file}`);
+          const creds = {
+            projectId: content.project_id,
+            clientEmail: content.client_email,
+            privateKey: content.private_key,
+          };
+          cachedCredentials = creds;
+          return creds;
+        }
+      } catch (e) {
+        // Skip invalid JSON
+      }
+    }
+  } catch (e) {
+    // Ignore directory read errors
+  }
+
   const rawJson = process.env.FIREBASE_ADMIN_CREDENTIALS;
-  if (rawJson) {
+  if (rawJson && rawJson.trim().startsWith('{')) {
     try {
       const parsed = parseJsonCredentials(rawJson);
       cachedCredentials = parsed;
@@ -75,24 +105,27 @@ function readCredentials(): AdminCredentials | null {
   }
 
   const projectId =
-    process.env.FIREBASE_ADMIN_PROJECT_ID ||
-    process.env.FIREBASE_PROJECT_ID ||
-    process.env.project_id;
+    sanitizeEnv(process.env.FIREBASE_ADMIN_PROJECT_ID) ||
+    sanitizeEnv(process.env.FIREBASE_PROJECT_ID) ||
+    sanitizeEnv(process.env.project_id);
   const clientEmail =
-    process.env.FIREBASE_ADMIN_CLIENT_EMAIL ||
-    process.env.FIREBASE_CLIENT_EMAIL ||
-    process.env.client_email;
-  const privateKey = normalizePrivateKey(
-    process.env.FIREBASE_ADMIN_PRIVATE_KEY ||
-      process.env.FIREBASE_PRIVATE_KEY ||
-      process.env.private_key
-  );
+    sanitizeEnv(process.env.FIREBASE_ADMIN_CLIENT_EMAIL) ||
+    sanitizeEnv(process.env.FIREBASE_CLIENT_EMAIL) ||
+    sanitizeEnv(process.env.client_email);
+  const privateKey =
+    sanitizeEnv(process.env.FIREBASE_ADMIN_PRIVATE_KEY) ||
+    sanitizeEnv(process.env.FIREBASE_PRIVATE_KEY) ||
+    sanitizeEnv(process.env.private_key);
 
   if (!projectId || !clientEmail || !privateKey) {
     return null;
   }
 
-  const parsed = { projectId, clientEmail, privateKey };
+  const parsed = {
+    projectId,
+    clientEmail,
+    privateKey: normalizePrivateKey(privateKey) as string
+  };
   cachedCredentials = parsed;
   return parsed;
 }

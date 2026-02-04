@@ -1,9 +1,10 @@
 import { env } from '@/lib/env';
 import type { FirebaseOptions } from 'firebase/app';
 
-const trimValue = (value?: string) => value?.trim() ?? '';
+const trimValue = (value?: string) => value?.split('#')[0].trim().replace(/^["']|["']$/g, '') ?? '';
 
-const publicFirebaseAuthFlag = process.env.NEXT_PUBLIC_ENABLE_FIREBASE_AUTH?.trim().toLowerCase();
+const rawAuthFlag = process.env.NEXT_PUBLIC_ENABLE_FIREBASE_AUTH;
+const publicFirebaseAuthFlag = rawAuthFlag?.split('#')[0].trim().toLowerCase();
 export const FIREBASE_AUTH_ENABLED = publicFirebaseAuthFlag === 'true';
 
 // Trimmed copy of the public Firebase config so server helpers can read the strings without forcing ENV resolution.

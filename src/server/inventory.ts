@@ -3,6 +3,7 @@ import { ENTRESTATE_INVENTORY } from '@/data/entrestate-inventory';
 import { firebaseConfig } from '@/lib/firebase/config';
 import type { ProjectData } from '@/lib/types';
 import { SERVER_ENV } from '@/lib/server/env';
+import { envBool } from '@/lib/env';
 
 let hasLoggedAdminInventoryFallback = false;
 function logAdminInventoryFallback(message: string, error?: unknown) {
@@ -18,13 +19,19 @@ function logAdminInventoryFallback(message: string, error?: unknown) {
 // Cache settings
 const CACHE_TTL_MS = 5 * 60 * 1000;
 const DEFAULT_MAX = 8000;
+
+const sanitizeEnv = (val?: string) => val?.split('#')[0].trim().replace(/^["']|["']$/g, '');
+
 const PUBLIC_PROJECT_ID =
-  process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ||
-  process.env.FIREBASE_PROJECT_ID ||
-  process.env.project_id ||
-  firebaseConfig?.projectId;
+  sanitizeEnv(process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) ||
+  sanitizeEnv(process.env.FIREBASE_PROJECT_ID) ||
+  sanitizeEnv(process.env.project_id) ||
+  sanitizeEnv(firebaseConfig?.projectId) || '';
+
 const PUBLIC_API_KEY =
-  process.env.NEXT_PUBLIC_FIREBASE_API_KEY || firebaseConfig?.apiKey;
+  sanitizeEnv(process.env.NEXT_PUBLIC_FIREBASE_API_KEY) ||
+  sanitizeEnv(firebaseConfig?.apiKey) || '';
+
 const ADMIN_PROJECT_ID = getAdminProjectId();
 const ADMIN_PROJECT_MISMATCH =
   ADMIN_PROJECT_ID && PUBLIC_PROJECT_ID && ADMIN_PROJECT_ID !== PUBLIC_PROJECT_ID;
@@ -145,6 +152,10 @@ export function decodeFirestoreFields(fields: Record<string, FirestoreValue>) {
 }
 
 export function normalizeProjectData(raw: any, id: string): ProjectData {
+  if (!raw) {
+    return { id, name: 'Invalid Project Data' } as ProjectData;
+  }
+
   const locationRaw = raw.location || {};
   const cityRaw = normalizeString(locationRaw.city || raw.city || raw.market, 'UAE');
   const city = normalizeCityLabel(cityRaw, 'UAE');
@@ -308,6 +319,10 @@ async function loadPublicInventory(max: number): Promise<ProjectData[]> {
 
     const res = await fetch(url.toString(), { cache: 'no-store' });
     if (!res.ok) {
+      const errorBody = await res.text().catch(() => 'No body');
+      console.error(
+        `[inventory] Public Firestore REST API failed: ${res.status} ${res.statusText}. Body: ${errorBody}`
+      );
       break;
     }
 
@@ -354,8 +369,13 @@ async function loadPublicProjectById(projectId: string): Promise<ProjectData | n
 }
 
 export async function loadInventoryProjects(max = DEFAULT_MAX, forceRefresh = false) {
-  const useStatic = SERVER_ENV.USE_STATIC_INVENTORY !== 'false';
-  console.log(`[inventory] Loading mode: ${useStatic ? 'STATIC' : 'FIRESTORE'} (Env: '${SERVER_ENV.USE_STATIC_INVENTORY}')`);
+  // Robust check for static mode: Default to FIRESTORE (false) for launch
+  const useStatic =
+    process.env.USE_STATIC_INVENTORY === 'true' ||
+    process.env.NEXT_PUBLIC_ENABLE_STATIC_INVENTORY === 'true' ||
+    envBool('USE_STATIC_INVENTORY', false);
+
+  console.log(`[inventory] Loading mode: ${useStatic ? 'STATIC' : 'FIRESTORE'}`);
 
   if (useStatic) {
     // Static mode (default) - prevents quota usage unless explicitly disabled
@@ -378,12 +398,27 @@ export async function loadInventoryProjects(max = DEFAULT_MAX, forceRefresh = fa
   const db = tryGetAdminDb();
   if (db && typeof db.collection === 'function') {
     try {
-      // Order by ingestion time to ensure the latest "commits" (projects) appear first
-      const snapshot = await db
-        .collection('inventory_projects')
-        .orderBy('ingestedAt', 'desc')
-        .limit(max)
-        .get();
+      let snapshot: any;
+      try {
+        // Order by ingestion time to ensure the latest "commits" (projects) appear first
+        // We wrap this in a Promise.race to prevent hanging the API route if Firestore is slow
+        snapshot = await Promise.race([
+          db.collection('inventory_projects')
+            .orderBy('ingestedAt', 'desc')
+            .limit(max)
+            .get(),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Firestore timeout')), 5000)
+          )
+        ]);
+      } catch (queryError: any) {
+        // Fallback 1: If orderBy fails (missing index) or times out, try a simple fetch
+        console.warn(
+          `[inventory] Primary Firestore query failed (${queryError.message}). Falling back to unordered query.`
+        );
+        snapshot = await db.collection('inventory_projects').limit(max).get();
+      }
+
       if (!snapshot.empty) {
         projects = snapshot.docs.map((doc: any) => normalizeProjectData(doc.data(), doc.id));
         console.log(`[inventory] Successfully loaded ${projects.length} projects from Firestore.`);
@@ -391,6 +426,8 @@ export async function loadInventoryProjects(max = DEFAULT_MAX, forceRefresh = fa
     } catch (error) {
       if (error && typeof error === 'object' && 'code' in error && (error as any).code === 8) {
         logAdminInventoryFallback('Admin inventory query quota exceeded (RESOURCE_EXHAUSTED); falling back to public/static inventory.');
+      } else if (error && typeof error === 'object' && 'code' in error && (error as any).code === 7) {
+        logAdminInventoryFallback('Admin inventory query failed: PERMISSION_DENIED. Ensure your service account has the "Cloud Datastore User" role in Google Cloud Console.');
       } else {
         logAdminInventoryFallback('Admin inventory query failed; falling back to public/static inventory.', error);
       }
@@ -415,7 +452,9 @@ export async function loadInventoryProjects(max = DEFAULT_MAX, forceRefresh = fa
 
   cachedProjects = projects;
   cachedAt = now;
-  hasFullInventoryLoaded = projects.length < max;
+  // Mark as fully loaded if we got a reasonable amount of data
+  // We consider it "full" if we hit the max or got a significant chunk
+  hasFullInventoryLoaded = projects.length > 0 && projects.length < max;
   return projects.slice(0, max);
 }
 
@@ -423,7 +462,12 @@ export async function loadInventoryProjectById(projectId: string) {
   if (!projectId) return null;
   const resolvedId = safeDecodeURIComponent(projectId);
 
-  if (SERVER_ENV.USE_STATIC_INVENTORY === 'false') {
+  const useStatic =
+    process.env.USE_STATIC_INVENTORY === 'true' ||
+    process.env.NEXT_PUBLIC_ENABLE_STATIC_INVENTORY === 'true' ||
+    envBool('USE_STATIC_INVENTORY', false);
+
+  if (!useStatic) {
     const db = tryGetAdminDb();
     if (db && typeof db.collection === 'function') {
       try {
@@ -454,7 +498,7 @@ export async function loadInventoryProjectById(projectId: string) {
   const now = Date.now();
   const isCacheValid = cachedProjects.length && now - cachedAt < CACHE_TTL_MS;
 
-  if (!isCacheValid || SERVER_ENV.USE_STATIC_INVENTORY !== 'false') {
+  if (!isCacheValid || useStatic) {
     fallback = ENTRESTATE_INVENTORY.map((p) => normalizeProjectData(p, p.id));
   }
 
@@ -483,7 +527,8 @@ export async function getRelevantProjects(message: string, context?: string, max
   const terms = query.split(/[^a-z0-9]+/i).filter((term) => term.length > 2);
 
   if (!terms.length) {
-    return [];
+    // If the query is empty or too vague, return the top projects to show market expertise
+    return projects.slice(0, max);
   }
 
   const scored = projects
@@ -519,10 +564,12 @@ export async function getRelevantProjects(message: string, context?: string, max
 
 export function formatProjectContext(project: ProjectData) {
   const location = project.location?.area || project.location?.city || 'UAE';
+  const developer = project.developer && project.developer !== 'Unknown Developer' ? project.developer : 'a premium developer';
   const price = project.price?.label || 'Price on request';
   const handover = project.handover ? `Q${project.handover.quarter} ${project.handover.year}` : 'TBD';
   const status = project.availability || project.status || 'Available';
-  const highlights = project.features?.slice(0, 3).join(', ');
+  const highlights = project.features?.slice(0, 8).join(', ');
+  const description = project.description?.short || project.description?.full?.slice(0, 150) || '';
 
-  return `- ${project.name} (${location}) | ${price} | ${status} | Handover ${handover}${highlights ? ` | ${highlights}` : ''}`;
+  return `- ${project.name} by ${developer} in ${location}: ${description} | Price: ${price} | Status: ${status} | Handover: ${handover}${highlights ? ` | Amenities: ${highlights}` : ''}`;
 }

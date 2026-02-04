@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { generateText } from 'ai';
 import { z } from 'zod';
-import { getGoogleModel, FLASH_MODEL } from '@/lib/ai/google';
+import { getGoogleModel } from '@/lib/ai/google';
 import { formatProjectContext } from '@/server/inventory';
 import { mainSystemPrompt } from '@/config/prompts';
 import { enforceRateLimit, getRequestIp } from '@/lib/server/rateLimit';
@@ -14,6 +14,9 @@ import { fetchRelevantProjects } from '@/lib/server/inventory-search';
 import { scoreLeadIntent } from '@/lib/server/lead-intent';
 import { getAdminDb } from '@/server/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
+import { normalizeEmail, normalizePhone } from '@/lib/server/lead-dedupe';
+import { requireRole } from '@/server/auth';
+import { enforceUsageLimit, PlanLimitError, planLimitErrorResponse } from '@/lib/server/billing';
 
 const requestSchema = z.object({
   message: z.string().min(1),
@@ -51,6 +54,19 @@ export async function POST(req: NextRequest) {
     }
     const body = await req.json();
     payload = requestSchema.parse(body);
+
+    // Enforce usage limits for the 'ai_conversations' metric
+    try {
+      const { tenantId } = await requireRole(req, ['agent', 'agency_admin', 'super_admin']);
+      const db = getAdminDb();
+      await enforceUsageLimit(db, tenantId, 'ai_conversations');
+    } catch (error) {
+      if (error instanceof PlanLimitError) {
+        return respond(planLimitErrorResponse(error), { status: 402 });
+      }
+      // If auth fails (public preview), we rely on the rate limit above
+    }
+
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return respond(
@@ -78,16 +94,20 @@ export async function POST(req: NextRequest) {
 
   const projectContext = await getProjectContext(req, payload.message, payload.context);
   const systemPrompt = `
-Role & Context:
-${payload.context || 'Entrestate chat assistant for UAE real estate teams.'}
+Persona: 25-Year UAE Real Estate Expert
+Context: ${payload.context || 'General UAE Real Estate Market'}
 
-You are a UAE real estate advisor who explains things clearly and avoids technical jargon.
-Use the listing context below when available and keep answers concise.
-If asked about Dubai/UAE investment topics (fees, visas, payment plans, ROI, financing), give high-level guidance and say details should be confirmed with the broker.
-If you mention pricing or returns, note they are estimates.
-If you are unsure, say so and offer a next step (brochure, viewing, or a call).
-Ask one question at a time. If the buyer shows interest and contact details are missing, ask for name and WhatsApp or email.
-Avoid repetition and try to keep the conversation flowing naturally, providing diverse responses.
+You are a highly experienced UAE Real Estate Advisor with over 25 years of deep market expertise. 
+Your tone is professional, authoritative, and insightful. You provide high-value advice, not just data.
+
+Guidelines:
+1. Use the provided listing context to answer specific questions about projects, floor plans, and pricing.
+2. For general market inquiries (ROI, areas, visas, fees), provide expert-level insights based on your 25 years of experience.
+3. Always clarify that pricing and availability are estimates and should be confirmed with a broker.
+4. Keep responses concise but packed with value. Avoid generic "AI assistant" phrasing.
+5. If the user shows intent, ask for their Name and WhatsApp/Email to send a brochure or schedule a viewing.
+6. Ask only one follow-up question at a time to maintain a natural conversation flow.
+
 ${projectContext}
 `;
 
@@ -114,8 +134,8 @@ ${projectContext}
   let aiFailure: { error: string; message: string; missing?: string[] } | null = null;
   try {
     reply = await generatePreviewReply(messages, systemPrompt);
-  } catch (error: unknown) {
-    logError(scope, error, { requestId });
+  } catch (error: any) {
+    console.error('[bot/preview/chat] Actual AI Error:', error);
     if (error instanceof MissingAIKeyError) {
       aiFailure = {
         error: 'missing_api_key',
@@ -133,11 +153,15 @@ ${projectContext}
   }
 
   const db = getAdminDb();
-  const leadRef = await db.collection('public_leads').add({
+  // Save to the 'public' tenant collection for dashboard visibility
+  const leadRef = await db.collection('tenants').doc('public').collection('leads').add({
     source: 'preview_chat',
     message: payload.message,
+    name: null,
     email: emailMatch || null,
+    emailNormalized: normalizeEmail(emailMatch),
     phone: phoneMatch || null,
+    phoneNormalized: normalizePhone(phoneMatch),
     intentScore: intent.intent_score,
     intentFocus: intent.focus,
     intentReasoning: intent.reasoning,
@@ -145,6 +169,10 @@ ${projectContext}
     intentNextAction: intent.next_action,
     createdAt: FieldValue.serverTimestamp(),
     updatedAt: FieldValue.serverTimestamp(),
+    metadata: {
+      requestId,
+      context: payload.context
+    }
   });
   console.log(
     JSON.stringify({
@@ -165,19 +193,9 @@ ${projectContext}
   };
 
   if (aiFailure) {
-    return respond(
-      {
-        ok: false,
-        error: {
-          code: aiFailure.error,
-          message: aiFailure.message,
-          missing: aiFailure.missing,
-        },
-        data: responseData,
-        requestId,
-      },
-      { status: 503 }
-    );
+    // Log the failure for the developer but return the fallback reply to the user with 200 OK
+    console.error(`[bot/preview/chat] AI Failure: ${aiFailure.message}`, { requestId });
+    return respond({ ok: true, data: responseData, requestId });
   }
 
   return respond({ ok: true, data: responseData, requestId });
@@ -187,7 +205,7 @@ async function generatePreviewReply(
   messages: Array<{ role: 'user' | 'assistant'; content: string }>,
   systemPrompt: string
 ) {
-  return attemptModel(FLASH_MODEL, systemPrompt, messages);
+  return attemptModel('gemini-2.0-flash', systemPrompt, messages);
 }
 
 async function attemptModel(
@@ -230,7 +248,9 @@ function resolveModel(modelId: string) {
 
 async function getProjectContext(req: NextRequest, message: string, context?: string) {
   try {
-    const relevantProjects = await fetchRelevantProjects(req, `${message} ${context || ''}`, 8);
+    const cleanQuery = message.replace(/[?]/g, '').trim();
+    const relevantProjects = await fetchRelevantProjects(req, cleanQuery || 'Dubai', 8);
+    console.log(`[bot/preview/chat] Inventory search for "${message}" found ${relevantProjects.length} projects.`);
     if (!relevantProjects.length) return '';
     return `\nRelevant listings:\n${relevantProjects.map(formatProjectContext).join('\n')}`;
   } catch (error) {

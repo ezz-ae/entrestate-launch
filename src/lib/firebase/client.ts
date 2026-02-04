@@ -12,21 +12,27 @@ import { getFirestore, type Firestore } from 'firebase/firestore';
 
 import { FIREBASE_AUTH_ENABLED, getFirebaseConfig } from '@/lib/firebase/config';
 
-const enableFirebaseAuth = FIREBASE_AUTH_ENABLED;
-const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY?.trim() || '';
-const apiKeyLooksValid = /^AIza[0-9A-Za-z_-]{35}$/.test(apiKey);
+const sanitizeEnv = (val?: string) => val?.split('#')[0].trim().replace(/^["']|["']$/g, '');
+
+const isDevEnvironment = process.env.NODE_ENV !== 'production';
+
+const enableFirebaseAuth = FIREBASE_AUTH_ENABLED || sanitizeEnv(process.env.NEXT_PUBLIC_ENABLE_FIREBASE_AUTH) === 'true';
+const devAuthBypass = sanitizeEnv(process.env.NEXT_PUBLIC_ENABLE_DEV_AUTH_BYPASS) === 'true';
+
+const apiKey = sanitizeEnv(process.env.NEXT_PUBLIC_FIREBASE_API_KEY) || '';
+const apiKeyLooksValid = apiKey.startsWith('AIza') && apiKey.length > 30;
 
 const hasFirebaseEnvConfig =
   apiKeyLooksValid &&
-  !!process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN &&
-  !!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID &&
-  !!process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET &&
-  !!process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID &&
-  !!process.env.NEXT_PUBLIC_FIREBASE_APP_ID;
+  !!sanitizeEnv(process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN) &&
+  !!sanitizeEnv(process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) &&
+  !!sanitizeEnv(process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET) &&
+  !!sanitizeEnv(process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID) &&
+  !!sanitizeEnv(process.env.NEXT_PUBLIC_FIREBASE_APP_ID);
 
 export const FIREBASE_CONFIG_READY = enableFirebaseAuth && hasFirebaseEnvConfig;
 
-if (enableFirebaseAuth && !hasFirebaseEnvConfig && process.env.NODE_ENV !== 'production') {
+if (enableFirebaseAuth && !hasFirebaseEnvConfig && isDevEnvironment && !devAuthBypass) {
   const reason = apiKeyLooksValid
     ? 'NEXT_PUBLIC_FIREBASE_* config is incomplete'
     : 'NEXT_PUBLIC_FIREBASE_API_KEY looks invalid';
@@ -58,8 +64,10 @@ if (enableFirebaseAuth && firebaseApp) {
   }
 }
 
+export const FIREBASE_AUTH_BYPASSED = devAuthBypass && isDevEnvironment;
+
 export const FIREBASE_AUTH_DISABLED =
-  !enableFirebaseAuth || !FIREBASE_CONFIG_READY || !firebaseApp || authInitFailed;
+  FIREBASE_AUTH_BYPASSED || !enableFirebaseAuth || !FIREBASE_CONFIG_READY || !firebaseApp || authInitFailed;
 
 let db: Firestore | null = null;
 if (firebaseApp) {
