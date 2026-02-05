@@ -8,14 +8,14 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, MessageSquare, Send, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { ImportSmsContactsDialog } from './sms-import-contacts-dialog';
+import { ImportContactsDialog } from './import-contacts-dialog';
 import { authorizedFetch } from '@/lib/auth-fetch';
-import { useAuth } from '@/AuthContext';
+import { useFirebaseAuth } from '@/components/firebase-auth-provider';
 import { FIREBASE_AUTH_DISABLED } from '@/lib/firebase/client';
 
 export function SmsCampaignDashboard() {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user } = useFirebaseAuth();
 
   const [message, setMessage] = useState('');
   const [aiTopic, setAiTopic] = useState('');
@@ -175,7 +175,7 @@ export function SmsCampaignDashboard() {
 
   return (
     <div className="space-y-10 pb-20 animate-in fade-in duration-700">
-      <ImportSmsContactsDialog
+      <ImportContactsDialog
         open={showImportDialog}
         onOpenChange={setShowImportDialog}
         onImportComplete={handleImportComplete}
