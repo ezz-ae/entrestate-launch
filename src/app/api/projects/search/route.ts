@@ -7,23 +7,13 @@ import { decodeFirestoreFields, normalizeProjectData } from '@/server/inventory'
 import { enforceRateLimit, getRequestIp } from '@/lib/server/rateLimit';
 import { ENTRESTATE_INVENTORY } from '@/data/entrestate-inventory';
 import { SERVER_ENV } from '@/lib/server/env';
-import { firebaseConfig } from '@/lib/firebase/config';
 import { logError } from '@/lib/server/log';
-import {
-  createRequestId,
-  errorResponse,
-  jsonWithRequestId,
-} from '@/lib/server/request-id';
+import { createRequestId, errorResponse, jsonWithRequestId } from '@/lib/server/request-id';
 import { getAdminDb } from '@/server/firebase-admin';
-import {
-  resolveEntitlementsForTenant,
-} from '@/lib/server/entitlements';
-import {
-  requireRole,
-  UnauthorizedError,
-  ForbiddenError,
-} from '@/server/auth';
+import { resolveEntitlementsForTenant } from '@/lib/server/entitlements';
+import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
+import { firebaseConfig } from '@/lib/firebase/config';
 
 const DEFAULT_PAGE_SIZE = 12;
 const STATIC_CURSOR_PREFIX = 'static:';
@@ -57,8 +47,26 @@ function parseFilters(searchParams: URLSearchParams): ParsedFilters {
 function decodeStaticCursor(cursor?: string): number {
   if (!cursor?.startsWith(STATIC_CURSOR_PREFIX)) return 1;
   const page = Number(cursor.slice(STATIC_CURSOR_PREFIX.length));
-  if (!Number.isFinite(page) || page < 1) return 1;
-  return Math.floor(page);
+  return Number.isFinite(page) && page >= 1 ? Math.floor(page) : 1;
+}
+
+function decodeCursor(value?: string | null): { time: number; id: string } | undefined {
+  if (!value) return undefined;
+  try {
+    const decoded = Buffer.from(value, 'base64').toString('utf8');
+    const [timestamp, id] = decoded.split('_');
+    const time = parseInt(timestamp, 10);
+    if (id && time && Number.isFinite(time)) {
+      return { time, id };
+    }
+  } catch (e) {
+    // Ignore malformed cursor
+  }
+  return undefined;
+}
+
+function encodeCursor(createdAt: Date, id: string) {
+  return Buffer.from(`${createdAt.getTime()}_${id}`).toString('base64');
 }
 
 function buildStaticCursor(page: number) {
@@ -69,9 +77,7 @@ async function resolveOptionalAuth(req: NextRequest) {
   try {
     return await requireRole(req, ALL_ROLES);
   } catch (error) {
-    if (error instanceof UnauthorizedError || error instanceof ForbiddenError) {
-      return null;
-    }
+    if (error instanceof UnauthorizedError || error instanceof ForbiddenError) return null;
     throw error;
   }
 }
@@ -81,6 +87,7 @@ const PUBLIC_PROJECT_ID =
   process.env.FIREBASE_PROJECT_ID ||
   process.env.project_id ||
   firebaseConfig?.projectId;
+
 const PUBLIC_API_KEY =
   process.env.NEXT_PUBLIC_FIREBASE_API_KEY || firebaseConfig?.apiKey;
 
@@ -95,18 +102,12 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const filters = parseFilters(searchParams);
     const { cursor } = filters;
+    const useStaticParam = searchParams.get('useStatic');
 
     const authContext = await resolveOptionalAuth(req);
     const ip = getRequestIp(req);
     if (!(await enforceRateLimit(`projects:search:${ip}`, 120, 60_000))) {
-      return respond(
-        {
-          ok: false,
-          error: 'Rate limit exceeded',
-          requestId,
-        },
-        { status: 429 }
-      );
+      return respond({ ok: false, error: 'Rate limit exceeded', requestId }, { status: 429 });
     }
 
     if (authContext) {
@@ -136,133 +137,106 @@ export async function GET(req: NextRequest) {
       maxPrice: filters.maxPrice,
     };
 
-    const useStaticInventory = SERVER_ENV.USE_STATIC_INVENTORY !== 'false';
+    const useStaticInventory =
+      useStaticParam === 'true' || SERVER_ENV.USE_STATIC_INVENTORY !== 'false';
 
     const items: ProjectData[] = [];
     let nextCursor: string | null = null;
     let totalApprox: number | undefined;
     let dataSource = 'static';
-    let firestoreCursor =
-      cursor && !cursor.startsWith(STATIC_CURSOR_PREFIX) ? cursor : undefined;
-    let firestoreNextToken: string | null = null;
+
     let firestoreSucceeded = false;
 
-    if (!useStaticInventory && PUBLIC_PROJECT_ID && PUBLIC_API_KEY && !cursor.startsWith(STATIC_CURSOR_PREFIX)) {
+    // ---------- Firestore Lazy Pagination ----------
+    if (!useStaticInventory) {
       try {
-        const baseUrl = `https://firestore.googleapis.com/v1/projects/${PUBLIC_PROJECT_ID}/databases/(default)/documents/inventory_projects`;
-        let attempts = 0;
-        while (attempts < MAX_FIRESTORE_PAGES && items.length < DEFAULT_PAGE_SIZE) {
-          attempts += 1;
-          const url = new URL(baseUrl);
-          url.searchParams.set('pageSize', String(DEFAULT_PAGE_SIZE));
-          url.searchParams.set('key', PUBLIC_API_KEY);
+        const db = getAdminDb();
+        let firestoreCursor = cursor && !cursor.startsWith(STATIC_CURSOR_PREFIX) ? decodeCursor(cursor) : undefined;
+        let pagesFetched = 0;
+
+        while (pagesFetched < MAX_FIRESTORE_PAGES && items.length < DEFAULT_PAGE_SIZE) {
+          pagesFetched++;
+
+          let query = db.collection('inventory_projects').orderBy('createdAt');
+
+          // Start after cursor if exists
           if (firestoreCursor) {
-            url.searchParams.set('pageToken', firestoreCursor);
+            const lastDocSnapshot = await db.collection('inventory_projects').doc(firestoreCursor.id).get();
+            if (lastDocSnapshot.exists) query = query.startAfter(lastDocSnapshot);
           }
 
-          const res = await fetch(url.toString(), { cache: 'no-store' });
-          const text = await res.text();
-          let parsed: any = null;
+          // Apply filters if possible (Firestore indexes recommended)
+          if (filters.city !== 'all') query = query.where('city', '==', filters.city);
+          if (filters.status !== 'all') query = query.where('status', '==', filters.status);
+          if (filters.developer) query = query.where('developer', '==', filters.developer);
+
           try {
-            parsed = text ? JSON.parse(text) : null;
-          } catch {
-            parsed = null;
-          }
+            const snapshot = await query.limit(DEFAULT_PAGE_SIZE).get();
+            if (snapshot.empty) break;
 
-          if (!res.ok) {
-            const errorPayload = parsed?.error;
-            const errorMessage =
-              typeof errorPayload?.message === 'string' ? errorPayload.message : '';
-            const errorCode = errorPayload?.status ?? errorPayload?.code;
-            const isQuotaError = QUOTA_ERROR_KEYWORDS.some((keyword) =>
-              [errorCode, errorMessage].some(
-                (value) => typeof value === 'string' && value.includes(keyword)
-              )
-            );
-            if (isQuotaError) {
-              return respond(
-                {
-                  ok: false,
-                  error:
-                    'Inventory service is temporarily limited due to quota. Please retry shortly.',
-                  requestId,
-                },
-                { status: 503 }
-              );
-            }
-            throw new Error(
-              errorMessage ||
-                `Firestore inventory request failed with status ${res.status}`
-            );
-          }
+            const normalized = snapshot.docs.map((doc) => normalizeProjectData(doc.data(), doc.id));
+            const filtered = filterProjects(normalized, searchFilters);
 
-          const documents = Array.isArray(parsed?.documents) ? parsed.documents : [];
-          const normalized = documents.map((doc: any) => {
-            const docId =
-              typeof doc.name === 'string'
-                ? doc.name.split('/').filter(Boolean).pop() || ''
-                : '';
-            const raw = decodeFirestoreFields(doc.fields || {});
-            return normalizeProjectData(raw, docId || 'unknown');
-          });
-
-          const filtered = filterProjects(normalized, searchFilters);
-          const remaining = DEFAULT_PAGE_SIZE - items.length;
-          if (remaining > 0) {
+            const remaining = DEFAULT_PAGE_SIZE - items.length;
             items.push(...filtered.slice(0, remaining));
-          }
 
-          totalApprox =
-            typeof parsed?.totalSize === 'number' && parsed.totalSize > 0
-              ? parsed.totalSize
-              : totalApprox;
-          dataSource = 'firestore';
-          firestoreSucceeded = true;
+            const lastDoc = snapshot.docs[snapshot.docs.length - 1];
+            if (lastDoc) {
+              const lastCreatedAt = lastDoc.data()?.createdAt?.toDate();
+              if (lastCreatedAt) {
+                firestoreCursor = { time: lastCreatedAt.getTime(), id: lastDoc.id };
+                nextCursor = encodeCursor(lastCreatedAt, lastDoc.id);
+              } else {
+                firestoreCursor = undefined;
+              }
+            }
 
-          const parsedNext =
-            typeof parsed?.nextPageToken === 'string' ? parsed.nextPageToken : null;
-          firestoreNextToken = parsedNext;
-          if (!parsedNext) {
-            break;
+            firestoreSucceeded = true;
+
+            if (!firestoreCursor || items.length >= DEFAULT_PAGE_SIZE) break;
+          } catch (queryError: any) {
+            console.warn(
+              '[projects/search] Individual Firestore query page failed:',
+              queryError.message
+            );
+            // Continue to next page attempt or break if too many failures
+            break; // Break and fall back to static if a page query fails
           }
-          firestoreCursor = parsedNext;
         }
-        if (firestoreSucceeded && firestoreNextToken) {
-          nextCursor = firestoreNextToken;
-        }
+
+        dataSource = firestoreSucceeded ? 'firestore' : 'static';
       } catch (firestoreError) {
-        console.warn(
-          '[projects/search] Firestore query failed, falling back to static.',
-          firestoreError
-        );
+        console.warn('[projects/search] Firestore query failed, will fallback to static.', firestoreError);
       }
     }
 
-    if (!firestoreSucceeded) {
-      const normalizedStatic = ENTRESTATE_INVENTORY.map((project) =>
-        normalizeProjectData(project, project.id)
-      );
+    // ---------- Static Fallback ----------
+    if (items.length < DEFAULT_PAGE_SIZE) {
+      const normalizedStatic = ENTRESTATE_INVENTORY.map((project) => normalizeProjectData(project, project.id));
       const filtered = filterProjects(normalizedStatic, searchFilters);
-      totalApprox = filtered.length;
+
       const staticPage = decodeStaticCursor(cursor);
       const start = (staticPage - 1) * DEFAULT_PAGE_SIZE;
-      const pageItems = filtered.slice(start, start + DEFAULT_PAGE_SIZE);
-      items.splice(0, items.length, ...pageItems);
-      if (start + DEFAULT_PAGE_SIZE < filtered.length) {
-        nextCursor = buildStaticCursor(staticPage + 1);
-      } else {
-        nextCursor = null;
+
+      for (let i = 0; items.length < DEFAULT_PAGE_SIZE && start + i < filtered.length; i++) {
+        items.push(filtered[start + i]);
       }
-      dataSource = 'static';
+
+      totalApprox = filtered.length;
+
+      if (start + DEFAULT_PAGE_SIZE < filtered.length && !nextCursor) {
+        nextCursor = buildStaticCursor(staticPage + 1);
+      }
+
+      if (!firestoreSucceeded) dataSource = 'static';
     }
 
-    const cursorUsed = cursor || '<start>';
     console.log(
       JSON.stringify({
         event: 'inventory.pagination',
         userId: authContext?.uid ?? 'anonymous',
         tenantId: authContext?.tenantId ?? 'public',
-        cursorUsed,
+        cursorUsed: cursor || '<start>',
         countReturned: items.length,
         dataSource,
       })
@@ -278,15 +252,13 @@ export async function GET(req: NextRequest) {
           totalApprox,
           dataSource,
           returnedCount: items.length,
-          cursorUsed,
+          cursorUsed: cursor || '<start>',
         },
       },
-      {
-        headers: { 'X-Inventory-Source': dataSource },
-      }
+      { headers: { 'X-Inventory-Source': dataSource } }
     );
   } catch (error) {
-    logError(scope, error, { url: path, requestId });
+    logError(scope, error, { url: req.url, requestId });
     return errorResponse(requestId, scope);
   }
 }

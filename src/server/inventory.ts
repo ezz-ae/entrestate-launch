@@ -18,7 +18,7 @@ function logAdminInventoryFallback(message: string, error?: unknown) {
 
 // Cache settings
 const CACHE_TTL_MS = 5 * 60 * 1000;
-const DEFAULT_MAX = 8000;
+const DEFAULT_MAX = 500; // Reduced from 8000 to prevent timeouts during metadata builds
 
 const sanitizeEnv = (val?: string) => val?.split('#')[0].trim().replace(/^["']|["']$/g, '');
 
@@ -398,17 +398,17 @@ export async function loadInventoryProjects(max = DEFAULT_MAX, forceRefresh = fa
   const db = tryGetAdminDb();
   if (db && typeof db.collection === 'function') {
     try {
-      let snapshot: any;
+      let snapshot;
       try {
-        // Order by ingestion time to ensure the latest "commits" (projects) appear first
+        // Order by createdAt to ensure the latest projects appear first
         // We wrap this in a Promise.race to prevent hanging the API route if Firestore is slow
         snapshot = await Promise.race([
           db.collection('inventory_projects')
-            .orderBy('ingestedAt', 'desc')
+            .orderBy('createdAt', 'desc')
             .limit(max)
             .get(),
           new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Firestore timeout')), 5000)
+            setTimeout(() => reject(new Error('Firestore timeout')), 10000)
           )
         ]);
       } catch (queryError: any) {
@@ -419,7 +419,7 @@ export async function loadInventoryProjects(max = DEFAULT_MAX, forceRefresh = fa
         snapshot = await db.collection('inventory_projects').limit(max).get();
       }
 
-      if (!snapshot.empty) {
+      if (snapshot && !snapshot.empty) {
         projects = snapshot.docs.map((doc: any) => normalizeProjectData(doc.data(), doc.id));
         console.log(`[inventory] Successfully loaded ${projects.length} projects from Firestore.`);
       }
@@ -462,6 +462,8 @@ export async function loadInventoryProjectById(projectId: string) {
   if (!projectId) return null;
   const resolvedId = safeDecodeURIComponent(projectId);
 
+  console.log(`[inventory] Attempting to load project by ID: ${resolvedId}`);
+
   const useStatic =
     process.env.USE_STATIC_INVENTORY === 'true' ||
     process.env.NEXT_PUBLIC_ENABLE_STATIC_INVENTORY === 'true' ||
@@ -471,9 +473,13 @@ export async function loadInventoryProjectById(projectId: string) {
     const db = tryGetAdminDb();
     if (db && typeof db.collection === 'function') {
       try {
+        console.log('[inventory] Querying Firestore for project ID:', resolvedId);
         const snapshot = await db.collection('inventory_projects').doc(resolvedId).get();
         if (snapshot.exists) {
+          console.log('[inventory] Project found in Firestore:', resolvedId);
           return normalizeProjectData(snapshot.data(), snapshot.id);
+        } else {
+          console.warn('[inventory] Project not found in Firestore for ID:', resolvedId);
         }
       } catch (error) {
         logAdminInventoryFallback('Admin project lookup failed; falling back to public/static inventory.', error);
@@ -484,16 +490,17 @@ export async function loadInventoryProjectById(projectId: string) {
 
     try {
       const project = await loadPublicProjectById(resolvedId);
-      if (project) return project;
+      if (project) {
+        console.log('[inventory] Project found via Public API:', resolvedId);
+        return project;
+      }
     } catch (error) {
       console.error('[inventory] public project lookup failed', error);
     }
   }
 
   // Fallback: Use cached or static data.
-  // We avoid calling loadInventoryProjects() in DB mode to prevent triggering a full 8k read
-  // just for a single ID lookup miss.
-  console.log(`[inventory] Safe fallback triggered for ID: ${projectId} - Skipping full DB load.`);
+  console.log(`[inventory] Safe fallback triggered for ID: ${projectId} - Attempting cached/static.`);
   let fallback = cachedProjects;
   const now = Date.now();
   const isCacheValid = cachedProjects.length && now - cachedAt < CACHE_TTL_MS;
@@ -503,22 +510,31 @@ export async function loadInventoryProjectById(projectId: string) {
   }
 
   const directMatch = fallback.find((project) => project.id === resolvedId);
-  if (directMatch) return directMatch;
+  if (directMatch) {
+    console.log('[inventory] Project found in static/cached data:', resolvedId);
+    return directMatch;
+  }
 
   const normalizedId = normalizeKey(resolvedId);
   if (!normalizedId) return null;
 
-  return (
-    fallback.find((project) => {
-      if (normalizeKey(project.id) === normalizedId) return true;
-      if (normalizeKey(project.name) === normalizedId) return true;
-      if (project.publicUrl) {
-        const slug = project.publicUrl.split('/').filter(Boolean).pop();
-        if (slug && normalizeKey(slug) === normalizedId) return true;
-      }
-      return false;
-    }) ?? null
-  );
+  const foundInFallback = fallback.find((project) => {
+    if (normalizeKey(project.id) === normalizedId) return true;
+    if (normalizeKey(project.name) === normalizedId) return true;
+    if (project.publicUrl) {
+      const slug = project.publicUrl.split('/').filter(Boolean).pop();
+      if (slug && normalizeKey(slug) === normalizedId) return true;
+    }
+    return false;
+  });
+
+  if (foundInFallback) {
+    console.log('[inventory] Project found in static/cached data (normalized ID match): ', resolvedId);
+    return foundInFallback;
+  }
+
+  console.warn('[inventory] Project not found in any source:', resolvedId);
+  return null;
 }
 
 export async function getRelevantProjects(message: string, context?: string, max = 8) {
