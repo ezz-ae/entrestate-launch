@@ -86,7 +86,6 @@
     "nanoid": "^5.0.7",
     "next": "^16.1.6",
     "next-themes": "^0.3.0",
-    "node": "^25.5.0",
     "openai": "^6.16.0",
     "pdf-parse": "^2.4.5",
     "pdf-parse-fork": "^1.2.0",
