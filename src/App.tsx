@@ -249,7 +249,7 @@ const AppContent: React.FC = () => {
       case 'leadScoring':
         return <CRMPipelineScreen onBack={() => navigateTo('settings')} />;
       case 'integrations':
-        return <SettingsScreen onBack={() => navigateTo('dashboard')} onSave={() => { }} theme={theme} onToggleTheme={toggleTheme} onNavigateTo={navigateTo} />;
+        return <SettingsScreen />;
 
       default:
         return (
