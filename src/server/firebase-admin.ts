@@ -25,7 +25,7 @@ if (fs.existsSync(serviceAccountPath)) {
     parsedCredentials = {
       projectId: rawConfig.project_id,
       clientEmail: rawConfig.client_email,
-      privateKey: rawConfig.private_key?.replace(/\\n/g, '\n'),
+      privateKey: rawConfig.private_key,
     };
     console.log('[firebase-admin] Local private key loaded (first 50 chars):', parsedCredentials.privateKey?.substring(0, 50));
   } catch (e) {
