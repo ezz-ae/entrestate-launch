@@ -10,14 +10,14 @@ import { Mail, Upload, Loader2, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ImportContactsDialog } from './import-contacts-dialog';
 import { authorizedFetch } from '@/lib/auth-fetch';
-import { useAuth } from '@/AuthContext';
+import { useFirebaseAuth } from '@/components/firebase-auth-provider';
 import { FIREBASE_AUTH_DISABLED } from '@/lib/firebase/client';
 
 const DEFAULT_SUBJECT = 'New project update from Entrestate';
 
 export function EmailCampaignDashboard() {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user } = useFirebaseAuth();
 
   const [subject, setSubject] = useState(DEFAULT_SUBJECT);
   const [message, setMessage] = useState('');

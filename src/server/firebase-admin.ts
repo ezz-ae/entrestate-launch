@@ -29,7 +29,9 @@ let adminApp: App | null = null;
 const sanitizeEnv = (val?: string) => val?.split('#')[0].trim().replace(/^["']|["']$/g, '');
 
 function normalizePrivateKey(value?: string) {
-  return value?.replace(/\\n/g, '\n');
+  if (!value) return undefined;
+  // Vercel may escape newlines as \\n or just \n. Also remove quotes.
+  return value.replace(/\\n/g, '\\n').replace(/\\n/g, '\n').replace(/"/g, '');
 }
 
 function logDebug(message: string) {
