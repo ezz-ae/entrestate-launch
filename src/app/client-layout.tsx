@@ -2,7 +2,7 @@
 
 import { useMemo, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { AuthProvider } from '@/AuthContext';
+import { FirebaseAuthProvider } from '@/components/firebase-auth-provider';
 import { SiteHeader } from '@/components/site-header';
 import { SiteFooter } from '@/components/site-footer';
 
@@ -56,10 +56,10 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   // }, []);
 
   return (
-    <AuthProvider>
+    <FirebaseAuthProvider>
       {showPublicChrome && <SiteHeader />}
       {children}
       {showPublicChrome && <SiteFooter />}
-    </AuthProvider>
+    </FirebaseAuthProvider>
   );
 }
