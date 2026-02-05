@@ -47,7 +47,10 @@ export async function POST(request: NextRequest) {
       publishedAt: action === 'publish' ? new Date() : null,
       updatedAt: new Date(),
     }, { merge: true });
-    // TODO: Call Vercel API to trigger deployment
+    
+    // Note: For dynamic sites (ISR/SSR), updating the database is sufficient to "publish" content.
+    // If static generation (SSG) was used, we would call Vercel Deploy Hooks here.
+    
     return respond({
       ok: true,
       data: { status: action === 'publish' ? 'published' : 'draft' },
