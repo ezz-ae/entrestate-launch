@@ -10,6 +10,7 @@ import { mainSystemPrompt } from '@/config/prompts';
 import { getAdminDb } from '@/server/firebase-admin';
 import { enforceRateLimit, getRequestIp } from '@/lib/server/rateLimit';
 import { logError } from '@/lib/server/log';
+import { FieldValue } from 'firebase-admin/firestore';
 import {
   createRequestId,
   errorResponse,
@@ -18,6 +19,7 @@ import {
 import { scoreLeadIntent } from '@/lib/server/lead-intent';
 import { requireRole } from '@/server/auth';
 import { enforceUsageLimit, PlanLimitError, planLimitErrorResponse } from '@/lib/server/billing';
+import { normalizeEmail, normalizePhone } from '@/lib/server/lead-dedupe';
 
 const NIL_HISTORY: Array<{ role: 'user' | 'agent'; content: string }> = [];
 
