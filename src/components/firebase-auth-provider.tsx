@@ -17,7 +17,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const FirebaseAuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const auth = getAuthSafe();
-  const [user, loading, error] = useAuthState(auth!);
+  const [user, loading, error] = auth ? useAuthState(auth) : [null, false, undefined];
 
   const value = {
     user,

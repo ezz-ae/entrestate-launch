@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { IS_EMAIL_ENABLED } from '@/lib/server/env';
 

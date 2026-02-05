@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { generateImage } from 'ai';
 import { getGoogleModel, IMAGE_MODEL } from '@/lib/ai/google';

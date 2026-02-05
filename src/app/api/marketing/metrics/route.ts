@@ -5,7 +5,6 @@ import { DEFAULT_MARKETING_METRICS } from '@/data/marketing-metrics';
 import { ALL_ROLES } from '@/lib/server/roles';
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 const COLLECTION = 'analytics';
 const DOC_ID = 'marketing';

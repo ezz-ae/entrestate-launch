@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextRequest } from 'next/server';
 import { getAdminDb } from '@/server/firebase-admin';
 import { createRequestId, errorResponse, jsonWithRequestId } from '@/lib/server/request-id';

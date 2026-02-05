@@ -12,7 +12,6 @@ import {
 } from '@/lib/server/request-id';
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 const DEFAULT_LIMIT = 12;
 

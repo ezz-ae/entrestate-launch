@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { paypalRequest } from '@/server/paypal';
 import { getAdminDb } from '@/server/firebase-admin';

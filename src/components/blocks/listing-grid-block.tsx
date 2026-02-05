@@ -33,6 +33,11 @@ export function ListingGridBlock({
       try {
           const rawResults = await searchProjects(query, filters);
           
+          if (!Array.isArray(rawResults)) {
+            console.error("searchProjects did not return an array:", rawResults);
+            return;
+          }
+
           const cleanedResults = await Promise.all(rawResults.slice(0, 6).map(async (p) => {
               const cleanAssets = await verifyAndFetchAssets(p.name, p.images);
               

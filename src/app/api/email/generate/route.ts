@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextRequest } from 'next/server';
 import { generateText } from 'ai';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';

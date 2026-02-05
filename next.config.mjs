@@ -1,4 +1,3 @@
-
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
@@ -116,6 +115,7 @@ const nextConfig = {
                 pathname: '/**',
             },
         ],
+        domains: ['i.pravatar.cc', 'assets.entrestate.com', 'www.gravatar.com'],
     },
     experimental: {
         serverActions: {

@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextRequest } from 'next/server';
 import pdf from 'pdf-parse-fork';
 import { nanoid } from 'nanoid';

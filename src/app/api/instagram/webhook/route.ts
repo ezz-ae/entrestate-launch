@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminDb } from '@/server/firebase-admin'; // Import Firebase Admin
 import { FieldValue } from 'firebase-admin/firestore'; // Import FieldValue for arrayUnion

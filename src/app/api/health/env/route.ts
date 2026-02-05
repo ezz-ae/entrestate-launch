@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { logError } from '@/lib/server/log';
 import { envBool } from '@/lib/env';
 import {

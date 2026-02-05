@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { generateSiteStructure } from '@/lib/ai/vertex-service';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';

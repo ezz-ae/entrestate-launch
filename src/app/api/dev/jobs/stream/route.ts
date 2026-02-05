@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 
 // Simple Server-Sent Events (SSE) endpoint for dev job updates.

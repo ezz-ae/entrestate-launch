@@ -47,6 +47,11 @@ service cloud.firestore {
         allow write: if isTenantAdmin(tenantId);
       }
 
+      match /inventory/{inventoryId} {
+        allow read: if isTenantMember(tenantId);
+        allow write: if isTenantAdmin(tenantId);
+      }
+
       match /leads/{leadId} {
         allow read, create, update, delete: if isTenantMember(tenantId);
         match /notes/{noteId} {
@@ -63,35 +68,9 @@ service cloud.firestore {
         allow read, write: if isTenantAdmin(tenantId);
       }
 
-      match /marketing_plans/{docId} {
-        allow read, write: if isTenantMember(tenantId);
-      }
-
-      match /teamInvites/{docId} {
-        allow read, write: if isTenantAdmin(tenantId);
-      }
-
-      match /domain_requests/{docId} {
-        allow read, write: if isTenantAdmin(tenantId);
-      }
-
-      match /events/{docId} {
-        allow read, write: if isTenantMember(tenantId);
-      }
-
-      match /analytics/{docId} {
+      match /projects/{projectId} {
         allow read: if isTenantMember(tenantId);
-        allow write: if isTenantAdmin(tenantId);
-      }
-
-      match /usage/{docId} {
-        allow read: if isTenantMember(tenantId);
-        allow write: if isTenantAdmin(tenantId);
-      }
-
-      match /billing_events/{docId} {
-        allow read: if isTenantAdmin(tenantId);
-        allow write: if isTenantAdmin(tenantId);
+        allow create, update, delete: if isTenantAdmin(tenantId);
       }
     }
 

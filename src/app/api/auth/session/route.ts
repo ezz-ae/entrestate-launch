@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 
 import { FIREBASE_AUTH_ENABLED } from '@/lib/server/env';

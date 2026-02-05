@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextRequest } from 'next/server';
 import { envBool } from '@/lib/env';
 import { logError } from '@/lib/server/log';

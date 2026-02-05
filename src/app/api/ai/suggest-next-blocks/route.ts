@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { suggestNextBlocksFlow } from '@/ai/flows/suggest-next-blocks';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
