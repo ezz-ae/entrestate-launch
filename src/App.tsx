@@ -131,13 +131,7 @@ const AppContent: React.FC = () => {
 
       case 'settings':
         return (
-          <SettingsScreen
-            onBack={() => navigateTo('dashboard')}
-            onSave={() => navigateTo('dashboard')}
-            theme={theme}
-            onToggleTheme={toggleTheme}
-            onNavigateTo={(screen) => navigateTo(screen)}
-          />
+          <SettingsScreen />
         );
 
       case 'notifications':
