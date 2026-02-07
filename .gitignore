@@ -66,3 +66,7 @@ src/config/service-account.json
 src/config/service-account.json
 src/config/service-account.json
 .env*.local
+
+# Firebase Admin SDK Keys
+firebase-adminsdk.json
+gen-lang-client-0927332284-571bd59f331e.json
