@@ -36,6 +36,11 @@ const serverEnvSchema = z.object({
   ENABLE_SUPABASE: z.string().optional().default('false'),
   ENABLE_CRON: z.string().optional().default('false'),
   META_ACCESS_TOKEN: z.string().optional(),
+  DATABASE_URL: z.string().optional(),
+  NEXTAUTH_URL: z.string().optional(),
+  NEXTAUTH_SECRET: z.string().optional(),
+  BLOB_READ_WRITE_TOKEN: z.string().optional(),
+  USE_NEON: z.string().optional(),
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;
@@ -81,3 +86,9 @@ export const FIREBASE_AUTH_ENABLED = envBool(
   'ENABLE_FIREBASE_AUTH',
   process.env.NODE_ENV === 'production'
 );
+
+export const USE_NEON = envBool('USE_NEON', false);
+export const NEXTAUTH_SECRET = SERVER_ENV.NEXTAUTH_SECRET || '';
+export const NEXTAUTH_URL = SERVER_ENV.NEXTAUTH_URL || '';
+export const DATABASE_URL = SERVER_ENV.DATABASE_URL || '';
+export const BLOB_READ_WRITE_TOKEN = SERVER_ENV.BLOB_READ_WRITE_TOKEN || '';

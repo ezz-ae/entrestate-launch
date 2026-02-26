@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import ForgivingInput from './ForgivingInput';
 import StickyFooter from './StickyFooter';
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
-import { getAuthSafe } from '@/lib/firebase/client';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
 
 const LoginScreen: React.FC = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { logIn } = useAuth();
 
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -20,12 +20,7 @@ const LoginScreen: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const auth = getAuthSafe();
-      if (!auth) {
-        throw new Error('Auth is not initialized.');
-      }
-      await signInWithEmailAndPassword(auth, formData.email, formData.password);
-      // Redirect to dashboard after successful login
+      await logIn(formData.email, formData.password);
       router.push('/dashboard');
     } catch (err: any) {
       setError(err.message);

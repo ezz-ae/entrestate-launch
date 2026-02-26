@@ -1,7 +1,6 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-import { FIREBASE_AUTH_ENABLED } from '@/lib/server/env';
 import { verifyFirebaseIdToken } from '@/lib/server/auth';
 
 const DEV_COOKIE_NAMES = ['dev_user', 'dev_uid'];
@@ -25,12 +24,8 @@ export async function requireDashboardAuth() {
         return;
     }
 
-    if (hasDevCookie && (isDevEnvironment || !FIREBASE_AUTH_ENABLED)) {
+    if (hasDevCookie && isDevEnvironment) {
         return;
-    }
-
-    if (!FIREBASE_AUTH_ENABLED) {
-        redirect('/login');
     }
 
     const cookieHeader = buildCookieHeader(cookieStore);

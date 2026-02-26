@@ -1,0 +1,140 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Tenant {
+  id        String    @id @default(cuid())
+  name      String
+  createdAt DateTime  @default(now())
+
+  users          User[]
+  projects       Project[]
+  leads          Lead[]
+  campaigns      Campaign[]
+  uploads        Upload[]
+  agentTraining  AgentTraining[]
+  orders         Order[]
+}
+
+model User {
+  id           String   @id @default(cuid())
+  tenantId     String
+  email        String   @unique
+  role         String
+  passwordHash String
+  createdAt    DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  tenantId    String
+  slug        String
+  title       String
+  city        String?
+  community   String?
+  developer   String?
+  priceMin    Decimal?
+  priceMax    Decimal?
+  rentalYield Decimal?
+  sortScore   Int?
+  firstPage   Boolean?
+  imagesJson  Json?
+  dataJson    Json?
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  leads  Lead[]
+  uploads Upload[]
+  agentTraining AgentTraining[]
+  orders Order[]
+
+  @@unique([tenantId, slug])
+}
+
+model Lead {
+  id        String   @id @default(cuid())
+  tenantId  String
+  projectId String?
+  name      String?
+  phone     String?
+  email     String?
+  source    String?
+  utmJson   Json?
+  notes     String?
+  status    String?
+  createdAt DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+}
+
+model Campaign {
+  id          String   @id @default(cuid())
+  tenantId    String
+  platform    String
+  name        String
+  utmSource   String?
+  utmCampaign String?
+  spend       Decimal?
+  metaJson    Json?
+  createdAt   DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+}
+
+enum UploadKind {
+  brochure
+  image
+  logo
+}
+
+model Upload {
+  id        String     @id @default(cuid())
+  tenantId  String
+  kind      UploadKind
+  filename  String
+  mime      String
+  size      Int
+  url       String
+  projectId String?
+  createdAt DateTime   @default(now())
+
+  tenant  Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  agentTrainings AgentTraining[]
+}
+
+model AgentTraining {
+  id            String   @id @default(cuid())
+  tenantId      String
+  projectId     String?
+  uploadId      String?
+  status        String?
+  extractedJson Json?
+  createdAt     DateTime @default(now())
+
+  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  upload  Upload?  @relation(fields: [uploadId], references: [id], onDelete: SetNull)
+}
+
+model Order {
+  id        String   @id @default(cuid())
+  tenantId  String
+  projectId String?
+  status    String?
+  amount    Decimal?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+}

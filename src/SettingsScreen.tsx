@@ -2,12 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Button } from './components/ui/button'; // Assuming button component path
 import ForgivingInput from './ForgivingInput';
 import StickyFooter from './StickyFooter';
-import { useFirebaseAuth } from './components/firebase-auth-provider';
-import { getAuth, signOut } from 'firebase/auth';
+import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 
 const SettingsScreen: React.FC = () => {
-  const { user } = useFirebaseAuth();
+  const { user, logOut } = useAuth();
   const router = useRouter();
   const [profile, setProfile] = useState({
     name: user?.displayName || '',
@@ -32,8 +31,7 @@ const SettingsScreen: React.FC = () => {
   const [showChangePassword, setShowChangePassword] = useState(false);
 
   const handleLogout = async () => {
-    const auth = getAuth();
-    await signOut(auth);
+    await logOut();
     router.push('/login');
   };
 

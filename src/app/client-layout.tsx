@@ -5,6 +5,8 @@ import { usePathname } from 'next/navigation';
 import { FirebaseAuthProvider } from '@/components/firebase-auth-provider';
 import { SiteHeader } from '@/components/site-header';
 import { SiteFooter } from '@/components/site-footer';
+import { SessionProvider } from 'next-auth/react';
+import { AuthProvider } from '@/hooks/useAuth';
 
 const HIDDEN_PREFIXES = ['/dashboard', '/builder', '/admin', '/api'];
 const HIDDEN_ROUTES = new Set(['/init', '/profile']);
@@ -58,10 +60,14 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   }, []);
 
   return (
-    <FirebaseAuthProvider>
-      {showPublicChrome && <SiteHeader />}
-      {children}
-      {showPublicChrome && <SiteFooter />}
-    </FirebaseAuthProvider>
+    <SessionProvider>
+      <AuthProvider>
+        <FirebaseAuthProvider>
+          {showPublicChrome && <SiteHeader />}
+          {children}
+          {showPublicChrome && <SiteFooter />}
+        </FirebaseAuthProvider>
+      </AuthProvider>
+    </SessionProvider>
   );
 }
