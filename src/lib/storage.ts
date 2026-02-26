@@ -1,90 +1,73 @@
-import { getStorage, ref, uploadBytes, getDownloadURL, listAll, type FirebaseStorage } from "firebase/storage";
-import { firebaseApp } from "@/lib/firebase/client";
-
-let cachedStorage: FirebaseStorage | undefined;
-let hasWarnedMissingStorage = false;
-const getStorageSafe = () => {
-  if (!firebaseApp) {
-    if (!hasWarnedMissingStorage) {
-      console.warn('[storage] Firebase client is not configured.');
-      hasWarnedMissingStorage = true;
-    }
-    return undefined;
-  }
-  if (!cachedStorage) {
-    cachedStorage = getStorage(firebaseApp);
-  }
-  return cachedStorage;
-};
-
 export interface UploadResult {
   url: string;
   path: string;
 }
 
 export const ProjectLibrary = {
-  
   /**
-   * Uploads a file to the specific project folder
+   * Uploads a file to the specific project folder.
    */
-  uploadAsset: async (projectId: string, file: File, type: 'images' | 'brochures' | 'floorplans'): Promise<UploadResult> => {
-    const storage = getStorageSafe();
-    if (!storage) return { url: '', path: '' };
-    const path = `projects/\${projectId}/\${type}/\${file.name}`;
-    const storageRef = ref(storage, path);
-    
-    await uploadBytes(storageRef, file);
-    const url = await getDownloadURL(storageRef);
-    
-    return { url, path };
+  uploadAsset: async (
+    projectId: string,
+    file: File,
+    type: 'images' | 'brochures' | 'floorplans'
+  ): Promise<UploadResult> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('projectId', projectId);
+    formData.append('type', type);
+
+    const response = await fetch('/api/storage/project', {
+      method: 'POST',
+      body: formData,
+    });
+    const payload = await response.json();
+    if (!response.ok || !payload?.ok) {
+      throw new Error(payload?.error?.message || 'Failed to upload asset.');
+    }
+    return payload.data as UploadResult;
   },
 
   /**
-   * Lists all assets for a project
+   * Lists all assets for a project.
    */
   getAssets: async (projectId: string): Promise<string[]> => {
-    const storage = getStorageSafe();
-    if (!storage) return [];
-    const projectRef = ref(storage, `projects/\${projectId}`);
-    // This assumes a flat structure or requires recursive listing. 
-    // For V1, we'll listing images.
-    const imagesRef = ref(storage, `projects/\${projectId}/images`);
-    
     try {
-      const res = await listAll(imagesRef);
-      const urls = await Promise.all(res.items.map(item => getDownloadURL(item)));
-      return urls;
+      const response = await fetch(
+        `/api/storage/project?projectId=${encodeURIComponent(projectId)}&type=images`
+      );
+      const payload = await response.json();
+      if (!response.ok || !payload?.ok) {
+        console.error('Error fetching assets:', payload?.error || response.statusText);
+        return [];
+      }
+      return payload.data.urls || [];
     } catch (error) {
-      console.error("Error fetching assets:", error);
+      console.error('Error fetching assets:', error);
       return [];
     }
   },
 
   /**
-   * "Purification" Helper: Takes a scraped URL, downloads it, and uploads to our storage
+   * "Purification" Helper: Takes a scraped URL, downloads it, and uploads to our storage.
    */
-  migrateExternalAsset: async (projectId: string, externalUrl: string, type: 'images' | 'brochures'): Promise<string> => {
-    const storage = getStorageSafe();
-    if (!storage) return externalUrl;
+  migrateExternalAsset: async (
+    projectId: string,
+    externalUrl: string,
+    type: 'images' | 'brochures'
+  ): Promise<string> => {
     try {
-        // 1. Fetch the external image
-        const response = await fetch(externalUrl);
-        const blob = await response.blob();
-        
-        // 2. Generate a filename
-        const ext = externalUrl.split('.').pop()?.split('?')[0] || 'jpg';
-        const filename = `imported-\${Date.now()}.\${ext}`;
-        
-        // 3. Upload to our storage
-        const path = `projects/\${projectId}/\${type}/\${filename}`;
-        const storageRef = ref(storage, path);
-        await uploadBytes(storageRef, blob);
-        
-        // 4. Return our new internal URL
-        return await getDownloadURL(storageRef);
+      const response = await fetch(externalUrl);
+      const blob = await response.blob();
+      const ext = externalUrl.split('.').pop()?.split('?')[0] || 'jpg';
+      const filename = `imported-${Date.now()}.${ext}`;
+      const file = new File([blob], filename, { type: blob.type || 'image/jpeg' });
+
+      const { url } = await ProjectLibrary.uploadAsset(projectId, file, type);
+      return url;
     } catch (error) {
-        console.error(`Failed to migrate asset for \${projectId}:`, error);
-        return externalUrl; // Fallback to original if fail
+      console.error(`Failed to migrate asset for ${projectId}:`, error);
+      return externalUrl;
     }
-  }
+  },
 };

@@ -6,7 +6,7 @@ import type { ProjectData } from '@/lib/types';
 import { decodeFirestoreFields, normalizeProjectData } from '@/server/inventory';
 import { enforceRateLimit, getRequestIp } from '@/lib/server/rateLimit';
 import { ENTRESTATE_INVENTORY } from '@/data/entrestate-inventory';
-import { SERVER_ENV } from '@/lib/server/env';
+import { SERVER_ENV, USE_NEON } from '@/lib/server/env';
 import { logError } from '@/lib/server/log';
 import { createRequestId, errorResponse, jsonWithRequestId } from '@/lib/server/request-id';
 import { getAdminDb } from '@/server/firebase-admin';
@@ -14,6 +14,7 @@ import { resolveEntitlementsForTenant } from '@/lib/server/entitlements';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
 import { firebaseConfig } from '@/lib/firebase/config';
+import { prisma } from '@/server/db';
 
 const DEFAULT_PAGE_SIZE = 12;
 const STATIC_CURSOR_PREFIX = 'static:';
@@ -110,7 +111,7 @@ export async function GET(req: NextRequest) {
       return respond({ ok: false, error: 'Rate limit exceeded', requestId }, { status: 429 });
     }
 
-    if (authContext) {
+    if (authContext && !USE_NEON) {
       const db = getAdminDb();
       const entitlements = await resolveEntitlementsForTenant(db, authContext.tenantId);
       if (!entitlements.features.inventoryAccess.allowed) {
@@ -146,9 +147,86 @@ export async function GET(req: NextRequest) {
     let dataSource = 'static';
 
     let firestoreSucceeded = false;
+    let neonSucceeded = false;
+
+    // ---------- Neon Pagination ----------
+    if (USE_NEON && !useStaticInventory && !cursor.startsWith(STATIC_CURSOR_PREFIX)) {
+      try {
+        const tenantId = authContext?.tenantId ?? 'public';
+        const neonCursor = decodeCursor(cursor);
+        const where: any = {
+          tenantId,
+          city: filters.city !== 'all' ? filters.city : undefined,
+          OR: filters.query
+            ? [
+                { title: { contains: filters.query, mode: 'insensitive' } },
+                { city: { contains: filters.query, mode: 'insensitive' } },
+                { community: { contains: filters.query, mode: 'insensitive' } },
+              ]
+            : undefined,
+          priceMin: filters.minPrice !== undefined ? { gte: filters.minPrice } : undefined,
+          priceMax: filters.maxPrice !== undefined ? { lte: filters.maxPrice } : undefined,
+        };
+
+        if (neonCursor) {
+          where.AND = [
+            {
+              OR: [
+                { createdAt: { lt: new Date(neonCursor.time) } },
+                {
+                  createdAt: new Date(neonCursor.time),
+                  id: { lt: neonCursor.id },
+                },
+              ],
+            },
+          ];
+        }
+
+        const neonItems = await prisma.project.findMany({
+          where,
+          orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+          take: DEFAULT_PAGE_SIZE,
+        });
+
+        const filtered = neonItems
+          .map((project) => {
+            const raw = project.dataJson ?? {
+              name: project.title,
+              developer: project.developer,
+              city: project.city,
+              community: project.community,
+              price_min: project.priceMin ? Number(project.priceMin) : undefined,
+              price_max: project.priceMax ? Number(project.priceMax) : undefined,
+              images: project.imagesJson,
+            };
+            const normalized = normalizeProjectData(raw, project.id);
+            return { ...normalized, __createdAt: project.createdAt };
+          })
+          .filter((project) => {
+            if (filters.status !== 'all' && project.status) {
+              return project.status.toLowerCase() === filters.status;
+            }
+            if (filters.developer) {
+              return (project.developer || '').toLowerCase() === filters.developer;
+            }
+            return true;
+          });
+
+        items.push(...filtered);
+        const lastItem = items[items.length - 1];
+        if (lastItem && (lastItem as any)?.__createdAt) {
+          nextCursor = encodeCursor(new Date((lastItem as any).__createdAt), lastItem.id);
+        }
+
+        neonSucceeded = items.length > 0;
+        if (neonSucceeded) dataSource = 'neon';
+      } catch (neonError) {
+        console.warn('[projects/search] Neon query failed, will fallback.', neonError);
+      }
+    }
 
     // ---------- Firestore Lazy Pagination ----------
-    if (!useStaticInventory) {
+    if (!useStaticInventory && !neonSucceeded) {
       try {
         const db = getAdminDb();
         let firestoreCursor = cursor && !cursor.startsWith(STATIC_CURSOR_PREFIX) ? decodeCursor(cursor) : undefined;
@@ -204,7 +282,7 @@ export async function GET(req: NextRequest) {
           }
         }
 
-        dataSource = firestoreSucceeded ? 'firestore' : 'static';
+        dataSource = firestoreSucceeded ? 'firestore' : dataSource;
       } catch (firestoreError) {
         console.warn('[projects/search] Firestore query failed, will fallback to static.', firestoreError);
       }
@@ -228,7 +306,7 @@ export async function GET(req: NextRequest) {
         nextCursor = buildStaticCursor(staticPage + 1);
       }
 
-      if (!firestoreSucceeded) dataSource = 'static';
+      if (!firestoreSucceeded && !neonSucceeded) dataSource = 'static';
     }
 
     console.log(
@@ -242,16 +320,24 @@ export async function GET(req: NextRequest) {
       })
     );
 
+    const responseItems = items.map((item: any) => {
+      if (item && typeof item === 'object' && '__createdAt' in item) {
+        const { __createdAt, ...rest } = item;
+        return rest;
+      }
+      return item;
+    });
+
     return respond(
       {
         ok: true,
         requestId,
         data: {
-          items,
+          items: responseItems,
           nextCursor,
           totalApprox,
           dataSource,
-          returnedCount: items.length,
+          returnedCount: responseItems.length,
           cursorUsed: cursor || '<start>',
         },
       },

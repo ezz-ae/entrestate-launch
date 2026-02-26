@@ -2,24 +2,22 @@
 
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
-import { getAdminDb } from '@/server/firebase-admin';
 import { verifyFirebaseIdToken } from '@/lib/server/auth';
 import { resolveEntitlementsForTenant } from '@/lib/server/entitlements';
-import { FieldValue } from 'firebase-admin/firestore';
+import { prisma } from '@/server/db';
+import { USE_NEON } from '@/lib/server/env';
 
 export async function generateLookalikeAudience() {
   const tenantId = await resolveTenantForExport();
-  const db = getAdminDb();
-
-  const snapshot = await db
-    .collection('tenants')
-    .doc(tenantId)
-    .collection('leads')
-    .orderBy('createdAt', 'desc')
-    .limit(50)
-    .get();
-
-  const count = snapshot.size;
+  const count = USE_NEON
+    ? await prisma.lead.count({ where: { tenantId } })
+    : (await (await import('@/server/firebase-admin')).getAdminDb()
+        .collection('tenants')
+        .doc(tenantId)
+        .collection('leads')
+        .orderBy('createdAt', 'desc')
+        .limit(50)
+        .get()).size;
 
   // Simulate processing delay (e.g. calling external API)
   await new Promise(resolve => setTimeout(resolve, 2000));
@@ -40,20 +38,36 @@ export async function generateLookalikeAudience() {
 
 export async function triggerCampaign(type: 'email' | 'sms', text: string, leadIds: string[], projectId: string) {
   const tenantId = await resolveTenantForExport();
-  const db = getAdminDb();
-
   // Simulate API call to email/sms provider
   await new Promise(resolve => setTimeout(resolve, 1500));
   
   // Log to database for tracking
-  await db.collection('tenants').doc(tenantId).collection('campaign_logs').add({
-    type,
-    content: text,
-    leadIds,
-    projectId,
-    status: 'sent',
-    createdAt: FieldValue.serverTimestamp()
-  });
+  if (USE_NEON) {
+    await prisma.campaign.create({
+      data: {
+        tenantId,
+        platform: type,
+        name: `${type.toUpperCase()} Campaign`,
+        metaJson: {
+          content: text,
+          leadIds,
+          projectId,
+          status: 'sent',
+        },
+      },
+    });
+  } else {
+    const db = (await import('@/server/firebase-admin')).getAdminDb();
+    const { FieldValue } = await import('firebase-admin/firestore');
+    await db.collection('tenants').doc(tenantId).collection('campaign_logs').add({
+      type,
+      content: text,
+      leadIds,
+      projectId,
+      status: 'sent',
+      createdAt: FieldValue.serverTimestamp(),
+    });
+  }
 
   return {
     success: true,
@@ -63,22 +77,31 @@ export async function triggerCampaign(type: 'email' | 'sms', text: string, leadI
 
 export async function syncLeadsToWebhook(webhookUrl: string) {
   const tenantId = await resolveTenantForExport();
-  const db = getAdminDb();
-  const snapshot = await db
-    .collection('tenants')
-    .doc(tenantId)
-    .collection('leads')
-    .orderBy('createdAt', 'desc')
-    .limit(50)
-    .get();
+  let leads: any[] = [];
+  if (USE_NEON) {
+    leads = await prisma.lead.findMany({
+      where: { tenantId },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
+  } else {
+    const db = (await import('@/server/firebase-admin')).getAdminDb();
+    const snapshot = await db
+      .collection('tenants')
+      .doc(tenantId)
+      .collection('leads')
+      .orderBy('createdAt', 'desc')
+      .limit(50)
+      .get();
 
-  const leads = snapshot.docs.map((doc) => {
-    const data = doc.data();
-    return {
-      id: doc.id,
-      ...data,
-    };
-  });
+    leads = snapshot.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+      };
+    });
+  }
 
   if (!leads || leads.length === 0) {
     return { success: false, message: 'No leads found to sync.' };
@@ -105,19 +128,27 @@ export async function syncLeadsToWebhook(webhookUrl: string) {
 
 export async function updateLeadStatus(leadId: string, status: string) {
   const tenantId = await resolveTenantForExport();
-  const db = getAdminDb();
-  await db
-    .collection('tenants')
-    .doc(tenantId)
-    .collection('leads')
-    .doc(leadId)
-    .set(
-      {
-        status,
-        updatedAt: FieldValue.serverTimestamp(),
-      },
-      { merge: true }
-    );
+  if (USE_NEON) {
+    await prisma.lead.updateMany({
+      where: { id: leadId, tenantId },
+      data: { status },
+    });
+  } else {
+    const db = (await import('@/server/firebase-admin')).getAdminDb();
+    const { FieldValue } = await import('firebase-admin/firestore');
+    await db
+      .collection('tenants')
+      .doc(tenantId)
+      .collection('leads')
+      .doc(leadId)
+      .set(
+        {
+          status,
+          updatedAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
+  }
   
   revalidatePath('/dashboard/leads');
   return { success: true };
@@ -125,13 +156,22 @@ export async function updateLeadStatus(leadId: string, status: string) {
 
 export async function deleteLeads(leadIds: string[]) {
   const tenantId = await resolveTenantForExport();
-  const db = getAdminDb();
-  const batch = db.batch();
-  const leadsCollection = db.collection('tenants').doc(tenantId).collection('leads');
-  leadIds.forEach((id) => {
-    batch.delete(leadsCollection.doc(id));
-  });
-  await batch.commit();
+  if (USE_NEON) {
+    await prisma.lead.deleteMany({
+      where: {
+        tenantId,
+        id: { in: leadIds },
+      },
+    });
+  } else {
+    const db = (await import('@/server/firebase-admin')).getAdminDb();
+    const batch = db.batch();
+    const leadsCollection = db.collection('tenants').doc(tenantId).collection('leads');
+    leadIds.forEach((id) => {
+      batch.delete(leadsCollection.doc(id));
+    });
+    await batch.commit();
+  }
   
   revalidatePath('/dashboard/leads');
   return { success: true };
@@ -139,48 +179,47 @@ export async function deleteLeads(leadIds: string[]) {
 
 export async function getLeadsForExport(query?: string) {
   const tenantId = await resolveTenantForExport();
-  const entitlements = await resolveEntitlementsForTenant(getAdminDb(), tenantId);
-  if (!entitlements.features.leadExports.allowed) {
-    throw new Error(
-      entitlements.features.leadExports.reason || 'Lead exports are not available on your plan.'
+  if (!USE_NEON) {
+    const entitlements = await resolveEntitlementsForTenant(
+      (await import('@/server/firebase-admin')).getAdminDb(),
+      tenantId
     );
+    if (!entitlements.features.leadExports.allowed) {
+      throw new Error(
+        entitlements.features.leadExports.reason || 'Lead exports are not available on your plan.'
+      );
+    }
   }
 
-  const db = getAdminDb();
-  const snapshot = await db
-    .collection('tenants')
-    .doc(tenantId)
-    .collection('leads')
-    .orderBy('createdAt', 'desc')
-    .limit(500)
-    .get();
-
   const normalizedQuery = query?.toLowerCase().trim();
-  const leads = snapshot.docs.map((doc): {
-    id: string;
-    name?: string;
-    email?: string;
-    phone?: string;
-    screening?: {
-      emailValid: boolean;
-      domain: string;
-      apps: { whatsapp: boolean; telegram: boolean };
-    };
-    enrichment?: {
-      linkedin_url?: string;
-      job_title?: string;
-    };
-    projects?: { headline?: string | null };
-    [key: string]: any;
-  } => {
-    const data = doc.data() as Record<string, any>;
-    return {
-      id: doc.id,
-      ...data,
-      screening: data.screening_data || data.screening,
-      projects: { headline: data.projectHeadline || data.projectName || null },
-    };
-  });
+  let leads: any[] = [];
+
+  if (USE_NEON) {
+    leads = await prisma.lead.findMany({
+      where: { tenantId },
+      orderBy: { createdAt: 'desc' },
+      take: 500,
+    });
+  } else {
+    const db = (await import('@/server/firebase-admin')).getAdminDb();
+    const snapshot = await db
+      .collection('tenants')
+      .doc(tenantId)
+      .collection('leads')
+      .orderBy('createdAt', 'desc')
+      .limit(500)
+      .get();
+
+    leads = snapshot.docs.map((doc) => {
+      const data = doc.data() as Record<string, any>;
+      return {
+        id: doc.id,
+        ...data,
+        screening: data.screening_data || data.screening,
+        projects: { headline: data.projectHeadline || data.projectName || null },
+      };
+    });
+  }
 
   if (!normalizedQuery) return leads;
   return leads.filter((lead) => {
@@ -214,31 +253,44 @@ export async function resolveTenantForExport() {
     return tenantClaim.trim();
   }
 
-  const db = getAdminDb();
+  if (USE_NEON) {
+    const user = await prisma.user.findUnique({ where: { id: context.uid } });
+    return user?.tenantId || context.uid;
+  }
+
+  const db = (await import('@/server/firebase-admin')).getAdminDb();
   const userSnap = await db.collection('users').doc(context.uid).get();
   const userData = userSnap.exists ? userSnap.data() : null;
-  const fallbackTenant =
+  return (
     (userData?.tenantId as string | undefined) ||
     (userData?.tenant as string | undefined) ||
-    context.uid;
-  return fallbackTenant;
+    context.uid
+  );
 }
 
 export async function updateLeadNotes(leadId: string, notes: string) {
   const tenantId = await resolveTenantForExport();
-  const db = getAdminDb();
-  await db
-    .collection('tenants')
-    .doc(tenantId)
-    .collection('leads')
-    .doc(leadId)
-    .set(
-      {
-        notes,
-        updatedAt: FieldValue.serverTimestamp(),
-      },
-      { merge: true }
-    );
+  if (USE_NEON) {
+    await prisma.lead.updateMany({
+      where: { id: leadId, tenantId },
+      data: { notes },
+    });
+  } else {
+    const db = (await import('@/server/firebase-admin')).getAdminDb();
+    const { FieldValue } = await import('firebase-admin/firestore');
+    await db
+      .collection('tenants')
+      .doc(tenantId)
+      .collection('leads')
+      .doc(leadId)
+      .set(
+        {
+          notes,
+          updatedAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
+  }
   
   revalidatePath('/dashboard/leads');
   return { success: true };
@@ -319,7 +371,20 @@ export async function calculateLeadScore(lead: any) {
  */
 export async function getCampaignLogsAction(projectId: string) {
   const tenantId = await resolveTenantForExport();
-  const db = getAdminDb();
+  if (USE_NEON) {
+    return prisma.campaign.findMany({
+      where: {
+        tenantId,
+        metaJson: {
+          path: ['projectId'],
+          equals: projectId,
+        } as any,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  const db = (await import('@/server/firebase-admin')).getAdminDb();
   const snapshot = await db
     .collection('tenants')
     .doc(tenantId)
@@ -336,22 +401,30 @@ export async function getCampaignLogsAction(projectId: string) {
  */
 export async function exportLeadsByProjectAction(projectId: string) {
   const tenantId = await resolveTenantForExport();
-  const db = getAdminDb();
-  const snapshot = await db
-    .collection('tenants')
-    .doc(tenantId)
-    .collection('leads')
-    .where('project_id', '==', projectId)
-    .orderBy('createdAt', 'desc')
-    .get();
+  let leads: any[] = [];
+  if (USE_NEON) {
+    leads = await prisma.lead.findMany({
+      where: { tenantId, projectId },
+      orderBy: { createdAt: 'desc' },
+    });
+  } else {
+    const db = (await import('@/server/firebase-admin')).getAdminDb();
+    const snapshot = await db
+      .collection('tenants')
+      .doc(tenantId)
+      .collection('leads')
+      .where('project_id', '==', projectId)
+      .orderBy('createdAt', 'desc')
+      .get();
 
-  const leads: any[] = snapshot.docs.map(doc => {
-    const data = doc.data() as Record<string, any>;
-    return {
-      id: doc.id,
-      ...data
-    };
-  });
+    leads = snapshot.docs.map(doc => {
+      const data = doc.data() as Record<string, any>;
+      return {
+        id: doc.id,
+        ...data,
+      };
+    });
+  }
   
   if (leads.length === 0) return { success: false, message: "No leads found for this project." };
 
@@ -363,7 +436,7 @@ export async function exportLeadsByProjectAction(projectId: string) {
     `"${l.phone || ""}"`,
     `"${l.status || ""}"`,
     `"${l.source || ""}"`,
-    `"${l.createdAt ? new Date((l.createdAt as any).seconds * 1000).toLocaleString() : ""}"`
+    `"${l.createdAt ? new Date(l.createdAt).toLocaleString() : ""}"`
   ]);
 
   const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");

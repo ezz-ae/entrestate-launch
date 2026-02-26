@@ -2,9 +2,8 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { FieldValue } from 'firebase-admin/firestore';
-import type { Firestore } from 'firebase-admin/firestore';
-import { getAdminDb } from '@/server/firebase-admin';
+import { prisma } from '@/server/db';
+import { USE_NEON } from '@/lib/server/env';
 import { CAP } from '@/lib/capabilities';
 import { sendLeadEmail } from '@/lib/notifications/email';
 import { sendLeadSMS } from '@/lib/notifications/sms';
@@ -25,12 +24,17 @@ import {
   errorResponse,
   jsonWithRequestId,
 } from '@/lib/server/request-id';
-import {
-  buildLeadTouchUpdate,
-  findExistingLead,
-  normalizeEmail,
-  normalizePhone,
-} from '@/lib/server/lead-dedupe';
+const normalizeEmail = (value?: string | null) => {
+  const trimmed = value?.trim().toLowerCase();
+  return trimmed ? trimmed : null;
+};
+
+const normalizePhone = (value?: string | null) => {
+  if (!value) return null;
+  const digits = value.replace(/\D/g, '');
+  if (!digits) return null;
+  return digits.length >= 7 ? digits : null;
+};
 
 const NOTIFY_EMAIL_TO = process.env.NOTIFY_EMAIL_TO;
 const NOTIFY_SMS_TO = process.env.NOTIFY_SMS_TO;
@@ -90,7 +94,6 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-    const db = getAdminDb();
     const ip = getRequestIp(req);
 
     // Public lead capture is allowed only for published sites; tenantId is never accepted from client input.
@@ -146,7 +149,9 @@ export async function POST(req: NextRequest) {
       logger.setActor(context.uid);
     }
 
-    if (context && siteId) {
+    if (context && siteId && !USE_NEON) {
+      const { getAdminDb } = await import('@/server/firebase-admin');
+      const db = getAdminDb();
       const siteSnap = await db.collection('sites').doc(siteId).get();
       if (siteSnap.exists) {
         const siteData = siteSnap.data() || {};
@@ -165,70 +170,139 @@ export async function POST(req: NextRequest) {
 
     const emailNormalized = normalizeEmail(payload.email);
     const phoneNormalized = normalizePhone(payload.phone);
-    const existingLead = await findExistingLead(db, tenantId, {
-      email: emailNormalized,
-      phone: phoneNormalized,
-    });
+    let leadId = '';
+    let deduped = false;
 
-    if (existingLead) {
-      await existingLead.ref.update(
-        buildLeadTouchUpdate({
-          name: payload.name || null,
-          email: payload.email || null,
-          phone: payload.phone || null,
-          message: payload.message || null,
-          source: payload.source || payload.context?.service || 'Website',
-        })
-      );
+    if (USE_NEON) {
+      const existingLead = await prisma.lead.findFirst({
+        where: {
+          tenantId,
+          OR: [
+            emailNormalized
+              ? { email: { equals: emailNormalized, mode: 'insensitive' } }
+              : undefined,
+            phoneNormalized ? { phone: phoneNormalized } : undefined,
+          ].filter(Boolean) as any,
+        },
+      });
 
-      logger.logSuccess(200, { leadId: existingLead.id, deduped: true });
+      if (existingLead) {
+        await prisma.lead.update({
+          where: { id: existingLead.id },
+          data: {
+            name: payload.name || existingLead.name,
+            email: payload.email || existingLead.email,
+            phone: payload.phone || existingLead.phone,
+            notes: payload.message || existingLead.notes,
+            source: payload.source || payload.context?.service || existingLead.source || 'Website',
+            status: existingLead.status || 'New',
+          },
+        });
+        leadId = existingLead.id;
+        deduped = true;
+      } else {
+        const lead = await prisma.lead.create({
+          data: {
+            tenantId,
+            projectId: payload.projectId || null,
+            name: payload.name || null,
+            email: payload.email || null,
+            phone: payload.phone || null,
+            notes: payload.message || null,
+            source: payload.source || payload.context?.service || 'Website',
+            status: 'New',
+            utmJson: payload.attribution || null,
+          },
+        });
+        leadId = lead.id;
+      }
+    } else {
+      const { getAdminDb } = await import('@/server/firebase-admin');
+      const { FieldValue } = await import('firebase-admin/firestore');
+      const { buildLeadTouchUpdate, findExistingLead } = await import('@/lib/server/lead-dedupe');
+      const db = getAdminDb();
+
+      const existingLead = await findExistingLead(db, tenantId, {
+        email: emailNormalized,
+        phone: phoneNormalized,
+      });
+
+      if (existingLead) {
+        await existingLead.ref.update(
+          buildLeadTouchUpdate({
+            name: payload.name || null,
+            email: payload.email || null,
+            phone: payload.phone || null,
+            message: payload.message || null,
+            source: payload.source || payload.context?.service || 'Website',
+          })
+        );
+
+        logger.logSuccess(200, { leadId: existingLead.id, deduped: true });
+        return respond({
+          ok: true,
+          data: { id: existingLead.id, tenantId, deduped: true },
+          requestId,
+        });
+      }
+
+      await enforceUsageLimit(db, tenantId, 'leads', 1);
+
+      const leadData = {
+        tenantId,
+        siteId,
+        project: payload.project || null,
+        projectId: payload.projectId || null,
+        pageSlug: payload.pageSlug || null,
+        name: payload.name || null,
+        email: payload.email || null,
+        emailNormalized,
+        phone: payload.phone || null,
+        phoneNormalized,
+        message: payload.message || null,
+        source: payload.source || payload.context?.service || 'Website',
+        context: payload.context || null,
+        attribution: payload.attribution || null,
+        metadata: payload.metadata || null,
+        status: 'New',
+        priority: 'Warm',
+        touches: 1,
+        lastSeenAt: FieldValue.serverTimestamp(),
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+      };
+
+      const leadRef = await db
+        .collection('tenants')
+        .doc(tenantId)
+        .collection('leads')
+        .add(leadData);
+
+      leadId = leadRef.id;
+    }
+
+    // Optional notifications + CRM webhook
+    let settings: Record<string, any> | null = null;
+    if (!USE_NEON) {
+      const { getAdminDb } = await import('@/server/firebase-admin');
+      const db = getAdminDb();
+      const settingsSnap = await db
+        .collection('tenants')
+        .doc(tenantId)
+        .collection('settings')
+        .doc('leads')
+        .get();
+      settings = settingsSnap.exists ? settingsSnap.data() : null;
+    }
+
+    if (deduped) {
+      logger.logSuccess(200, { leadId, deduped: true });
       return respond({
         ok: true,
-        data: { id: existingLead.id, tenantId, deduped: true },
+        data: { id: leadId, tenantId, deduped: true },
         requestId,
       });
     }
-
-    await enforceUsageLimit(db, tenantId, 'leads', 1);
-
-    const leadData = {
-      tenantId,
-      siteId,
-      project: payload.project || null,
-      projectId: payload.projectId || null,
-      pageSlug: payload.pageSlug || null,
-      name: payload.name || null,
-      email: payload.email || null,
-      emailNormalized,
-      phone: payload.phone || null,
-      phoneNormalized,
-      message: payload.message || null,
-      source: payload.source || payload.context?.service || 'Website',
-      context: payload.context || null,
-      attribution: payload.attribution || null,
-      metadata: payload.metadata || null,
-      status: 'New',
-      priority: 'Warm',
-      touches: 1,
-      lastSeenAt: FieldValue.serverTimestamp(),
-      createdAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp(),
-    };
-
-    const leadRef = await db
-      .collection('tenants')
-      .doc(tenantId)
-      .collection('leads')
-      .add(leadData);
-
-    // Optional notifications + CRM webhook
-    const settingsSnap = await db
-      .collection('tenants')
-      .doc(tenantId)
-      .collection('settings')
-      .doc('leads')
-      .get();
-    const settings = settingsSnap.exists ? settingsSnap.data() : null;
 
     const notificationEmail = settings?.notificationEmail as string | undefined;
     const crmWebhookUrl = settings?.crmWebhookUrl as string | undefined;
@@ -309,16 +383,25 @@ export async function POST(req: NextRequest) {
         await fetch(crmWebhookUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: leadRef.id, ...leadData }),
+          body: JSON.stringify({
+            id: leadId,
+            tenantId,
+            projectId: payload.projectId || null,
+            name: payload.name || null,
+            email: payload.email || null,
+            phone: payload.phone || null,
+            message: payload.message || null,
+            source: payload.source || payload.context?.service || 'Website',
+          }),
         });
       } catch (error) {
         console.error('[leads] webhook failed', error);
       }
     }
 
-    logger.logSuccess(201, { leadId: leadRef.id, siteId });
+    logger.logSuccess(201, { leadId, siteId });
     return respond(
-      { ok: true, data: { id: leadRef.id, tenantId, deduped: false }, requestId },
+      { ok: true, data: { id: leadId, tenantId, deduped: false }, requestId },
       { status: 201 }
     );
   } catch (error) {

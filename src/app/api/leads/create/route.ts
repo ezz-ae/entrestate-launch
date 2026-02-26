@@ -2,8 +2,8 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { FieldValue } from 'firebase-admin/firestore';
-import { getAdminDb } from '@/server/firebase-admin';
+import { prisma } from '@/server/db';
+import { USE_NEON } from '@/lib/server/env';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
 import {
@@ -17,12 +17,17 @@ import {
   errorResponse,
   jsonWithRequestId,
 } from '@/lib/server/request-id';
-import {
-  buildLeadTouchUpdate,
-  findExistingLead,
-  normalizeEmail,
-  normalizePhone,
-} from '@/lib/server/lead-dedupe';
+const normalizeEmail = (value?: string | null) => {
+  const trimmed = value?.trim().toLowerCase();
+  return trimmed ? trimmed : null;
+};
+
+const normalizePhone = (value?: string | null) => {
+  if (!value) return null;
+  const digits = value.replace(/\D/g, '');
+  if (!digits) return null;
+  return digits.length >= 7 ? digits : null;
+};
 
 const payloadSchema = z.object({
   name: z.string().min(1),
@@ -41,9 +46,61 @@ export async function POST(req: NextRequest) {
     const payload = payloadSchema.parse(await req.json());
     const { tenantId } = await requireRole(req, ALL_ROLES);
 
-    const db = getAdminDb();
     const emailNormalized = normalizeEmail(payload.email);
     const phoneNormalized = normalizePhone(payload.phone);
+    if (USE_NEON) {
+      const existingLead = await prisma.lead.findFirst({
+        where: {
+          tenantId,
+          OR: [
+            emailNormalized
+              ? { email: { equals: emailNormalized, mode: 'insensitive' } }
+              : undefined,
+            phoneNormalized ? { phone: phoneNormalized } : undefined,
+          ].filter(Boolean) as any,
+        },
+      });
+
+      if (existingLead) {
+        await prisma.lead.update({
+          where: { id: existingLead.id },
+          data: {
+            name: payload.name,
+            email: payload.email,
+            phone: payload.phone || null,
+            notes: payload.message || existingLead.notes,
+            status: existingLead.status || 'New',
+            source: existingLead.source || 'Manual Entry',
+          },
+        });
+        return respond({
+          ok: true,
+          data: { id: existingLead.id, deduped: true },
+          requestId,
+        });
+      }
+
+      const lead = await prisma.lead.create({
+        data: {
+          tenantId,
+          name: payload.name,
+          email: payload.email,
+          phone: payload.phone || null,
+          notes: payload.message || null,
+          status: 'New',
+          source: 'Manual Entry',
+        },
+      });
+
+      return respond(
+        { ok: true, data: { id: lead.id, deduped: false }, requestId },
+        { status: 201 }
+      );
+    }
+
+    const db = (await import('@/server/firebase-admin')).getAdminDb();
+    const { buildLeadTouchUpdate, findExistingLead } = await import('@/lib/server/lead-dedupe');
+
     const existingLead = await findExistingLead(db, tenantId, {
       email: emailNormalized,
       phone: phoneNormalized,
@@ -83,9 +140,9 @@ export async function POST(req: NextRequest) {
         priority: 'Warm',
         source: 'Manual Entry',
         touches: 1,
-        lastSeenAt: FieldValue.serverTimestamp(),
-        createdAt: FieldValue.serverTimestamp(),
-        updatedAt: FieldValue.serverTimestamp(),
+        lastSeenAt: (await import('firebase-admin/firestore')).FieldValue.serverTimestamp(),
+        createdAt: (await import('firebase-admin/firestore')).FieldValue.serverTimestamp(),
+        updatedAt: (await import('firebase-admin/firestore')).FieldValue.serverTimestamp(),
       });
 
     return respond(

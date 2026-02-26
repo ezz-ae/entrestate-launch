@@ -1,6 +1,3 @@
-'use server';
-
-
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { ADMIN_ROLES } from '@/lib/server/roles';
@@ -9,13 +6,19 @@ import {
   PlanLimitError,
   planLimitErrorResponse,
 } from '@/lib/server/billing';
-import { getAdminDb } from '@/server/firebase-admin';
-import { getStorage } from 'firebase-admin/storage'; // Import Firebase Admin Storage
+import { put } from '@vercel/blob';
+import { prisma } from '@/server/db';
+import { USE_NEON } from '@/lib/server/env';
+
+export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {
   try {
     const { tenantId } = await requireRole(req, ADMIN_ROLES);
-    await enforceUsageLimit(getAdminDb(), tenantId, 'ai_agents', 1);
+    if (!USE_NEON) {
+      const { getAdminDb } = await import('@/server/firebase-admin');
+      await enforceUsageLimit(getAdminDb(), tenantId, 'ai_agents', 1);
+    }
     const formData = await req.formData();
     const file = formData.get('file') as File | null;
 
@@ -27,25 +30,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid file type. Only PDF is accepted.' }, { status: 400 });
     }
 
-    const fileBuffer = Buffer.from(await file.arrayBuffer());
-    const bucket = getStorage().bucket(); // Get default bucket
-    const fileName = `brochures/${tenantId}/${Date.now()}-${file.name}`;
-    const fileRef = bucket.file(fileName);
+    const safeName = file.name.replace(/\s+/g, '-');
+    const blob = await put(`brochures/${tenantId}/${Date.now()}-${safeName}`, file, {
+      access: 'public',
+    });
+    const publicUrl = blob.url;
 
-    await fileRef.save(fileBuffer, {
-      metadata: {
-        contentType: file.type,
-        // Add custom metadata if needed
-        metadata: {
-          tenantId: tenantId,
-          originalName: file.name,
-        },
+    await prisma.upload.create({
+      data: {
+        tenantId,
+        kind: 'brochure',
+        filename: file.name,
+        mime: file.type,
+        size: file.size,
+        url: publicUrl,
       },
     });
-
-    // Make the file publicly accessible
-    await fileRef.makePublic();
-    const publicUrl = fileRef.publicUrl();
 
     // TODO: Integrate AI processing here.
     // Call a service to extract data from the PDF using AI (e.g., Google Gemini).

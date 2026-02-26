@@ -9,6 +9,8 @@ export type ProjectFilters = {
   community?: string;
   firstPage?: boolean;
   search?: string;
+  minPrice?: number;
+  maxPrice?: number;
   limit?: number;
   offset?: number;
 };
@@ -29,13 +31,15 @@ export async function getProjectBySlug(tenantId: string, slug: string) {
 }
 
 export async function listProjects(filters: ProjectFilters) {
-  const { tenantId, ids, slug, city, community, firstPage, search, limit, offset } = filters;
+  const { tenantId, ids, slug, city, community, firstPage, search, minPrice, maxPrice, limit, offset } = filters;
   const where: Prisma.ProjectWhereInput = {
     tenantId,
     slug,
     city,
     community,
     firstPage,
+    priceMin: minPrice !== undefined ? { gte: new Prisma.Decimal(minPrice) } : undefined,
+    priceMax: maxPrice !== undefined ? { lte: new Prisma.Decimal(maxPrice) } : undefined,
     id: ids ? { in: ids } : undefined,
     OR: search
       ? [
