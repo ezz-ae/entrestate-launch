@@ -2,10 +2,9 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getAdminDb } from '@/server/firebase-admin';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { ADMIN_ROLES } from '@/lib/server/roles';
-import { FieldValue } from 'firebase-admin/firestore';
+import { prisma } from '@/server/db';
 
 type RouteContext = { params: Promise<{ agentId: string }> };
 
@@ -25,21 +24,30 @@ export async function POST(req: NextRequest, context: RouteContext) {
     const body = await req.json();
     const knowledgeData = knowledgeSchema.parse(body);
 
-    const db = getAdminDb();
-    const agentRef = db.collection('tenants').doc(tenantId).collection('agents').doc(agentId);
-
-    const agentDoc = await agentRef.get();
-    if (!agentDoc.exists) {
+    const agent = await prisma.chatAgent.findFirst({
+      where: { id: agentId, tenantId },
+    });
+    if (!agent) {
       return NextResponse.json({ error: 'Agent not found or does not belong to your tenant.' }, { status: 404 });
     }
 
-    const knowledgeRef = await agentRef.collection('knowledge').add({
+    const profile = (agent.profile as Record<string, unknown> | null) || {};
+    const entries = Array.isArray((profile as any).knowledgeEntries)
+      ? [...(profile as any).knowledgeEntries]
+      : [];
+    const entryId = `knowledge_${Date.now()}`;
+    entries.push({
+      id: entryId,
       ...knowledgeData,
-      createdAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+    await prisma.chatAgent.update({
+      where: { id: agent.id },
+      data: { profile: { ...profile, knowledgeEntries: entries } },
     });
 
-    return NextResponse.json({ message: 'Knowledge added successfully.', knowledgeId: knowledgeRef.id });
+    return NextResponse.json({ message: 'Knowledge added successfully.', knowledgeId: entryId });
 
   } catch (error) {
     console.error('Add Knowledge API Error:', error);

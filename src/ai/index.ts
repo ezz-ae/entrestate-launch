@@ -1,6 +1,5 @@
 import { generateText as aiGenerateText } from 'ai';
 import { google } from '@ai-sdk/google';
-import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 export const generateText = aiGenerateText;
 

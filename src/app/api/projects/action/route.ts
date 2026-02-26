@@ -1,9 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest } from 'next/server';
-import { FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
-import { getAdminDb } from '@/server/firebase-admin';
 import { requireRole } from '@/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
 import { logError } from '@/lib/server/log';
@@ -14,6 +12,7 @@ import {
 } from '@/lib/server/request-id';
 import { resolveEntitlementsForTenant } from '@/lib/server/entitlements';
 import { loadInventoryProjectById } from '@/server/inventory';
+import { prisma } from '@/server/db';
 
 const requestSchema = z.object({
   projectId: z.string().min(1),
@@ -64,14 +63,13 @@ function buildLeadPack(project: any) {
 export async function POST(req: NextRequest) {
   const scope = 'api/projects/action';
   const requestId = createRequestId();
-  const respond = (body: unknown, init?: ResponseInit) =>
-    jsonWithRequestId(requestId, body, init);
+    const respond = (body: unknown, init?: ResponseInit) =>
+      jsonWithRequestId(requestId, body, init);
 
   try {
     const { tenantId } = await requireRole(req, ALL_ROLES);
     const payload = requestSchema.parse(await req.json());
-    const db = getAdminDb();
-    const entitlements = await resolveEntitlementsForTenant(db, tenantId);
+    const entitlements = await resolveEntitlementsForTenant(null, tenantId);
     if (!entitlements.features.inventoryAccess.allowed) {
       return respond(
         {
@@ -94,77 +92,62 @@ export async function POST(req: NextRequest) {
     }
 
     if (payload.action === 'create_landing_draft') {
-      const draftRef = db
-        .collection('tenants')
-        .doc(tenantId)
-        .collection('drafts')
-        .doc();
-      const now = new Date().toISOString();
-      await draftRef.set({
-        id: draftRef.id,
-        owner: tenantId,
+      const draft = await prisma.projectDraft.create({
+        data: {
+          tenantId,
+          ownerUid: tenantId,
         status: 'draft',
         title: project.name || 'New landing page',
         prompt: `Landing page for ${project.name || 'new launch'}`,
         projectId: project.id,
-        createdAt: now,
-        updatedAt: now,
+        },
       });
       return respond({
         ok: true,
         data: {
-          draftId: draftRef.id,
-          builderUrl: `/builder?project=${encodeURIComponent(project.id)}&draftId=${draftRef.id}`,
+          draftId: draft.id,
+          builderUrl: `/builder?project=${encodeURIComponent(project.id)}&draftId=${draft.id}`,
         },
         requestId,
       });
     }
 
-    const actionsRef = db
-      .collection('tenants')
-      .doc(tenantId)
-      .collection('project_actions');
-
     if (payload.action === 'draft_listing') {
       const text = buildListingCopy(project);
-      const actionRef = await actionsRef.add({
-        projectId: project.id,
-        type: 'listing_copy',
-        text,
-        createdAt: FieldValue.serverTimestamp(),
+      const action = await prisma.projectAction.create({
+        data: { tenantId, projectId: project.id, type: 'listing_copy', text },
       });
       return respond({
         ok: true,
-        data: { artifactId: actionRef.id, text },
+        data: { artifactId: action.id, text },
         requestId,
       });
     }
 
     if (payload.action === 'sales_message') {
       const text = buildSalesMessage(project);
-      const actionRef = await actionsRef.add({
-        projectId: project.id,
-        type: 'sales_message',
-        text,
-        createdAt: FieldValue.serverTimestamp(),
+      const action = await prisma.projectAction.create({
+        data: { tenantId, projectId: project.id, type: 'sales_message', text },
       });
       return respond({
         ok: true,
-        data: { artifactId: actionRef.id, text },
+        data: { artifactId: action.id, text },
         requestId,
       });
     }
 
     const payloadData = buildLeadPack(project);
-    const actionRef = await actionsRef.add({
-      projectId: project.id,
-      type: 'lead_pack',
-      payload: payloadData,
-      createdAt: FieldValue.serverTimestamp(),
+    const action = await prisma.projectAction.create({
+      data: {
+        tenantId,
+        projectId: project.id,
+        type: 'lead_pack',
+        payload: payloadData,
+      },
     });
     return respond({
       ok: true,
-      data: { artifactId: actionRef.id, payload: payloadData },
+      data: { artifactId: action.id, payload: payloadData },
       requestId,
     });
   } catch (error) {

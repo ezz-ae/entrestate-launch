@@ -1,9 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest } from 'next/server';
-import { FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
-import { getAdminDb } from '@/server/firebase-admin';
 import { requireRole } from '@/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
 import { logError } from '@/lib/server/log';
@@ -13,6 +11,7 @@ import {
   jsonWithRequestId,
 } from '@/lib/server/request-id';
 import { normalizeEmail, normalizePhone } from '@/lib/server/lead-dedupe';
+import { prisma } from '@/server/db';
 
 const MAX_IMPORT = 100;
 
@@ -30,23 +29,22 @@ export async function POST(req: NextRequest) {
     const { tenantId } = await requireRole(req, ALL_ROLES);
     const payload = requestSchema.parse(await req.json().catch(() => ({})));
     const limit = payload.limit ?? MAX_IMPORT;
-    const db = getAdminDb();
 
-    const leadSnap = await db
-      .collection('tenants')
-      .doc(tenantId)
-      .collection('leads')
-      .orderBy('createdAt', 'desc')
-      .limit(limit)
-      .get();
+    const leads = await prisma.lead.findMany({
+      where: {
+        tenantId,
+        NOT: { source: 'cold_call' },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    });
 
     let imported = 0;
     let skipped = 0;
     const seenPhones = new Set<string>();
 
-    for (const doc of leadSnap.docs) {
-      const data = doc.data();
-      const phoneNormalized = normalizePhone(data.phone);
+    for (const lead of leads) {
+      const phoneNormalized = normalizePhone(lead.phone);
       if (!phoneNormalized) {
         skipped += 1;
         continue;
@@ -57,35 +55,49 @@ export async function POST(req: NextRequest) {
       }
       seenPhones.add(phoneNormalized);
 
-      const emailNormalized = normalizeEmail(data.email);
-      const recordId = `lead-${doc.id}`;
-      const recordRef = db
-        .collection('tenants')
-        .doc(tenantId)
-        .collection('cold_call_leads')
-        .doc(recordId);
+      const emailNormalized = normalizeEmail(lead.email);
+      const recordId = `coldcall_${lead.id}`;
+      const existing = await prisma.lead.findUnique({ where: { id: recordId } });
+      const existingMeta = (existing?.metadata as Record<string, any> | null) || {};
+      const coldCallMeta = {
+        ...(existingMeta.coldCall || {}),
+        sourceLeadId: lead.id,
+        unwelcomedCalls: existingMeta.coldCall?.unwelcomedCalls || 0,
+        lastOutcome: existingMeta.coldCall?.lastOutcome || null,
+        lastOutcomeAt: existingMeta.coldCall?.lastOutcomeAt || null,
+      };
+      const metadata = { ...existingMeta, coldCall: coldCallMeta };
 
-      const recordSnap = await recordRef.get();
-      const existing = recordSnap.exists ? recordSnap.data() : null;
-
-      await recordRef.set(
-        {
-          id: recordId,
-          sourceLeadId: doc.id,
-          name: data.name || data.fullName || null,
-          email: data.email || null,
-          emailNormalized,
-          phone: data.phone || null,
-          phoneNormalized,
-          status: existing?.status || 'active',
-          unwelcomedCalls: existing?.unwelcomedCalls || 0,
-          lastOutcome: existing?.lastOutcome || null,
-          lastOutcomeAt: existing?.lastOutcomeAt || null,
-          createdAt: existing?.createdAt || data.createdAt || FieldValue.serverTimestamp(),
-          updatedAt: FieldValue.serverTimestamp(),
-        },
-        { merge: true }
-      );
+      if (existing) {
+        await prisma.lead.update({
+          where: { id: recordId },
+          data: {
+            name: lead.name || null,
+            email: lead.email || null,
+            emailNormalized,
+            phone: lead.phone || null,
+            phoneNormalized,
+            status: existing.status || 'active',
+            metadata,
+            updatedAt: new Date(),
+          },
+        });
+      } else {
+        await prisma.lead.create({
+          data: {
+            id: recordId,
+            tenantId,
+            name: lead.name || null,
+            email: lead.email || null,
+            emailNormalized,
+            phone: lead.phone || null,
+            phoneNormalized,
+            status: 'active',
+            source: 'cold_call',
+            metadata,
+          },
+        });
+      }
 
       imported += 1;
     }

@@ -3,7 +3,6 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/server/db';
-import { USE_NEON } from '@/lib/server/env';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
 
@@ -24,32 +23,12 @@ export async function POST(req: NextRequest) {
 
     const entries = await Promise.all(
       siteIds.map(async (siteId) => {
-        if (USE_NEON) {
-          const leads = await prisma.lead.count({
-            where: { tenantId, siteId },
-          });
-          const stats: SiteStats = { leads, views: 0 };
-          return [siteId, stats] as const;
-        }
-
-        const db = (await import('@/server/firebase-admin')).getAdminDb();
-        const tenantRef = db.collection('tenants').doc(tenantId);
-        const leadsRef = tenantRef.collection('leads');
-        const eventsRef = tenantRef.collection('events');
-
-        const [leadsSnapshot, eventsSnapshot] = await Promise.all([
-          leadsRef.where('siteId', '==', siteId).get(),
-          eventsRef.where('siteId', '==', siteId).get(),
-        ]);
-        const views = eventsSnapshot.docs.reduce((count: number, doc: any) => {
-          const data = doc.data();
-          if (!data.type || data.type === 'cta_click') {
-            return count + 1;
-          }
-          return count;
-        }, 0);
+        const leads = await prisma.lead.count({
+          where: { tenantId, siteId },
+        });
+        const views = 0;
         const stats: SiteStats = {
-          leads: leadsSnapshot.size,
+          leads,
           views,
         };
         return [siteId, stats] as const;

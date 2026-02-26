@@ -1,7 +1,6 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest } from 'next/server';
-import { getAdminDb } from '@/server/firebase-admin';
 import { requireRole } from '@/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
 import { logError } from '@/lib/server/log';
@@ -10,6 +9,7 @@ import {
   errorResponse,
   jsonWithRequestId,
 } from '@/lib/server/request-id';
+import { prisma } from '@/server/db';
 
 const MAX_RESULTS = 100;
 
@@ -21,19 +21,26 @@ export async function GET(req: NextRequest) {
 
   try {
     const { tenantId } = await requireRole(req, ALL_ROLES);
-    const db = getAdminDb();
-    const snapshot = await db
-      .collection('tenants')
-      .doc(tenantId)
-      .collection('cold_call_leads')
-      .orderBy('updatedAt', 'desc')
-      .limit(MAX_RESULTS)
-      .get();
+    const leads = await prisma.lead.findMany({
+      where: { tenantId, source: 'cold_call' },
+      orderBy: { updatedAt: 'desc' },
+      take: MAX_RESULTS,
+    });
 
-    const items: Array<{ id: string; status?: string }> = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...(doc.data() as { status?: string }),
-    }));
+    const items = leads.map((lead) => {
+      const meta = (lead.metadata as Record<string, any> | null) || {};
+      const coldCall = meta.coldCall || {};
+      return {
+        id: lead.id,
+        name: lead.name,
+        phone: lead.phone,
+        status: lead.status,
+        lastOutcome: coldCall.lastOutcome || null,
+        unwelcomedCalls: coldCall.unwelcomedCalls || 0,
+        ignoredReason: lead.ignoredReason || null,
+        updatedAt: lead.updatedAt?.toISOString?.() || null,
+      };
+    });
     const ignoredCount = items.filter((item) => item.status === 'ignored').length;
 
     return respond({

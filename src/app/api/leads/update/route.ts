@@ -3,7 +3,6 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/server/db';
-import { USE_NEON } from '@/lib/server/env';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
 
@@ -18,34 +17,16 @@ export async function POST(req: NextRequest) {
     const payload = payloadSchema.parse(await req.json());
     const { tenantId } = await requireRole(req, ALL_ROLES);
 
-    if (USE_NEON) {
-      const result = await prisma.lead.updateMany({
-        where: { id: payload.leadId, tenantId },
-        data: {
-          status: payload.status,
-        },
-      });
-      if (result.count === 0) {
-        return NextResponse.json({ error: 'Lead not found' }, { status: 404 });
-      }
-      return NextResponse.json({ success: true });
-    }
-
-    const { FieldValue } = await import('firebase-admin/firestore');
-    const db = (await import('@/server/firebase-admin')).getAdminDb();
-    const updates: Record<string, any> = {
-      updatedAt: FieldValue.serverTimestamp(),
-    };
-    if (payload.status) updates.status = payload.status;
-    if (payload.priority) updates.priority = payload.priority;
-
-    const leadRef = db.collection('tenants').doc(tenantId).collection('leads').doc(payload.leadId);
-    const leadSnap = await leadRef.get();
-    if (!leadSnap.exists) {
+    const result = await prisma.lead.updateMany({
+      where: { id: payload.leadId, tenantId },
+      data: {
+        status: payload.status,
+        priority: payload.priority,
+      },
+    });
+    if (result.count === 0) {
       return NextResponse.json({ error: 'Lead not found' }, { status: 404 });
     }
-
-    await leadRef.update(updates);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('[leads/update] error', error);

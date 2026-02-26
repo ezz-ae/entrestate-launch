@@ -2,8 +2,6 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { FieldValue } from 'firebase-admin/firestore';
-import { getAdminDb } from '@/server/firebase-admin';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { ADMIN_ROLES } from '@/lib/server/roles';
 import {
@@ -11,6 +9,7 @@ import {
   featureAccessErrorResponse,
   requirePlanFeature,
 } from '@/lib/server/billing';
+import { prisma } from '@/server/db';
 
 const payloadSchema = z.object({
   listType: z.enum(['imported', 'pilot']).default('imported'),
@@ -25,16 +24,9 @@ export async function POST(req: NextRequest) {
     const payload = payloadSchema.parse(await req.json());
     const { tenantId } = await requireRole(req, ADMIN_ROLES);
 
-    const db = getAdminDb();
     if (payload.listType === 'imported') {
-      await requirePlanFeature(db, tenantId, 'meta_custom_audiences');
+      await requirePlanFeature({} as any, tenantId, 'meta_custom_audiences');
     }
-    const requestRef = db
-      .collection('tenants')
-      .doc(tenantId)
-      .collection('audience_requests')
-      .doc();
-
     const requestData = {
       listType: payload.listType,
       goal: payload.goal,
@@ -42,13 +34,19 @@ export async function POST(req: NextRequest) {
       budget: payload.budget ?? null,
       notes: payload.notes ?? null,
       status: 'requested',
-      createdAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
+    const record = await prisma.campaign.create({
+      data: {
+        tenantId,
+        platform: 'audience_request',
+        name: `${payload.goal} - ${payload.region}`.slice(0, 120),
+        metaJson: requestData,
+      },
+    });
 
-    await requestRef.set(requestData);
-
-    return NextResponse.json({ success: true, request: { id: requestRef.id, ...requestData } });
+    return NextResponse.json({ success: true, request: { id: record.id, ...requestData } });
   } catch (error) {
     console.error('[audience/build] error', error);
     if (error instanceof z.ZodError) {

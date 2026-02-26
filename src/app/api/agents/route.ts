@@ -2,9 +2,9 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getAdminDb } from '@/server/firebase-admin';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { ADMIN_ROLES } from '@/lib/server/roles';
+import { prisma } from '@/server/db';
 
 const agentConfigSchema = z.object({
   name: z.string().min(1, "Agent name is required."),
@@ -15,17 +15,28 @@ const agentConfigSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    const { tenantId } = await requireRole(req, ADMIN_ROLES);
+    const { tenantId, uid } = await requireRole(req, ADMIN_ROLES);
     const body = await req.json();
     const config = agentConfigSchema.parse(body);
 
-    const db = getAdminDb();
-    const agentRef = await db.collection('tenants').doc(tenantId).collection('agents').add({
-      ...config,
-      createdAt: new Date(),
+    if (!uid) {
+      return NextResponse.json({ error: 'Missing user context' }, { status: 401 });
+    }
+
+    const agent = await prisma.chatAgent.create({
+      data: {
+        tenantId,
+        userId: uid,
+        name: config.name,
+        companyName: config.companyName,
+        profile: {
+          knowledgeSource: config.knowledgeSource,
+          conversionGoal: config.conversionGoal,
+        },
+      },
     });
 
-    return NextResponse.json({ id: agentRef.id, ...config });
+    return NextResponse.json({ id: agent.id, ...config });
 
   } catch (error) {
     console.error('Agent Creation API Error:', error);

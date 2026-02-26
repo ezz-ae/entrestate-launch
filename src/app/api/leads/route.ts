@@ -3,7 +3,6 @@ export const dynamic = 'force-dynamic';
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/server/db';
-import { USE_NEON } from '@/lib/server/env';
 import { CAP } from '@/lib/capabilities';
 import { sendLeadEmail } from '@/lib/notifications/email';
 import { sendLeadSMS } from '@/lib/notifications/sms';
@@ -12,7 +11,6 @@ import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
 import { createApiLogger } from '@/lib/logger';
 import {
-  enforceUsageLimit,
   PlanLimitError,
   planLimitErrorResponse,
 } from '@/lib/server/billing';
@@ -149,18 +147,16 @@ export async function POST(req: NextRequest) {
       logger.setActor(context.uid);
     }
 
-    if (context && siteId && !USE_NEON) {
-      const { getAdminDb } = await import('@/server/firebase-admin');
-      const db = getAdminDb();
-      const siteSnap = await db.collection('sites').doc(siteId).get();
-      if (siteSnap.exists) {
-        const siteData = siteSnap.data() || {};
-        const siteTenant = siteData.tenantId as string | undefined;
-        const siteOwner = siteData.ownerUid as string | undefined;
-        if (siteTenant && siteTenant !== tenantId) {
+    if (context && siteId) {
+      const site = await prisma.site.findUnique({
+        where: { id: siteId },
+        select: { tenantId: true, ownerUid: true },
+      });
+      if (site) {
+        if (site.tenantId && site.tenantId !== tenantId) {
           return respond({ ok: false, error: 'Forbidden', requestId }, { status: 403 });
         }
-        if (!siteTenant && siteOwner && siteOwner !== context.uid) {
+        if (!site.tenantId && site.ownerUid && site.ownerUid !== context.uid) {
           return respond({ ok: false, error: 'Forbidden', requestId }, { status: 403 });
         }
       } else {
@@ -173,132 +169,66 @@ export async function POST(req: NextRequest) {
     let leadId = '';
     let deduped = false;
 
-    if (USE_NEON) {
-      const existingLead = await prisma.lead.findFirst({
-        where: {
-          tenantId,
-          OR: [
-            emailNormalized
-              ? { email: { equals: emailNormalized, mode: 'insensitive' } }
-              : undefined,
-            phoneNormalized ? { phone: phoneNormalized } : undefined,
-          ].filter(Boolean) as any,
+    const existingLead = await prisma.lead.findFirst({
+      where: {
+        tenantId,
+        OR: [
+          emailNormalized
+            ? { email: { equals: emailNormalized, mode: 'insensitive' } }
+            : undefined,
+          phoneNormalized ? { phone: phoneNormalized } : undefined,
+        ].filter(Boolean) as any,
+      },
+    });
+
+    if (existingLead) {
+      await prisma.lead.update({
+        where: { id: existingLead.id },
+        data: {
+          name: payload.name || existingLead.name,
+          email: payload.email || existingLead.email,
+          emailNormalized: emailNormalized || existingLead.emailNormalized,
+          phone: payload.phone || existingLead.phone,
+          phoneNormalized: phoneNormalized || existingLead.phoneNormalized,
+          message: payload.message || existingLead.message,
+          source: payload.source || payload.context?.service || existingLead.source || 'Website',
+          status: existingLead.status || 'New',
+          touches: { increment: 1 },
+          lastSeenAt: new Date(),
         },
       });
-
-      if (existingLead) {
-        await prisma.lead.update({
-          where: { id: existingLead.id },
-          data: {
-            name: payload.name || existingLead.name,
-            email: payload.email || existingLead.email,
-            phone: payload.phone || existingLead.phone,
-            notes: payload.message || existingLead.notes,
-            source: payload.source || payload.context?.service || existingLead.source || 'Website',
-            status: existingLead.status || 'New',
-          },
-        });
-        leadId = existingLead.id;
-        deduped = true;
-      } else {
-        const lead = await prisma.lead.create({
-          data: {
-            tenantId,
-            siteId,
-            projectId: payload.projectId || null,
-            name: payload.name || null,
-            email: payload.email || null,
-            phone: payload.phone || null,
-            notes: payload.message || null,
-            source: payload.source || payload.context?.service || 'Website',
-            status: 'New',
-            utmJson: payload.attribution || null,
-          },
-        });
-        leadId = lead.id;
-      }
+      leadId = existingLead.id;
+      deduped = true;
     } else {
-      const { getAdminDb } = await import('@/server/firebase-admin');
-      const { FieldValue } = await import('firebase-admin/firestore');
-      const { buildLeadTouchUpdate, findExistingLead } = await import('@/lib/server/lead-dedupe');
-      const db = getAdminDb();
-
-      const existingLead = await findExistingLead(db, tenantId, {
-        email: emailNormalized,
-        phone: phoneNormalized,
+      const lead = await prisma.lead.create({
+        data: {
+          tenantId,
+          siteId,
+          projectId: payload.projectId || null,
+          name: payload.name || null,
+          email: payload.email || null,
+          emailNormalized,
+          phone: payload.phone || null,
+          phoneNormalized,
+          message: payload.message || null,
+          source: payload.source || payload.context?.service || 'Website',
+          status: 'New',
+          priority: 'Warm',
+          touches: 1,
+          lastSeenAt: new Date(),
+          utmJson: payload.attribution || null,
+          context: payload.context || null,
+          metadata: payload.metadata || null,
+        },
       });
-
-      if (existingLead) {
-        await existingLead.ref.update(
-          buildLeadTouchUpdate({
-            name: payload.name || null,
-            email: payload.email || null,
-            phone: payload.phone || null,
-            message: payload.message || null,
-            source: payload.source || payload.context?.service || 'Website',
-          })
-        );
-
-        logger.logSuccess(200, { leadId: existingLead.id, deduped: true });
-        return respond({
-          ok: true,
-          data: { id: existingLead.id, tenantId, deduped: true },
-          requestId,
-        });
-      }
-
-      await enforceUsageLimit(db, tenantId, 'leads', 1);
-
-      const leadData = {
-        tenantId,
-        siteId,
-        project: payload.project || null,
-        projectId: payload.projectId || null,
-        pageSlug: payload.pageSlug || null,
-        name: payload.name || null,
-        email: payload.email || null,
-        emailNormalized,
-        phone: payload.phone || null,
-        phoneNormalized,
-        message: payload.message || null,
-        source: payload.source || payload.context?.service || 'Website',
-        context: payload.context || null,
-        attribution: payload.attribution || null,
-        metadata: payload.metadata || null,
-        status: 'New',
-        priority: 'Warm',
-        touches: 1,
-        lastSeenAt: FieldValue.serverTimestamp(),
-        createdAt: FieldValue.serverTimestamp(),
-        updatedAt: FieldValue.serverTimestamp(),
-      };
-
-      const leadRef = await db
-        .collection('tenants')
-        .doc(tenantId)
-        .collection('leads')
-        .add(leadData);
-
-      leadId = leadRef.id;
+      leadId = lead.id;
     }
 
     // Optional notifications + CRM webhook
     let settings: Record<string, any> | null = null;
-    if (USE_NEON) {
-      settings = await prisma.leadSetting.findUnique({
-        where: { tenantId },
-      });
-    } else {
-      const { getAdminDb } = await import('@/server/firebase-admin');
-      const db = getAdminDb();
-      const settingsSnap = await db
-        .collection('tenants')
-        .doc(tenantId)
-        .collection('settings')
-        .doc('leads')
-        .get();
-      settings = settingsSnap.exists ? settingsSnap.data() : null;
-    }
+    settings = await prisma.leadSetting.findUnique({
+      where: { tenantId },
+    });
 
     if (deduped) {
       logger.logSuccess(200, { leadId, deduped: true });

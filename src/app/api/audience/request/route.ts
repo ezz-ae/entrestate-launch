@@ -2,8 +2,6 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { FieldValue } from 'firebase-admin/firestore';
-import { getAdminDb } from '@/server/firebase-admin';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { ADMIN_ROLES } from '@/lib/server/roles';
 import {
@@ -16,6 +14,7 @@ import {
   errorResponse,
   jsonWithRequestId,
 } from '@/lib/server/request-id';
+import { prisma } from '@/server/db';
 
 const payloadSchema = z.object({
   listType: z.enum(['imported', 'pilot']),
@@ -33,23 +32,18 @@ export async function GET(req: NextRequest) {
 
   try {
     const { tenantId } = await requireRole(req, ADMIN_ROLES);
-    const db = getAdminDb();
-    const snapshot = await db
-      .collection('tenants')
-      .doc(tenantId)
-      .collection('audience_requests')
-      .orderBy('createdAt', 'desc')
-      .limit(1)
-      .get();
+    const record = await prisma.campaign.findFirst({
+      where: { tenantId, platform: 'audience_request' },
+      orderBy: { createdAt: 'desc' },
+    });
 
-    if (snapshot.empty) {
+    if (!record) {
       return respond({ ok: true, data: { request: null }, requestId });
     }
 
-    const doc = snapshot.docs[0];
     return respond({
       ok: true,
-      data: { request: { id: doc.id, ...doc.data() } },
+      data: { request: { id: record.id, ...(record.metaJson as Record<string, unknown>) } },
       requestId,
     });
   } catch (error) {
@@ -74,13 +68,6 @@ export async function POST(req: NextRequest) {
     const payload = payloadSchema.parse(await req.json());
     const { tenantId } = await requireRole(req, ADMIN_ROLES);
 
-    const db = getAdminDb();
-    const requestRef = db
-      .collection('tenants')
-      .doc(tenantId)
-      .collection('audience_requests')
-      .doc();
-
     const requestData = {
       listType: payload.listType,
       goal: payload.goal,
@@ -88,15 +75,22 @@ export async function POST(req: NextRequest) {
       budget: payload.budget ?? null,
       notes: payload.notes ?? null,
       status: 'requested',
-      createdAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
 
-    await requestRef.set(requestData);
+    const record = await prisma.campaign.create({
+      data: {
+        tenantId,
+        platform: 'audience_request',
+        name: `${payload.goal} - ${payload.region}`.slice(0, 120),
+        metaJson: requestData,
+      },
+    });
 
     return respond({
       ok: true,
-      data: { request: { id: requestRef.id, ...requestData } },
+      data: { request: { id: record.id, ...requestData } },
       requestId,
     });
   } catch (error) {

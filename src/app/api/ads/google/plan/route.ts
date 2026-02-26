@@ -12,7 +12,6 @@ import {
   featureAccessErrorResponse,
   requirePlanFeature,
 } from '@/lib/server/billing';
-import { getAdminDb } from '@/server/firebase-admin';
 import {
   createRequestId,
   jsonWithRequestId,
@@ -106,7 +105,7 @@ export async function POST(req: NextRequest) {
       );
     }
     const payload = requestSchema.parse(await req.json());
-    await requirePlanFeature(getAdminDb(), tenantId, 'google_ads');
+    await requirePlanFeature({} as any, tenantId, 'google_ads');
 
     const goal = GOAL_MAP[payload.goal] || 'leads';
     const siteUrl = payload.landingPage || 'https://entrestate.com';

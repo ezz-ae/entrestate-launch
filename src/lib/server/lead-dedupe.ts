@@ -1,9 +1,8 @@
-import { FieldValue, type Firestore } from 'firebase-admin/firestore';
+import { prisma } from '@/server/db';
 
 export type LeadDedupeMatch = {
   id: string;
-  ref: FirebaseFirestore.DocumentReference;
-  data: FirebaseFirestore.DocumentData;
+  data: Record<string, any>;
 };
 
 export function normalizeEmail(value?: string | null) {
@@ -19,37 +18,26 @@ export function normalizePhone(value?: string | null) {
 }
 
 export async function findExistingLead(
-  db: Firestore,
   tenantId: string,
   options: { email?: string | null; phone?: string | null }
 ): Promise<LeadDedupeMatch | null> {
   const emailNormalized = normalizeEmail(options.email);
   if (emailNormalized) {
-    const snapshot = await db
-      .collection('tenants')
-      .doc(tenantId)
-      .collection('leads')
-      .where('emailNormalized', '==', emailNormalized)
-      .limit(1)
-      .get();
-    const doc = snapshot.docs[0];
-    if (doc) {
-      return { id: doc.id, ref: doc.ref, data: doc.data() };
+    const lead = await prisma.lead.findFirst({
+      where: { tenantId, emailNormalized },
+    });
+    if (lead) {
+      return { id: lead.id, data: lead as Record<string, any> };
     }
   }
 
   const phoneNormalized = normalizePhone(options.phone);
   if (phoneNormalized) {
-    const snapshot = await db
-      .collection('tenants')
-      .doc(tenantId)
-      .collection('leads')
-      .where('phoneNormalized', '==', phoneNormalized)
-      .limit(1)
-      .get();
-    const doc = snapshot.docs[0];
-    if (doc) {
-      return { id: doc.id, ref: doc.ref, data: doc.data() };
+    const lead = await prisma.lead.findFirst({
+      where: { tenantId, phoneNormalized },
+    });
+    if (lead) {
+      return { id: lead.id, data: lead as Record<string, any> };
     }
   }
 
@@ -71,9 +59,9 @@ export function buildLeadTouchUpdate(payload: {
   metadata?: Record<string, any> | null;
 }) {
   return {
-    lastSeenAt: FieldValue.serverTimestamp(),
-    updatedAt: FieldValue.serverTimestamp(),
-    touches: FieldValue.increment(1),
+    lastSeenAt: new Date(),
+    updatedAt: new Date(),
+    touches: { increment: 1 },
     name: payload.name ?? null,
     email: payload.email ?? null,
     phone: payload.phone ?? null,
@@ -82,7 +70,7 @@ export function buildLeadTouchUpdate(payload: {
     intentScore: payload.intentScore ?? null,
     intentFocus: payload.intentFocus ?? null,
     intentReasoning: payload.intentReasoning ?? null,
-    intentProjectIds: payload.intentProjectIds ?? null,
+    intentProjectIds: payload.intentProjectIds ?? undefined,
     intentNextAction: payload.intentNextAction ?? null,
     siteId: payload.siteId ?? null,
     metadata: payload.metadata ?? null,

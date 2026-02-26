@@ -1,9 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest } from 'next/server';
-import { FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
-import { getAdminDb } from '@/server/firebase-admin';
 import { requireRole } from '@/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
 import { logError } from '@/lib/server/log';
@@ -12,6 +10,7 @@ import {
   errorResponse,
   jsonWithRequestId,
 } from '@/lib/server/request-id';
+import { prisma } from '@/server/db';
 
 const outcomeSchema = z.object({
   coldCallId: z.string().min(1),
@@ -28,42 +27,44 @@ export async function POST(req: NextRequest) {
   try {
     const { tenantId } = await requireRole(req, ALL_ROLES);
     const payload = outcomeSchema.parse(await req.json());
-    const db = getAdminDb();
-    const leadRef = db
-      .collection('tenants')
-      .doc(tenantId)
-      .collection('cold_call_leads')
-      .doc(payload.coldCallId);
-
-    const leadSnap = await leadRef.get();
-    if (!leadSnap.exists) {
+    const lead = await prisma.lead.findFirst({
+      where: { id: payload.coldCallId, tenantId },
+    });
+    if (!lead) {
       return respond(
         { ok: false, error: 'Cold call lead not found', requestId },
         { status: 404 }
       );
     }
 
-    const lead = leadSnap.data() || {};
-    const currentUnwelcomed = Number(lead.unwelcomedCalls || 0);
+    const meta = (lead.metadata as Record<string, any> | null) || {};
+    const coldCall = meta.coldCall || {};
+    const currentUnwelcomed = Number(coldCall.unwelcomedCalls || 0);
     const nextUnwelcomed =
       payload.outcome === 'unwelcomed' ? currentUnwelcomed + 1 : currentUnwelcomed;
     const ignored = nextUnwelcomed >= 5;
 
-    await leadRef.set(
-      {
+    const nextMetadata = {
+      ...meta,
+      coldCall: {
+        ...coldCall,
         lastOutcome: payload.outcome,
-        lastOutcomeAt: FieldValue.serverTimestamp(),
+        lastOutcomeAt: new Date().toISOString(),
         notes: payload.notes || null,
-        touches: FieldValue.increment(1),
         unwelcomedCalls: nextUnwelcomed,
-        status: ignored ? 'ignored' : lead.status || 'active',
-        ignoredReason: ignored
-          ? 'Marked ignored after 5 unwelcome calls.'
-          : lead.ignoredReason || null,
-        updatedAt: FieldValue.serverTimestamp(),
       },
-      { merge: true }
-    );
+    };
+
+    await prisma.lead.update({
+      where: { id: lead.id },
+      data: {
+        status: ignored ? 'ignored' : lead.status || 'active',
+        ignoredReason: ignored ? 'Marked ignored after 5 unwelcome calls.' : lead.ignoredReason || null,
+        touches: { increment: 1 },
+        metadata: nextMetadata,
+        updatedAt: new Date(),
+      },
+    });
 
     return respond({
       ok: true,

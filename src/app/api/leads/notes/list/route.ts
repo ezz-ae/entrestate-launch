@@ -4,7 +4,6 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/server/db';
-import { USE_NEON } from '@/lib/server/env';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
 
@@ -32,29 +31,11 @@ export async function GET(req: NextRequest) {
     const { tenantId } = await requireRole(req, ALL_ROLES);
     let notes: Array<{ id: string; content: string; authorId?: string; createdAt?: string }> = [];
 
-    if (USE_NEON) {
-      const lead = await prisma.lead.findFirst({
-        where: { id: parsed.leadId, tenantId },
-        select: { notes: true },
-      });
-      notes = parseNotes(lead?.notes);
-    } else {
-      const firestore = (await import('@/server/firebase-admin')).getAdminDb();
-      const notesSnapshot = await firestore
-        .collection('tenants')
-        .doc(tenantId)
-        .collection('leads')
-        .doc(parsed.leadId)
-        .collection('notes')
-        .orderBy('createdAt', 'desc')
-        .get();
-
-      notes = notesSnapshot.docs.map((doc: any) => {
-        const data = doc.data();
-        const createdAt = data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : data.createdAt;
-        return { id: doc.id, ...data, createdAt };
-      });
-    }
+    const lead = await prisma.lead.findFirst({
+      where: { id: parsed.leadId, tenantId },
+      select: { notes: true },
+    });
+    notes = parseNotes(lead?.notes);
 
     return NextResponse.json({ notes }, { status: 200 });
   } catch (error) {

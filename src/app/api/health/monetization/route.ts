@@ -1,10 +1,10 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminDb } from '@/server/firebase-admin';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { SUPER_ADMIN_ROLES } from '@/lib/server/roles';
 import { logError } from '@/lib/server/log';
+import { prisma } from '@/server/db';
 
 export async function GET(req: NextRequest) {
   const scope = 'api/health/monetization';
@@ -32,13 +32,13 @@ export async function GET(req: NextRequest) {
       paypal: Boolean(process.env.PAYPAL_WEBHOOK_ID),
       ziina: Boolean(process.env.ZIINA_WEBHOOK_SECRET),
     },
-    firestore: 'disconnected',
+    firestore: 'disabled',
+    neon: 'disconnected',
   };
 
   try {
-    const db = getAdminDb();
-    await db.collection('subscriptions').limit(1).get();
-    status.firestore = 'connected';
+    await prisma.$queryRaw`SELECT 1`;
+    status.neon = 'connected';
   } catch (error) {
     logError(scope, error, { phase: 'database' });
     return NextResponse.json({ ok: false, error: 'INTERNAL', scope }, { status: 500 });

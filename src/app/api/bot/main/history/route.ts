@@ -1,11 +1,11 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest } from 'next/server';
-import { getAdminDb } from '@/server/firebase-admin';
 import { requireRole } from '@/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
 import { logError } from '@/lib/server/log';
 import { createRequestId, errorResponse, jsonWithRequestId } from '@/lib/server/request-id';
+import { prisma } from '@/server/db';
 
 export async function GET(req: NextRequest) {
   const scope = 'api/bot/main/history';
@@ -16,15 +16,16 @@ export async function GET(req: NextRequest) {
 
   try {
     const { tenantId } = await requireRole(req, ALL_ROLES);
-    const db = getAdminDb();
-    const snapshot = await db
-      .collection('tenants')
-      .doc(tenantId)
-      .collection('chatThreads')
-      .orderBy('updatedAt', 'desc')
-      .limit(20)
-      .get();
-    const threads = snapshot.docs.map((doc) => doc.data());
+    const sessions = await prisma.chatSession.findMany({
+      where: { tenantId },
+      orderBy: { updatedAt: 'desc' },
+      take: 20,
+    });
+    const threads = sessions.map((session) => ({
+      id: session.id,
+      updatedAt: session.updatedAt,
+      conversation: session.conversation || [],
+    }));
     return respond({ ok: true, data: { threads }, requestId });
   } catch (error) {
     logError(scope, error, { url: path, requestId });

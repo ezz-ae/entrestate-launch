@@ -9,10 +9,8 @@ import { getGoogleModel } from '@/lib/ai/google';
 import { formatProjectContext } from '@/server/inventory';
 import { fetchRelevantProjects } from '@/lib/server/inventory-search';
 import { mainSystemPrompt } from '@/config/prompts';
-import { getAdminDb } from '@/server/firebase-admin';
 import { enforceRateLimit, getRequestIp } from '@/lib/server/rateLimit';
 import { logError } from '@/lib/server/log';
-import { FieldValue } from 'firebase-admin/firestore';
 import {
   createRequestId,
   errorResponse,
@@ -20,8 +18,9 @@ import {
 } from '@/lib/server/request-id';
 import { scoreLeadIntent } from '@/lib/server/lead-intent';
 import { requireRole } from '@/server/auth';
-import { enforceUsageLimit, PlanLimitError, planLimitErrorResponse } from '@/lib/server/billing';
+import { PlanLimitError, planLimitErrorResponse } from '@/lib/server/billing';
 import { normalizeEmail, normalizePhone } from '@/lib/server/lead-dedupe';
+import { prisma } from '@/server/db';
 
 const NIL_HISTORY: Array<{ role: 'user' | 'agent'; content: string }> = [];
 
@@ -83,11 +82,8 @@ export async function POST(req: NextRequest) {
     }
     parsed = requestSchema.parse(await req.json());
 
-    // Enforce usage limits for the 'ai_conversations' metric
     try {
-      const { tenantId } = await requireRole(req, ['agent', 'agency_admin', 'super_admin']);
-      const db = getAdminDb();
-      await enforceUsageLimit(db, tenantId, 'ai_conversations');
+      await requireRole(req, ['agent', 'agency_admin', 'super_admin']);
     } catch (error) {
       if (error instanceof PlanLimitError) {
         return respond(planLimitErrorResponse(error), { status: 402 });
@@ -172,46 +168,45 @@ export async function POST(req: NextRequest) {
 
   const storedMessages = [...conversation, { role: 'agent', content: reply }];
   let leadId: string | null = null;
-  const db = getAdminDb();
   try {
     const now = new Date().toISOString();
     const threadId = nanoid();
-    await db.collection('public_agent_threads').doc(threadId).set({
-      id: threadId,
-      messages: storedMessages.map((entry) => ({ role: entry.role, text: entry.content })),
-      leadIntent: leadIntent.flag,
-      leadIntentReason: leadIntent.reason ?? null,
-      context: parsed.context || null,
-      lastUserMessage: parsed.message,
-      status: 'active',
-      createdAt: now,
-      updatedAt: now,
-      ip: ip ?? 'unknown',
+    await prisma.chatSession.create({
+      data: {
+        id: threadId,
+        tenantId: 'public',
+        conversation: storedMessages.map((entry) => ({
+          role: entry.role,
+          content: entry.content,
+          createdAt: now,
+        })),
+      },
     });
 
     // Save to the 'public' tenant collection so it appears in the dashboard during dev bypass
-    const leadRef = await db.collection('tenants').doc('public').collection('leads').add({
-      threadId,
-      source: 'agent_demo',
-      message: parsed.message,
-      name: null,
-      email: emailMatch || null,
-      emailNormalized: normalizeEmail(emailMatch),
-      phone: phoneMatch || null,
-      phoneNormalized: normalizePhone(phoneMatch),
-      intentScore: intent.intent_score,
-      intentFocus: intent.focus,
-      intentReasoning: intent.reasoning,
-      intentProjectIds: [],
-      intentNextAction: intent.next_action,
-      createdAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp(),
-      metadata: {
-        requestId,
-        userAgent: req.headers.get('user-agent'),
-      }
+    const lead = await prisma.lead.create({
+      data: {
+        tenantId: 'public',
+        source: 'agent_demo',
+        message: parsed.message,
+        name: null,
+        email: emailMatch || null,
+        emailNormalized: normalizeEmail(emailMatch),
+        phone: phoneMatch || null,
+        phoneNormalized: normalizePhone(phoneMatch),
+        intentScore: intent.intent_score,
+        intentFocus: intent.focus,
+        intentReasoning: intent.reasoning,
+        intentProjectIds: [],
+        intentNextAction: intent.next_action,
+        metadata: {
+          requestId,
+          userAgent: req.headers.get('user-agent'),
+          threadId,
+        },
+      },
     });
-    leadId = leadRef.id;
+    leadId = lead.id;
     console.log(
       JSON.stringify({
         event: 'lead.created',

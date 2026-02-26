@@ -2,7 +2,6 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
-import { getAdminDb } from '@/server/firebase-admin';
 import { updateMarketingTotals } from '@/server/marketing-analytics';
 import { z } from 'zod';
 import { CAP } from '@/lib/capabilities';
@@ -10,7 +9,6 @@ import { resend, fromEmail } from '@/lib/resend';
 import { ADMIN_ROLES } from '@/lib/server/roles';
 import { enforceRateLimit, getRequestIp } from '@/lib/server/rateLimit';
 import {
-  enforceUsageLimit,
   FeatureAccessError,
   PlanLimitError,
   featureAccessErrorResponse,
@@ -18,6 +16,7 @@ import {
   requirePlanFeature,
 } from '@/lib/server/billing';
 import { IS_GOOGLE_ADS_ENABLED } from '@/lib/server/env';
+import { prisma } from '@/server/db';
 
 const requestSchema = z.object({
   name: z.string().min(1),
@@ -57,8 +56,7 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
         }
         const body = requestSchema.parse(await req.json());
-        const db = getAdminDb();
-        await requirePlanFeature(db, tenantId, 'google_ads');
+        await requirePlanFeature({} as any, tenantId, 'google_ads');
         
         // This would implement the Google Ads API OAuth flow and mutate the campaign.
         // We simulate a successful sync for the OS interface.
@@ -72,45 +70,49 @@ export async function POST(req: NextRequest) {
         };
 
         try {
-            await enforceUsageLimit(db, tenantId, 'campaigns', 1);
-            const campaignsRef = db
-              .collection('tenants')
-              .doc(tenantId)
-              .collection('ads_campaigns');
-            const campaignDoc = campaignsRef.doc(responsePayload.campaignId);
             const createdAt = new Date().toISOString();
-
-            await campaignDoc.set(
-              {
-                ...body,
-                ...responsePayload,
-                campaignId: responsePayload.campaignId,
-                tenantId,
-                name: body.name,
-                status: responsePayload.status,
-                dailyBudget: body.budget,
-                scheduledSpend: body.budget * body.duration,
-                goal: body.goal || 'Lead Generation',
-                landingPage: body.landingPage || null,
-                notes: body.notes || null,
-                keywords: body.keywords || [],
-                adCopy: {
-                  headlines: body.headlines || body.variation?.headlines || [],
-                  descriptions: body.descriptions || body.variation?.descriptions || [],
-                },
-                expectations: body.expectations || null,
-                leadsCaptured: 0,
-                conversions: 0,
-                revenue: 0,
-                roas: 0,
-                createdAt,
-                updatedAt: createdAt,
+            const campaignPayload = {
+              ...body,
+              ...responsePayload,
+              campaignId: responsePayload.campaignId,
+              tenantId,
+              name: body.name,
+              status: responsePayload.status,
+              dailyBudget: body.budget,
+              scheduledSpend: body.budget * body.duration,
+              goal: body.goal || 'Lead Generation',
+              landingPage: body.landingPage || null,
+              notes: body.notes || null,
+              keywords: body.keywords || [],
+              adCopy: {
+                headlines: body.headlines || body.variation?.headlines || [],
+                descriptions: body.descriptions || body.variation?.descriptions || [],
               },
-              { merge: true },
-            );
+              expectations: body.expectations || null,
+              leadsCaptured: 0,
+              conversions: 0,
+              revenue: 0,
+              roas: 0,
+              createdAt,
+              updatedAt: createdAt,
+            };
+
+            await prisma.adsCampaign.upsert({
+              where: { id: responsePayload.campaignId },
+              update: {
+                status: responsePayload.status,
+                dataJson: campaignPayload,
+              },
+              create: {
+                id: responsePayload.campaignId,
+                tenantId,
+                status: responsePayload.status,
+                dataJson: campaignPayload,
+              },
+            });
 
             const spendImpact = body.budget * body.duration;
-            await updateMarketingTotals(db, tenantId, (totals) => {
+            await updateMarketingTotals(null, tenantId, (totals) => {
               totals.adSpend = (totals.adSpend || 0) + spendImpact;
               if ((totals.conversions || 0) > 0 && totals.adSpend > 0) {
                 totals.cpl = totals.adSpend / (totals.conversions || 1);

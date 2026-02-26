@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { updateProfile } from 'firebase/auth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +9,6 @@ import { Loader2, Save, Users } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { authorizedFetch } from '@/lib/auth-fetch';
-import { getAuthSafe } from '@/lib/firebase/client';
 import { 
   Dialog, 
   DialogContent, 
@@ -104,11 +102,6 @@ export default function ProfilePage() {
         throw new Error(data?.error || 'Save failed');
       }
 
-      const nextDisplayName = [payload.firstName, payload.lastName].filter(Boolean).join(' ');
-      const firebaseUser = getAuthSafe()?.currentUser;
-      if (nextDisplayName && firebaseUser && nextDisplayName !== user.displayName) {
-        await updateProfile(firebaseUser, { displayName: nextDisplayName });
-      }
       toast({ title: 'Profile saved' });
     } catch (error: any) {
       toast({

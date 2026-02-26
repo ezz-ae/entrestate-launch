@@ -5,8 +5,8 @@ import { generateObject } from 'ai';
 import { z } from 'zod';
 import { getGoogleModel, PRO_MODEL } from '@/lib/ai/google';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
-import { getAdminDb } from '@/server/firebase-admin';
 import { ALL_ROLES } from '@/lib/server/roles';
+import { prisma } from '@/server/db';
 
 const agentResponseSchema = z.object({
   siteType: z.enum(['roadshow', 'developer-focus', 'partner-launch', 'full-company', 'freelancer', 'map-focused', 'ads-launch', 'agent-portfolio', 'custom']).optional(),
@@ -80,18 +80,19 @@ export async function POST(req: NextRequest) {
         };
 
         try {
-            const db = getAdminDb();
-            await db
-              .collection('tenants')
-              .doc(tenantId)
-              .collection('marketing_plans')
-              .add({
+            await prisma.campaign.create({
+              data: {
+                tenantId,
+                platform: 'marketing_plan',
+                name: payload.prompt.slice(0, 120),
+                metaJson: {
                   prompt: payload.prompt,
                   audience: payload.audience || null,
                   context: payload.context || null,
                   response: result,
-                  createdAt: new Date().toISOString(),
-              });
+                },
+              },
+            });
         } catch (logError) {
             console.error('[agents/marketing] failed to store plan', logError);
         }

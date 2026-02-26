@@ -6,13 +6,8 @@ import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { CAP } from '@/lib/capabilities';
 import { resend, fromEmail } from '@/lib/resend';
 import { ADMIN_ROLES } from '@/lib/server/roles';
-import {
-  checkUsageLimit,
-  PlanLimitError,
-  planLimitErrorResponse,
-} from '@/lib/server/billing';
+import { PlanLimitError, planLimitErrorResponse } from '@/lib/server/billing';
 import { prisma } from '@/server/db';
-import { USE_NEON } from '@/lib/server/env';
 
 const DOMAIN_REQUEST_EMAIL = process.env.DOMAIN_REQUEST_EMAIL;
 
@@ -29,65 +24,23 @@ export async function POST(req: NextRequest) {
     const payload = payloadSchema.parse(await req.json());
     const { tenantId, uid, email } = await requireRole(req, ADMIN_ROLES);
     const normalizedDomain = normalizeDomain(payload.domain);
-    if (!USE_NEON) {
-      await checkUsageLimit((await import('@/server/firebase-admin')).getAdminDb(), tenantId, 'domains');
-    }
 
     if (payload.siteId) {
-      if (USE_NEON) {
-        const site = await prisma.site.findUnique({ where: { id: payload.siteId } });
-        if (!site) {
-          return NextResponse.json({ error: 'Site not found' }, { status: 404 });
-        }
-        if (site.tenantId && site.tenantId !== tenantId) {
-          return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-        }
-        if (!site.tenantId && site.ownerUid && site.ownerUid !== uid) {
-          return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-        }
-      } else {
-        const db = (await import('@/server/firebase-admin')).getAdminDb();
-        const siteRef = db.collection('sites').doc(payload.siteId);
-        const siteSnap = await siteRef.get();
-        if (!siteSnap.exists) {
-          return NextResponse.json({ error: 'Site not found' }, { status: 404 });
-        }
-        const siteData = siteSnap.data() || {};
-        if (siteData.tenantId && siteData.tenantId !== tenantId) {
-          return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-        }
-        if (!siteData.tenantId && siteData.ownerUid && siteData.ownerUid !== uid) {
-          return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-        }
+      const site = await prisma.site.findUnique({ where: { id: payload.siteId } });
+      if (!site) {
+        return NextResponse.json({ error: 'Site not found' }, { status: 404 });
+      }
+      if (site.tenantId && site.tenantId !== tenantId) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+      if (!site.tenantId && site.ownerUid && site.ownerUid !== uid) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
       }
     }
 
-    let requestId = '';
-    if (USE_NEON) {
-      const record = await prisma.domainRequest.create({
-        data: {
-          tenantId,
-          domain: normalizedDomain,
-          provider: payload.provider,
-          siteId: payload.siteId || null,
-          status: 'requested',
-          requestedBy: {
-            uid: uid || null,
-            email: email || null,
-          },
-        },
-      });
-      requestId = record.id;
-    } else {
-      const { FieldValue } = await import('firebase-admin/firestore');
-      const db = (await import('@/server/firebase-admin')).getAdminDb();
-      const requestRef = db
-        .collection('tenants')
-        .doc(tenantId)
-        .collection('domain_requests')
-        .doc();
-
-      await requestRef.set({
+    const record = await prisma.domainRequest.create({
+      data: {
+        tenantId,
         domain: normalizedDomain,
         provider: payload.provider,
         siteId: payload.siteId || null,
@@ -96,11 +49,9 @@ export async function POST(req: NextRequest) {
           uid: uid || null,
           email: email || null,
         },
-        createdAt: FieldValue.serverTimestamp(),
-        updatedAt: FieldValue.serverTimestamp(),
-      });
-      requestId = requestRef.id;
-    }
+      },
+    });
+    const requestId = record.id;
 
     if (CAP.resend && resend && DOMAIN_REQUEST_EMAIL) {
       await resend.emails.send({

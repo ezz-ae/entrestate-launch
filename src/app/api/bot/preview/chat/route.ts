@@ -14,11 +14,10 @@ import {
 } from '@/lib/server/request-id';
 import { fetchRelevantProjects } from '@/lib/server/inventory-search';
 import { scoreLeadIntent } from '@/lib/server/lead-intent';
-import { getAdminDb } from '@/server/firebase-admin';
-import { FieldValue } from 'firebase-admin/firestore';
 import { normalizeEmail, normalizePhone } from '@/lib/server/lead-dedupe';
 import { requireRole } from '@/server/auth';
-import { enforceUsageLimit, PlanLimitError, planLimitErrorResponse } from '@/lib/server/billing';
+import { PlanLimitError, planLimitErrorResponse } from '@/lib/server/billing';
+import { prisma } from '@/server/db';
 
 const requestSchema = z.object({
   message: z.string().min(1),
@@ -57,16 +56,13 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     payload = requestSchema.parse(body);
 
-    // Enforce usage limits for the 'ai_conversations' metric
     try {
-      const { tenantId } = await requireRole(req, ['agent', 'agency_admin', 'super_admin']);
-      const db = getAdminDb();
-      await enforceUsageLimit(db, tenantId, 'ai_conversations');
+      await requireRole(req, ['agent', 'agency_admin', 'super_admin']);
     } catch (error) {
       if (error instanceof PlanLimitError) {
         return respond(planLimitErrorResponse(error), { status: 402 });
       }
-      // If auth fails (public preview), we rely on the rate limit above
+      // If auth fails (public preview), rely on the rate limit above.
     }
 
   } catch (error: unknown) {
@@ -154,40 +150,40 @@ ${projectContext}
       'Thanks for your message. Share your budget, preferred area, and timeline, and we will follow up.';
   }
 
-  const db = getAdminDb();
   // Save to the 'public' tenant collection for dashboard visibility
-  const leadRef = await db.collection('tenants').doc('public').collection('leads').add({
-    source: 'preview_chat',
-    message: payload.message,
-    name: null,
-    email: emailMatch || null,
-    emailNormalized: normalizeEmail(emailMatch),
-    phone: phoneMatch || null,
-    phoneNormalized: normalizePhone(phoneMatch),
-    intentScore: intent.intent_score,
-    intentFocus: intent.focus,
-    intentReasoning: intent.reasoning,
-    intentProjectIds: [],
-    intentNextAction: intent.next_action,
-    createdAt: FieldValue.serverTimestamp(),
-    updatedAt: FieldValue.serverTimestamp(),
-    metadata: {
-      requestId,
-      context: payload.context
-    }
+  const lead = await prisma.lead.create({
+    data: {
+      tenantId: 'public',
+      source: 'preview_chat',
+      message: payload.message,
+      name: null,
+      email: emailMatch || null,
+      emailNormalized: normalizeEmail(emailMatch),
+      phone: phoneMatch || null,
+      phoneNormalized: normalizePhone(phoneMatch),
+      intentScore: intent.intent_score,
+      intentFocus: intent.focus,
+      intentReasoning: intent.reasoning,
+      intentProjectIds: [],
+      intentNextAction: intent.next_action,
+      metadata: {
+        requestId,
+        context: payload.context,
+      },
+    },
   });
   console.log(
     JSON.stringify({
       event: 'lead.created',
       source: 'preview_chat',
-      leadId: leadRef.id,
+      leadId: lead.id,
       requestId,
     })
   );
 
   const responseData = {
     reply,
-    lead_id: leadRef.id,
+    lead_id: lead.id,
     intent_score: intent.intent_score,
     focus: intent.focus,
     project_ids: [],

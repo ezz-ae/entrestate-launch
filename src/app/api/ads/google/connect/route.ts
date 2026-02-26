@@ -19,9 +19,8 @@ export async function POST(request: NextRequest) {
   const redirectUri =
     process.env.GOOGLE_ADS_REDIRECT_URI || `${getAppUrl()}/api/ads/google/connect`;
   const tokens = await exchangeAuthCodeForTokens(authCode, redirectUri);
-  // Store tokens securely in Firestore
-  const db = (await import('@/server/firebase-admin')).getAdminDb();
-  await saveGoogleAdsTokensToFirestore(tenantId, tokens, db);
+  // Store tokens securely in Neon
+  await saveGoogleAdsTokensToFirestore(tenantId, tokens);
   // Log the connection event
   console.log(`[GoogleAds] Connected for tenant ${tenantId} by user ${uid}`);
   return NextResponse.json({ success: true });

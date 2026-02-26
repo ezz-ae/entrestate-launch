@@ -2,17 +2,12 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { getAdminDb } from '@/server/firebase-admin';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { CAP } from '@/lib/capabilities';
 import { ADMIN_ROLES } from '@/lib/server/roles';
 import { enforceRateLimit, getRequestIp } from '@/lib/server/rateLimit';
 import { createApiLogger } from '@/lib/logger';
 import {
-  checkUsageLimit,
-  enforceUsageLimits,
-  getBillingSummary,
-  getSuggestedUpgrade,
   PlanLimitError,
   planLimitErrorResponse,
 } from '@/lib/server/billing';
@@ -23,6 +18,7 @@ import {
   errorResponse,
   jsonWithRequestId,
 } from '@/lib/server/request-id';
+import { prisma } from '@/server/db';
 
 const ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
 const AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
@@ -46,8 +42,7 @@ export async function POST(req: NextRequest) {
   try {
     const payload = payloadSchema.parse(await req.json());
     const { tenantId } = await requireRole(req, ADMIN_ROLES);
-    const db = getAdminDb();
-    const entitlements = await resolveEntitlementsForTenant(db, tenantId);
+    const entitlements = await resolveEntitlementsForTenant(null, tenantId);
     if (!entitlements.features.senders.allowed) {
       return respond(
         {
@@ -84,15 +79,12 @@ export async function POST(req: NextRequest) {
       recipients = payload.recipients || [];
     } else {
       const listTenant = payload.list === 'pilot' ? 'pilot' : tenantId;
-      const snapshot = await db
-        .collection('contacts')
-        .where('tenantId', '==', listTenant)
-        .where('channel', '==', 'sms')
-        .limit(MAX_RECIPIENTS)
-        .get();
-
-      recipients = snapshot.docs
-        .map((doc: any) => String(doc.data().phone || '').trim())
+      const contacts = await prisma.contact.findMany({
+        where: { tenantId: listTenant, channel: 'sms' },
+        take: MAX_RECIPIENTS,
+      });
+      recipients = contacts
+        .map((contact) => String(contact.phone || '').trim())
         .filter(Boolean);
     }
 
@@ -102,21 +94,6 @@ export async function POST(req: NextRequest) {
         { ok: false, error: 'No recipients found for this list.', requestId },
         { status: 400 }
       );
-    }
-
-    await checkUsageLimit(db, tenantId, 'campaigns');
-    await checkUsageLimit(db, tenantId, 'sms_sends');
-    const summary = await getBillingSummary(db, tenantId);
-    const smsLimit = summary.limits.sms_sends;
-    if (smsLimit !== null && summary.usage.sms_sends + recipients.length > smsLimit) {
-      throw new PlanLimitError({
-        metric: 'sms_sends',
-        limit: smsLimit,
-        currentUsage: summary.usage.sms_sends,
-        plan: summary.subscription.plan,
-        status: summary.subscription.status,
-        suggestedUpgrade: getSuggestedUpgrade(summary.subscription.plan),
-      });
     }
 
     let sentCount = 0;
@@ -140,17 +117,6 @@ export async function POST(req: NextRequest) {
         failures.push(phone);
       } else {
         sentCount += 1;
-      }
-    }
-
-    if (sentCount > 0) {
-      try {
-        await enforceUsageLimits(db, tenantId, [
-          { metric: 'campaigns', increment: 1 },
-          { metric: 'sms_sends', increment: sentCount },
-        ]);
-      } catch (usageError) {
-        console.error('[sms/campaign] usage update failed', usageError);
       }
     }
 

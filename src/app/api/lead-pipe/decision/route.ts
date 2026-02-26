@@ -1,9 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest } from 'next/server';
-import { FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
-import { getAdminDb } from '@/server/firebase-admin';
 import { requireRole } from '@/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
 import { logError } from '@/lib/server/log';
@@ -12,6 +10,7 @@ import {
   errorResponse,
   jsonWithRequestId,
 } from '@/lib/server/request-id';
+import { prisma } from '@/server/db';
 
 const requestSchema = z.object({
   leadId: z.string().min(1),
@@ -28,15 +27,11 @@ export async function POST(req: NextRequest) {
   try {
     const { tenantId } = await requireRole(req, ALL_ROLES);
     const payload = requestSchema.parse(await req.json());
-    const db = getAdminDb();
     const leadId = payload.leadId.replace(/^lead:/, '');
-    const leadRef = db
-      .collection('tenants')
-      .doc(tenantId)
-      .collection('leads')
-      .doc(leadId);
-    const leadSnap = await leadRef.get();
-    if (!leadSnap.exists) {
+    const lead = await prisma.lead.findFirst({
+      where: { id: leadId, tenantId },
+    });
+    if (!lead) {
       return respond(
         {
           ok: false,
@@ -48,19 +43,17 @@ export async function POST(req: NextRequest) {
     }
 
     const rejected = payload.decision === 'reject';
-    await leadRef.set(
-      {
+    await prisma.lead.update({
+      where: { id: leadId },
+      data: {
         pipelineDecision: payload.decision,
-        pipelineDecisionAt: FieldValue.serverTimestamp(),
+        pipelineDecisionAt: new Date(),
         pipelineDecisionReason: payload.reason || null,
         status: rejected ? 'ignored' : 'active',
-        ignoredReason: rejected
-          ? payload.reason || 'Rejected from pipeline.'
-          : null,
-        updatedAt: FieldValue.serverTimestamp(),
+        ignoredReason: rejected ? payload.reason || 'Rejected from pipeline.' : null,
+        updatedAt: new Date(),
       },
-      { merge: true }
-    );
+    });
 
     return respond({
       ok: true,

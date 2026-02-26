@@ -1,44 +1,14 @@
-import { getAdminProjectId, tryGetAdminDb } from '@/server/firebase-admin';
+import { prisma } from '@/server/db';
 import { ENTRESTATE_INVENTORY } from '@/data/entrestate-inventory';
-import { firebaseConfig } from '@/lib/firebase/config';
 import type { ProjectData } from '@/lib/types';
-import { SERVER_ENV } from '@/lib/server/env';
-import { envBool } from '@/lib/env';
-
-let hasLoggedAdminInventoryFallback = false;
-function logAdminInventoryFallback(message: string, error?: unknown) {
-  if (hasLoggedAdminInventoryFallback) return;
-  hasLoggedAdminInventoryFallback = true;
-  if (error) {
-    console.warn(`[inventory] ${message}`, error);
-  } else {
-    console.warn(`[inventory] ${message}`);
-  }
-}
+import { SERVER_ENV, USE_NEON } from '@/lib/server/env';
 
 // Cache settings
 const CACHE_TTL_MS = 5 * 60 * 1000;
-const DEFAULT_MAX = 500; // Reduced from 8000 to prevent timeouts during metadata builds
-
-const sanitizeEnv = (val?: string) => val?.split('#')[0].trim().replace(/^["']|["']$/g, '');
-
-const PUBLIC_PROJECT_ID =
-  sanitizeEnv(process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) ||
-  sanitizeEnv(process.env.FIREBASE_PROJECT_ID) ||
-  sanitizeEnv(process.env.project_id) ||
-  sanitizeEnv(firebaseConfig?.projectId) || '';
-
-const PUBLIC_API_KEY =
-  sanitizeEnv(process.env.NEXT_PUBLIC_FIREBASE_API_KEY) ||
-  sanitizeEnv(firebaseConfig?.apiKey) || '';
-
-const ADMIN_PROJECT_ID = getAdminProjectId();
-const ADMIN_PROJECT_MISMATCH =
-  ADMIN_PROJECT_ID && PUBLIC_PROJECT_ID && ADMIN_PROJECT_ID !== PUBLIC_PROJECT_ID;
+const DEFAULT_MAX = 500;
 
 let cachedProjects: ProjectData[] = [];
 let cachedAt = 0;
-let hasFullInventoryLoaded = false;
 
 type FirestoreValue = {
   stringValue?: string;
@@ -218,306 +188,113 @@ export function normalizeProjectData(raw: any, id: string): ProjectData {
   const images = [
     ...normalizeArray(raw.images),
     ...normalizeArray(raw.gallery),
+    ...normalizeArray(raw.photos),
   ];
-  if (!images.length) {
-    const hero = normalizeString(raw.image || raw.heroImage || raw.coverImage);
-    if (hero) images.push(hero);
-  }
 
-  const bedroomsRaw = raw.bedrooms || {};
-  const bedroomMin = normalizeNumber(bedroomsRaw.min || raw.bedroomMin);
-  const bedroomMax = normalizeNumber(bedroomsRaw.max || raw.bedroomMax);
-  const bedrooms =
-    bedroomMin || bedroomMax
-      ? {
-          min: bedroomMin || bedroomMax,
-          max: bedroomMax || bedroomMin,
-          label: normalizeString(
-            bedroomsRaw.label,
-            bedroomMin && bedroomMax ? `${bedroomMin}-${bedroomMax}` : `${bedroomMin || bedroomMax}`
-          ),
-        }
-      : undefined;
+  const brochureUrl =
+    normalizeString(raw.brochureUrl || raw.brochure_url || raw.brochure) || undefined;
 
-  const areaRaw = raw.areaSqft || {};
-  const areaMin = normalizeNumber(areaRaw.min || raw.areaMin);
-  const areaMax = normalizeNumber(areaRaw.max || raw.areaMax);
-  const areaSqft =
-    areaMin || areaMax
-      ? {
-          min: areaMin || areaMax,
-          max: areaMax || areaMin,
-          label: normalizeString(
-            areaRaw.label,
-            areaMin && areaMax ? `${areaMin}-${areaMax} sqft` : `${areaMin || areaMax} sqft`
-          ),
-        }
-      : undefined;
-
-  const descriptionFallback = descriptionFull || descriptionShort || 'Details coming soon.';
+  const publicUrlRaw =
+    normalizeString(raw.publicUrl || raw.public_url || raw.landingPageUrl || raw.url) ||
+    undefined;
+  const publicUrl = publicUrlRaw ? safeDecodeURIComponent(publicUrlRaw) : undefined;
 
   return {
     id,
-    name: normalizeString(raw.name || raw.title, 'Untitled Project'),
-    developer: normalizeString(raw.developer || raw.builder, 'Unknown Developer'),
+    name: normalizeString(raw.name || raw.title || raw.project || raw.projectName, id),
+    developer: normalizeString(raw.developer || raw.builder || raw.dev, 'Unknown Developer'),
+    status: normalizeString(raw.status || raw.availability || 'Available'),
+    price: {
+      label: priceLabel,
+      value: priceFrom || undefined,
+      from: priceFrom || undefined,
+      sqftAvg: normalizeNumber(raw.price?.sqftAvg || raw.sqftAvg) || undefined,
+    },
     location: {
       city,
       area,
       mapQuery,
     },
-    handover,
-    deliveryYear: normalizeNumber(raw.deliveryYear) || undefined,
-    status: normalizeString(raw.status || raw.availabilityStatus),
-    description: {
-      full: descriptionFull || descriptionFallback,
-      short: descriptionShort || descriptionFallback,
-    },
-    features: normalizeArray(raw.features || raw.amenities),
-    price: {
-      from: priceFrom || 0,
-      label: priceLabel,
-      sqftAvg: normalizeNumber(raw.price?.sqftAvg || raw.sqftAvg) || undefined,
-    },
+    images: images.length ? images : undefined,
     performance: {
-      roi: normalizeNumber(performanceRaw.roi || raw.roi),
-      capitalAppreciation: normalizeNumber(
-        performanceRaw.capitalAppreciation || performanceRaw.capital_appreciation || raw.capitalAppreciation
-      ),
-      rentalYield: normalizeNumber(performanceRaw.rentalYield || raw.rentalYield),
+      roi: normalizeNumber(performanceRaw.roi || raw.roi) || undefined,
+      rentalYield: normalizeNumber(performanceRaw.rentalYield || raw.rentalYield) || undefined,
+      capitalAppreciation:
+        normalizeNumber(performanceRaw.capitalAppreciation || raw.capitalAppreciation) ||
+        undefined,
       marketTrend,
-      priceHistory: Array.isArray(performanceRaw.priceHistory)
-        ? performanceRaw.priceHistory
-        : [],
+      priceHistory: normalizeArray(performanceRaw.priceHistory || raw.priceHistory),
     },
-    availability: normalizeString(raw.availability || raw.status, 'Available') as ProjectData['availability'],
-    images,
-    bedrooms,
-    areaSqft,
-    tags: normalizeArray(raw.tags),
-    publicUrl: normalizeString(raw.publicUrl || raw.url),
-    unitsStockUpdatedAt: normalizeString(raw.unitsStockUpdatedAt),
-    brochureUrl: normalizeString(raw.brochureUrl),
+    handover: handover || undefined,
+    description: {
+      short: descriptionShort || descriptionFull || 'Project details coming soon.',
+      full: descriptionFull || descriptionShort || 'Project details coming soon.',
+    },
+    brochureUrl,
+    publicUrl,
+    features: normalizeArray(raw.features || raw.amenities || raw.highlights),
+    tags: normalizeArray(raw.tags || raw.keywords),
+    availability: normalizeString(raw.availability || raw.status || ''),
+    bedrooms: raw.bedrooms || raw.bedroom || undefined,
+    areaSqft: raw.areaSqft || raw.area_sqft || undefined,
+    unitsStockUpdatedAt: raw.unitsStockUpdatedAt || raw.units_stock_updated_at || undefined,
   };
 }
 
-async function loadPublicInventory(max: number): Promise<ProjectData[]> {
-  if (!PUBLIC_PROJECT_ID || !PUBLIC_API_KEY) {
-    return [];
-  }
-
-  const projects: ProjectData[] = [];
-  const baseUrl = `https://firestore.googleapis.com/v1/projects/${PUBLIC_PROJECT_ID}/databases/(default)/documents/inventory_projects`;
-  let pageToken: string | undefined;
-
-  while (projects.length < max) {
-    const url = new URL(baseUrl);
-    url.searchParams.set('pageSize', String(Math.min(1000, max - projects.length)));
-    url.searchParams.set('key', PUBLIC_API_KEY);
-    if (pageToken) {
-      url.searchParams.set('pageToken', pageToken);
-    }
-
-    const res = await fetch(url.toString(), { cache: 'no-store' });
-    if (!res.ok) {
-      const errorBody = await res.text().catch(() => 'No body');
-      console.error(
-        `[inventory] Public Firestore REST API failed: ${res.status} ${res.statusText}. Body: ${errorBody}`
-      );
-      break;
-    }
-
-    const data = await res.json();
-    const docs = Array.isArray(data.documents) ? data.documents : [];
-    docs.forEach((doc: any) => {
-      const name = typeof doc.name === 'string' ? doc.name : '';
-      const id = name.split('/').pop() || '';
-      const raw = decodeFirestoreFields(doc.fields || {});
-      projects.push(normalizeProjectData(raw, id));
-    });
-
-    pageToken = data.nextPageToken;
-    if (!pageToken) {
-      break;
-    }
-  }
-
-  return projects;
-}
-
-async function loadPublicProjectById(projectId: string): Promise<ProjectData | null> {
-  if (!PUBLIC_PROJECT_ID || !PUBLIC_API_KEY || !projectId) {
-    return null;
-  }
-
-  const url = new URL(
-    `https://firestore.googleapis.com/v1/projects/${PUBLIC_PROJECT_ID}/databases/(default)/documents/inventory_projects/${encodeURIComponent(projectId)}`
-  );
-  url.searchParams.set('key', PUBLIC_API_KEY);
-
-  const res = await fetch(url.toString(), { cache: 'no-store' });
-  if (!res.ok) {
-    return null;
-  }
-
-  const data = await res.json();
-  if (!data?.fields) {
-    return null;
-  }
-
-  const raw = decodeFirestoreFields(data.fields);
-  return normalizeProjectData(raw, projectId);
+function mapProjectRecord(project: any): ProjectData {
+  const raw = project.dataJson ?? {
+    name: project.title,
+    developer: project.developer,
+    city: project.city,
+    community: project.community,
+    price_min: project.priceMin ? Number(project.priceMin) : undefined,
+    price_max: project.priceMax ? Number(project.priceMax) : undefined,
+    images: project.imagesJson,
+  };
+  return normalizeProjectData(raw, project.id);
 }
 
 export async function loadInventoryProjects(max = DEFAULT_MAX, forceRefresh = false) {
-  // Robust check for static mode: Default to FIRESTORE (false) for launch
-  const useStatic =
-    process.env.USE_STATIC_INVENTORY === 'true' ||
-    process.env.NEXT_PUBLIC_ENABLE_STATIC_INVENTORY === 'true' ||
-    envBool('USE_STATIC_INVENTORY', false);
-
-  console.log(`[inventory] Loading mode: ${useStatic ? 'STATIC' : 'FIRESTORE'}`);
-
-  if (useStatic) {
-    // Static mode (default) - prevents quota usage unless explicitly disabled
-    return ENTRESTATE_INVENTORY.slice(0, max).map((project) => normalizeProjectData(project, project.id));
-  }
-
-  const now = Date.now();
-  if (!forceRefresh && (hasFullInventoryLoaded || cachedProjects.length >= max) && now - cachedAt < CACHE_TTL_MS) {
-    return cachedProjects.slice(0, max);
+  const isFresh = !forceRefresh && cachedProjects.length > 0 && Date.now() - cachedAt < CACHE_TTL_MS;
+  if (isFresh) {
+    return cachedProjects;
   }
 
   let projects: ProjectData[] = [];
 
-  if (ADMIN_PROJECT_MISMATCH) {
-    console.warn(
-      `[inventory] Admin project (${ADMIN_PROJECT_ID}) differs from public project (${PUBLIC_PROJECT_ID}). Using admin source first.`
-    );
+  if (USE_NEON) {
+    const records = await prisma.project.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: max,
+    });
+    projects = records.map(mapProjectRecord);
   }
 
-  const db = tryGetAdminDb();
-  if (db && typeof db.collection === 'function') {
-    try {
-      let snapshot;
-      try {
-        // Order by createdAt to ensure the latest projects appear first
-        // We wrap this in a Promise.race to prevent hanging the API route if Firestore is slow
-        snapshot = await Promise.race([
-          db.collection('inventory_projects')
-            .orderBy('createdAt', 'desc')
-            .limit(max)
-            .get(),
-          new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Firestore timeout')), 10000)
-          )
-        ]);
-      } catch (queryError: any) {
-        // Fallback 1: If orderBy fails (missing index) or times out, try a simple fetch
-        console.warn(
-          `[inventory] Primary Firestore query failed (${queryError.message}). Falling back to unordered query.`
-        );
-        snapshot = await db.collection('inventory_projects').limit(max).get();
-      }
-
-      if (snapshot && !snapshot.empty) {
-        projects = snapshot.docs.map((doc: any) => normalizeProjectData(doc.data(), doc.id));
-        console.log(`[inventory] Successfully loaded ${projects.length} projects from Firestore.`);
-      }
-    } catch (error) {
-      if (error && typeof error === 'object' && 'code' in error && (error as any).code === 8) {
-        logAdminInventoryFallback('Admin inventory query quota exceeded (RESOURCE_EXHAUSTED); falling back to public/static inventory.');
-      } else if (error && typeof error === 'object' && 'code' in error && (error as any).code === 7) {
-        logAdminInventoryFallback('Admin inventory query failed: PERMISSION_DENIED. Ensure your service account has the "Cloud Datastore User" role in Google Cloud Console.');
-      } else {
-        logAdminInventoryFallback('Admin inventory query failed; falling back to public/static inventory.', error);
-      }
-    }
-  } else {
-    logAdminInventoryFallback('Admin Firestore is unavailable; falling back to public/static inventory.');
-  }
-
-  if (!projects.length) {
-    try {
-      projects = await loadPublicInventory(max);
-      console.log(`[inventory] Public load returned ${projects.length} projects`);
-    } catch (error) {
-      console.error('[inventory] public load failed', error);
-    }
-  }
-
-  if (!projects.length) {
-    console.warn('[inventory] No projects loaded from DB or Public API. Falling back to static inventory.');
-    projects = ENTRESTATE_INVENTORY.map((project) => normalizeProjectData(project, project.id));
+  if (!projects.length && SERVER_ENV.USE_STATIC_INVENTORY !== 'false') {
+    projects = ENTRESTATE_INVENTORY.slice(0, max);
   }
 
   cachedProjects = projects;
-  cachedAt = now;
-  // Mark as fully loaded if we got a reasonable amount of data
-  // We consider it "full" if we hit the max or got a significant chunk
-  hasFullInventoryLoaded = projects.length > 0 && projects.length < max;
-  return projects.slice(0, max);
+  cachedAt = Date.now();
+  return projects;
 }
 
 export async function loadInventoryProjectById(projectId: string) {
-  if (!projectId) return null;
-  const resolvedId = safeDecodeURIComponent(projectId);
+  const resolvedId = projectId.trim();
+  if (!resolvedId) return null;
 
-  console.log(`[inventory] Attempting to load project by ID: ${resolvedId}`);
-
-  const useStatic =
-    process.env.USE_STATIC_INVENTORY === 'true' ||
-    process.env.NEXT_PUBLIC_ENABLE_STATIC_INVENTORY === 'true' ||
-    envBool('USE_STATIC_INVENTORY', false);
-
-  if (!useStatic) {
-    const db = tryGetAdminDb();
-    if (db && typeof db.collection === 'function') {
-      try {
-        console.log('[inventory] Querying Firestore for project ID:', resolvedId);
-        const snapshot = await db.collection('inventory_projects').doc(resolvedId).get();
-        if (snapshot.exists) {
-          console.log('[inventory] Project found in Firestore:', resolvedId);
-          return normalizeProjectData(snapshot.data(), snapshot.id);
-        } else {
-          console.warn('[inventory] Project not found in Firestore for ID:', resolvedId);
-        }
-      } catch (error) {
-        logAdminInventoryFallback('Admin project lookup failed; falling back to public/static inventory.', error);
-      }
-    } else {
-      logAdminInventoryFallback('Admin Firestore is unavailable; falling back to public/static inventory.');
-    }
-
-    try {
-      const project = await loadPublicProjectById(resolvedId);
-      if (project) {
-        console.log('[inventory] Project found via Public API:', resolvedId);
-        return project;
-      }
-    } catch (error) {
-      console.error('[inventory] public project lookup failed', error);
+  if (USE_NEON) {
+    const record = await prisma.project.findUnique({ where: { id: resolvedId } });
+    if (record) {
+      return mapProjectRecord(record);
     }
   }
 
-  // Fallback: Use cached or static data.
-  console.log(`[inventory] Safe fallback triggered for ID: ${projectId} - Attempting cached/static.`);
-  let fallback = cachedProjects;
-  const now = Date.now();
-  const isCacheValid = cachedProjects.length && now - cachedAt < CACHE_TTL_MS;
-
-  if (!isCacheValid || useStatic) {
-    fallback = ENTRESTATE_INVENTORY.map((p) => normalizeProjectData(p, p.id));
-  }
-
-  const directMatch = fallback.find((project) => project.id === resolvedId);
-  if (directMatch) {
-    console.log('[inventory] Project found in static/cached data:', resolvedId);
-    return directMatch;
-  }
+  const fallback = SERVER_ENV.USE_STATIC_INVENTORY !== 'false' ? ENTRESTATE_INVENTORY : cachedProjects;
+  const direct = fallback.find((project) => project.id === resolvedId);
+  if (direct) return direct;
 
   const normalizedId = normalizeKey(resolvedId);
-  if (!normalizedId) return null;
-
   const foundInFallback = fallback.find((project) => {
     if (normalizeKey(project.id) === normalizedId) return true;
     if (normalizeKey(project.name) === normalizedId) return true;
@@ -528,13 +305,7 @@ export async function loadInventoryProjectById(projectId: string) {
     return false;
   });
 
-  if (foundInFallback) {
-    console.log('[inventory] Project found in static/cached data (normalized ID match): ', resolvedId);
-    return foundInFallback;
-  }
-
-  console.warn('[inventory] Project not found in any source:', resolvedId);
-  return null;
+  return foundInFallback || null;
 }
 
 export async function getRelevantProjects(message: string, context?: string, max = 8) {
@@ -543,7 +314,6 @@ export async function getRelevantProjects(message: string, context?: string, max
   const terms = query.split(/[^a-z0-9]+/i).filter((term) => term.length > 2);
 
   if (!terms.length) {
-    // If the query is empty or too vague, return the top projects to show market expertise
     return projects.slice(0, max);
   }
 

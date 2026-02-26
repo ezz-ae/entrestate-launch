@@ -56,6 +56,7 @@ function validateServerEnv(rawEnv: NodeJS.ProcessEnv) {
     rawEnv.NODE_ENV === 'production' ||
     rawEnv.VERCEL_ENV === 'production' ||
     rawEnv.VERCEL_ENV === 'preview';
+  const useNeon = envBool('USE_NEON', false);
   const hasAdminJson = Boolean(env.FIREBASE_ADMIN_CREDENTIALS);
   const hasAdminSplit = Boolean(
     (env.FIREBASE_ADMIN_PROJECT_ID || env.FIREBASE_PROJECT_ID || env.project_id) &&
@@ -63,7 +64,7 @@ function validateServerEnv(rawEnv: NodeJS.ProcessEnv) {
       (env.FIREBASE_ADMIN_PRIVATE_KEY || env.FIREBASE_PRIVATE_KEY || env.private_key)
   );
 
-  if (isProductionLike && !hasAdminJson && !hasAdminSplit) {
+  if (isProductionLike && !useNeon && !hasAdminJson && !hasAdminSplit) {
     throw new Error(
       'Missing Firebase admin credentials. Set FIREBASE_ADMIN_CREDENTIALS or FIREBASE_ADMIN_PROJECT_ID/FIREBASE_ADMIN_CLIENT_EMAIL/FIREBASE_ADMIN_PRIVATE_KEY.'
     );

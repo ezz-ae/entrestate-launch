@@ -6,8 +6,6 @@ import { promises as fs } from 'fs';
 import { parse } from 'csv-parse/sync';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import { FieldValue } from 'firebase-admin/firestore';
-import { getAdminDb } from '@/server/firebase-admin';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { ADMIN_ROLES } from '@/lib/server/roles';
 import { enforceRateLimit, getRequestIp } from '@/lib/server/rateLimit';
@@ -17,6 +15,7 @@ import {
   errorResponse,
   jsonWithRequestId,
 } from '@/lib/server/request-id';
+import { prisma } from '@/server/db';
 
 export async function POST(req: NextRequest) {
   const scope = 'api/sms/import';
@@ -69,8 +68,7 @@ export async function POST(req: NextRequest) {
         );
     }
 
-    const db = getAdminDb();
-    const batch = db.batch();
+    const contacts: Array<{ id: string; tenantId: string; channel: string; phone?: string; name?: string; source: string; }> = [];
     let importedCount = 0;
 
     records.forEach((record) => {
@@ -87,26 +85,23 @@ export async function POST(req: NextRequest) {
       ].filter(Boolean);
       const name = nameParts.length ? String(nameParts.join(' ')).trim() : undefined;
 
-      const docId = `${tenantId}_${Buffer.from(normalizedPhone).toString('base64url')}`;
-      const docRef = db.collection('contacts').doc(docId);
-      batch.set(
-        docRef,
-        {
-          tenantId,
-          channel: 'sms',
-          phone: normalizedPhone,
-          name,
-          source: 'import',
-          updatedAt: FieldValue.serverTimestamp(),
-          createdAt: FieldValue.serverTimestamp(),
-        },
-        { merge: true }
-      );
+      const docId = `contact_${tenantId}_${Buffer.from(normalizedPhone).toString('base64url')}`;
+      contacts.push({
+        id: docId,
+        tenantId,
+        channel: 'sms',
+        phone: normalizedPhone,
+        name,
+        source: 'import',
+      });
       importedCount += 1;
     });
 
-    if (importedCount > 0) {
-      await batch.commit();
+    if (contacts.length > 0) {
+      await prisma.contact.createMany({
+        data: contacts,
+        skipDuplicates: true,
+      });
     }
 
     await fs.unlink(tempFilePath);

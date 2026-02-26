@@ -3,14 +3,9 @@ export const dynamic = 'force-dynamic';
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/server/db';
-import { USE_NEON } from '@/lib/server/env';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
-import {
-  enforceUsageLimit,
-  PlanLimitError,
-  planLimitErrorResponse,
-} from '@/lib/server/billing';
+import { PlanLimitError, planLimitErrorResponse } from '@/lib/server/billing';
 import { logError } from '@/lib/server/log';
 import {
   createRequestId,
@@ -48,74 +43,33 @@ export async function POST(req: NextRequest) {
 
     const emailNormalized = normalizeEmail(payload.email);
     const phoneNormalized = normalizePhone(payload.phone);
-    if (USE_NEON) {
-      const existingLead = await prisma.lead.findFirst({
-        where: {
-          tenantId,
-          OR: [
-            emailNormalized
-              ? { email: { equals: emailNormalized, mode: 'insensitive' } }
-              : undefined,
-            phoneNormalized ? { phone: phoneNormalized } : undefined,
-          ].filter(Boolean) as any,
-        },
-      });
-
-      if (existingLead) {
-        await prisma.lead.update({
-          where: { id: existingLead.id },
-          data: {
-            name: payload.name,
-            email: payload.email,
-            phone: payload.phone || null,
-            notes: payload.message || existingLead.notes,
-            status: existingLead.status || 'New',
-            source: existingLead.source || 'Manual Entry',
-          },
-        });
-        return respond({
-          ok: true,
-          data: { id: existingLead.id, deduped: true },
-          requestId,
-        });
-      }
-
-      const lead = await prisma.lead.create({
-        data: {
-          tenantId,
-          name: payload.name,
-          email: payload.email,
-          phone: payload.phone || null,
-          notes: payload.message || null,
-          status: 'New',
-          source: 'Manual Entry',
-        },
-      });
-
-      return respond(
-        { ok: true, data: { id: lead.id, deduped: false }, requestId },
-        { status: 201 }
-      );
-    }
-
-    const db = (await import('@/server/firebase-admin')).getAdminDb();
-    const { buildLeadTouchUpdate, findExistingLead } = await import('@/lib/server/lead-dedupe');
-
-    const existingLead = await findExistingLead(db, tenantId, {
-      email: emailNormalized,
-      phone: phoneNormalized,
+    const existingLead = await prisma.lead.findFirst({
+      where: {
+        tenantId,
+        OR: [
+          emailNormalized
+            ? { email: { equals: emailNormalized, mode: 'insensitive' } }
+            : undefined,
+          phoneNormalized ? { phone: phoneNormalized } : undefined,
+        ].filter(Boolean) as any,
+      },
     });
 
     if (existingLead) {
-      await existingLead.ref.update(
-        buildLeadTouchUpdate({
+      await prisma.lead.update({
+        where: { id: existingLead.id },
+        data: {
           name: payload.name,
           email: payload.email,
+          emailNormalized,
           phone: payload.phone || null,
-          message: payload.message || null,
-          source: 'Manual Entry',
-        })
-      );
+          phoneNormalized,
+          message: payload.message || existingLead.message,
+          notes: payload.message || existingLead.notes,
+          status: existingLead.status || 'New',
+          source: existingLead.source || 'Manual Entry',
+        },
+      });
       return respond({
         ok: true,
         data: { id: existingLead.id, deduped: true },
@@ -123,12 +77,8 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    await enforceUsageLimit(db, tenantId, 'leads', 1);
-    const leadRef = await db
-      .collection('tenants')
-      .doc(tenantId)
-      .collection('leads')
-      .add({
+    const lead = await prisma.lead.create({
+      data: {
         tenantId,
         name: payload.name,
         email: payload.email,
@@ -136,17 +86,14 @@ export async function POST(req: NextRequest) {
         phone: payload.phone || null,
         phoneNormalized,
         message: payload.message || null,
+        notes: payload.message || null,
         status: 'New',
-        priority: 'Warm',
         source: 'Manual Entry',
-        touches: 1,
-        lastSeenAt: (await import('firebase-admin/firestore')).FieldValue.serverTimestamp(),
-        createdAt: (await import('firebase-admin/firestore')).FieldValue.serverTimestamp(),
-        updatedAt: (await import('firebase-admin/firestore')).FieldValue.serverTimestamp(),
-      });
+      },
+    });
 
     return respond(
-      { ok: true, data: { id: leadRef.id, deduped: false }, requestId },
+      { ok: true, data: { id: lead.id, deduped: false }, requestId },
       { status: 201 }
     );
   } catch (error) {

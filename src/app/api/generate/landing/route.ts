@@ -5,13 +5,11 @@ import { generateSiteStructure } from '@/lib/ai/vertex-service';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
 import {
-  enforceUsageLimit,
   PlanLimitError,
   planLimitErrorResponse,
 } from '@/lib/server/billing';
 import { SitePage, Block } from '@/lib/types';
 import { prisma } from '@/server/db';
-import { USE_NEON } from '@/lib/server/env';
 
 export async function POST(req: NextRequest) {
     try {
@@ -43,37 +41,18 @@ export async function POST(req: NextRequest) {
             updatedAt: new Date().toISOString(),
         };
 
-        let pageId = '';
-        if (USE_NEON) {
-            const created = await prisma.site.create({
-                data: {
-                    tenantId,
-                    ownerUid: uid,
-                    title: newSite.title,
-                    dataJson: {
-                        ...newSite,
-                        projectId: projectId || null,
-                    },
-                },
-            });
-            pageId = created.id;
-        } else {
-            const db = (await import('@/server/firebase-admin')).getAdminDb();
-            const { FieldValue } = await import('firebase-admin/firestore');
-            await enforceUsageLimit(db, tenantId, 'landing_pages', 1);
-            const siteRef = db.collection('sites').doc();
-            pageId = siteRef.id;
-            await siteRef.set(
-                {
+        const created = await prisma.site.create({
+            data: {
+                tenantId,
+                ownerUid: uid,
+                title: newSite.title,
+                dataJson: {
                     ...newSite,
-                    id: pageId,
                     projectId: projectId || null,
-                    updatedAt: FieldValue.serverTimestamp(),
-                    createdAt: FieldValue.serverTimestamp(),
                 },
-                { merge: true },
-            );
-        }
+            },
+        });
+        const pageId = created.id;
 
         return NextResponse.json({ pageId });
     } catch (error) {

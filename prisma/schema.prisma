@@ -13,6 +13,7 @@ model Tenant {
   email     String?
   phone     String?
   brandKit  Json?
+  profileJson Json?
   googleAdsTokens Json?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -59,6 +60,20 @@ model UserTenant {
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@unique([userId, tenantId])
+}
+
+model TeamInvite {
+  id        String   @id @default(cuid())
+  tenantId  String
+  email     String
+  role      String
+  status    String
+  invitedBy String?
+  createdAt DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, createdAt])
 }
 
 model Project {
@@ -135,10 +150,28 @@ model Lead {
   name      String?
   phone     String?
   email     String?
+  emailNormalized String?
+  phoneNormalized String?
+  message   String?
   source    String?
   utmJson   Json?
   notes     String?
   status    String?
+  priority  String?
+  touches   Int      @default(0)
+  lastSeenAt DateTime?
+  updatedAt DateTime @updatedAt
+  context   Json?
+  metadata  Json?
+  intentScore Float?
+  intentFocus String?
+  intentReasoning String?
+  intentProjectIds String[] @default([])
+  intentNextAction String?
+  pipelineDecision String?
+  pipelineDecisionAt DateTime?
+  pipelineDecisionReason String?
+  ignoredReason String?
   createdAt DateTime @default(now())
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -147,6 +180,9 @@ model Lead {
   deployment Deployment? @relation(fields: [deploymentId], references: [id], onDelete: SetNull)
 
   @@index([siteId])
+  @@index([tenantId, createdAt])
+  @@index([emailNormalized])
+  @@index([phoneNormalized])
 }
 
 model LeadSetting {
@@ -237,6 +273,174 @@ model AgentTraining {
   tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
   upload  Upload?  @relation(fields: [uploadId], references: [id], onDelete: SetNull)
+}
+
+model Contact {
+  id        String   @id @default(cuid())
+  tenantId  String
+  channel   String
+  email     String?
+  phone     String?
+  name      String?
+  source    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, channel])
+  @@index([email])
+  @@index([phone])
+}
+
+model InventoryItem {
+  id        String   @id @default(cuid())
+  tenantId  String
+  name      String
+  status    String
+  dataJson  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, createdAt])
+}
+
+model ProjectDraft {
+  id        String   @id @default(cuid())
+  tenantId  String
+  ownerUid  String?
+  projectId String?
+  status    String
+  title     String
+  prompt    String?
+  source    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, createdAt])
+}
+
+model AdsBlueprint {
+  id        String   @id @default(cuid())
+  tenantId  String
+  siteId    String?
+  dataJson  Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, createdAt])
+}
+
+model AdsCampaign {
+  id        String   @id @default(cuid())
+  tenantId  String
+  status    String
+  dataJson  Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  deployments AdsDeployment[]
+  reports AdsReport[]
+  signals AdsLearningSignal[]
+
+  @@index([tenantId, createdAt])
+}
+
+model AdsDeployment {
+  id         String   @id @default(cuid())
+  campaignId String
+  status     String
+  payload    Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  campaign AdsCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId, createdAt])
+}
+
+model AdsReport {
+  id         String   @id @default(cuid())
+  campaignId String
+  dateId     String
+  dataJson   Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  campaign AdsCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, dateId])
+}
+
+model AdsLearningSignal {
+  id         String   @id @default(cuid())
+  tenantId   String
+  campaignId String
+  dataJson   Json
+  recordedAt DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  campaign AdsCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, recordedAt])
+}
+
+model AdsRefinerRun {
+  id        String   @id @default(cuid())
+  tenantId  String
+  siteId    String
+  result    Json
+  createdAt DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, createdAt])
+}
+
+model Wallet {
+  id        String   @id @default(cuid())
+  tenantId  String   @unique
+  balance   Decimal  @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  transactions WalletTransaction[]
+}
+
+model WalletTransaction {
+  id        String   @id @default(cuid())
+  walletId  String
+  type      String
+  amount    Decimal
+  createdAt DateTime @default(now())
+
+  wallet Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@index([walletId, createdAt])
+}
+
+model ProjectAction {
+  id        String   @id @default(cuid())
+  tenantId  String
+  projectId String?
+  type      String
+  text      String?
+  payload   Json?
+  createdAt DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, createdAt])
 }
 
 model Order {

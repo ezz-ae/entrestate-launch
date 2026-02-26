@@ -8,12 +8,9 @@ import { createApiLogger } from '@/lib/logger';
 import { CAP } from '@/lib/capabilities';
 import { ADMIN_ROLES } from '@/lib/server/roles';
 import {
-  checkUsageLimit,
-  enforceUsageLimit,
   PlanLimitError,
   planLimitErrorResponse,
 } from '@/lib/server/billing';
-import { getAdminDb } from '@/server/firebase-admin';
 import { FIREBASE_AUTH_ENABLED, IS_SMS_ENABLED } from '@/lib/server/env';
 import { resolveEntitlementsForTenant } from '@/lib/server/entitlements';
 import { logError } from '@/lib/server/log';
@@ -51,8 +48,7 @@ export async function POST(req: NextRequest) {
   const logger = createApiLogger(req, { route: 'POST /api/sms/send' });
   try {
     const { tenantId, uid } = await requireRole(req, ADMIN_ROLES);
-    const db = getAdminDb();
-    const entitlements = await resolveEntitlementsForTenant(db, tenantId);
+    const entitlements = await resolveEntitlementsForTenant(null, tenantId);
     if (!entitlements.features.senders.allowed) {
       return respond(
         {
@@ -104,7 +100,6 @@ export async function POST(req: NextRequest) {
     }
 
     const payload = payloadSchema.parse(await req.json());
-    await checkUsageLimit(db, tenantId, 'sms_sends');
     logger.setTenant(tenantId);
     logger.setActor(uid);
 
@@ -129,13 +124,6 @@ export async function POST(req: NextRequest) {
         { ok: false, error: 'Twilio send failed', details: data, requestId },
         { status: 500 }
       );
-    }
-
-    try {
-      await enforceUsageLimit(db, tenantId, 'sms_sends', 1);
-    } catch (usageError) {
-      // SMS already sent; log and continue without failing the request.
-      logger.logError(usageError, 200, { metric: 'sms_sends' });
     }
 
     logger.logSuccess(200, { to: payload.to });

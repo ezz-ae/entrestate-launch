@@ -1,4 +1,4 @@
-import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { prisma } from '@/server/db';
 import { GoogleAdsDashboard } from '@/components/GoogleAdsDashboard';
 import { notFound } from 'next/navigation';
 import { Search, ShieldCheck, Zap } from 'lucide-react';
@@ -20,18 +20,26 @@ export default async function SharedDashboardPage({ params }: SharedDashboardPag
     notFound();
   }
 
-  const supabase = await createSupabaseServerClient();
-  const { data: project } = await supabase
-    .from('projects')
-    .select('id, headline, description, original_filename, chat_agents(state, version, name)')
-    .eq('id', projectId)
-    .single();
+  const project = await prisma.project.findUnique({
+    where: { id: projectId },
+  });
 
   if (!project) {
     notFound();
   }
 
-  const agent = project.chat_agents?.[0];
+  const agent = project.tenantId
+    ? await prisma.chatAgent.findFirst({
+        where: { tenantId: project.tenantId },
+        orderBy: { updatedAt: 'desc' },
+      })
+    : null;
+
+  const projectView = {
+    id: project.id,
+    headline: (project.dataJson as any)?.headline || project.title || 'Untitled Project',
+    description: (project.dataJson as any)?.description || 'No description available.',
+  };
 
   return (
     <div className="min-h-screen bg-black text-white p-6 pt-24">
@@ -73,7 +81,7 @@ export default async function SharedDashboardPage({ params }: SharedDashboardPag
           </div>
         </div>
 
-        <GoogleAdsDashboard projects={[project]} readOnly={true} />
+        <GoogleAdsDashboard projects={[projectView]} readOnly={true} />
       </div>
     </div>
   );

@@ -38,7 +38,7 @@ function buildMetadata(projects: any[]) {
 
 export async function GET() {
   const headers: Record<string, string> = {
-    'x-inventory-source': SERVER_ENV.USE_STATIC_INVENTORY !== 'false' ? 'static-env' : 'firestore',
+    'x-inventory-source': SERVER_ENV.USE_STATIC_INVENTORY !== 'false' ? 'static-env' : 'neon',
   };
 
   const projects = await loadInventoryProjects();

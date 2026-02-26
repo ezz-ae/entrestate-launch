@@ -3,18 +3,15 @@ export const dynamic = 'force-dynamic';
 import { NextRequest } from 'next/server';
 import { generateText } from 'ai';
 import { z } from 'zod';
-import { FieldValue } from 'firebase-admin/firestore';
 import { getGoogleModel, PRO_MODEL, FLASH_MODEL } from '@/lib/ai/google';
 import { mainSystemPrompt } from '@/config/prompts';
 import { formatProjectContext } from '@/server/inventory';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
 import {
-  enforceUsageLimit,
   PlanLimitError,
   planLimitErrorResponse,
 } from '@/lib/server/billing';
-import { getAdminDb } from '@/server/firebase-admin';
 import { logError } from '@/lib/server/log';
 import {
   createRequestId,
@@ -29,6 +26,7 @@ import {
 } from '@/lib/server/lead-dedupe';
 import { scoreLeadIntent } from '@/lib/server/lead-intent';
 import { fetchRelevantProjects } from '@/lib/server/inventory-search';
+import { prisma } from '@/server/db';
 
 const requestSchema = z.object({
   message: z.string().min(1),
@@ -74,11 +72,8 @@ export async function POST(req: NextRequest) {
 
   try {
     const { tenantId } = await requireRole(req, ALL_ROLES);
-    await enforceUsageLimit(getAdminDb(), tenantId, 'ai_conversations', 1);
     const body = await req.json();
     const payload = requestSchema.parse(body);
-
-    const db = getAdminDb();
     const history = (payload.history || []).map((entry) => ({
       role: entry.role,
       text: entry.text,
@@ -86,31 +81,14 @@ export async function POST(req: NextRequest) {
 
     let agentKnowledge = '';
     try {
-      const agentSnapshot = await db
-        .collection('tenants')
-        .doc(tenantId)
-        .collection('agents')
-        .limit(1)
-        .get();
-      if (!agentSnapshot.empty) {
-        const agentId = agentSnapshot.docs[0].id;
-        const knowledgeSnapshot = await db
-          .collection('tenants')
-          .doc(tenantId)
-          .collection('agents')
-          .doc(agentId)
-          .collection('knowledge')
-          .get();
-        if (!knowledgeSnapshot.empty) {
-          knowledgeSnapshot.docs.forEach((doc: any) => {
-            const data = doc.data();
-            agentKnowledge += `\n- Chat Name: ${data.chatName || 'N/A'}`;
-            agentKnowledge += `\n- Company Details: ${data.companyDetails || 'N/A'}`;
-            agentKnowledge += `\n- Important Info: ${data.importantInfo || 'N/A'}`;
-            agentKnowledge += `\n- Exclusive Listing: ${data.exclusiveListing || 'N/A'}`;
-            agentKnowledge += `\n- Contact Details: ${data.contactDetails || 'N/A'}`;
-          });
-        }
+      const agent = await prisma.chatAgent.findFirst({
+        where: { tenantId },
+        orderBy: { updatedAt: 'desc' },
+      });
+      if (agent) {
+        agentKnowledge += `\n- Chat Name: ${agent.name || 'N/A'}`;
+        agentKnowledge += `\n- Company Details: ${agent.companyName || 'N/A'}`;
+        agentKnowledge += `\n- Contact Details: ${agent.contact ? JSON.stringify(agent.contact) : 'N/A'}`;
       }
     } catch (error) {
       console.error('[bot/main/chat] agent knowledge scan failed', error);
@@ -205,34 +183,23 @@ ${agentKnowledge}
     ];
     const leadIntent = analyzeLeadIntent(storedMessages.map((entry) => entry.text));
 
-    const conversationRef = db
-      .collection('tenants')
-      .doc(tenantId)
-      .collection('chatThreads')
-      .doc();
     const now = new Date().toISOString();
-    await conversationRef.set({
-      id: conversationRef.id,
-      createdAt: now,
-      updatedAt: now,
-      lastUserMessage: payload.message,
-      messages: storedMessages,
-      status: 'active',
-      leadIntent: leadIntent.flag,
-      leadIntentReason: leadIntent.reason ?? null,
-      intentScore: intent.intent_score,
-      intentFocus: intent.focus,
-      intentReasoning: intent.reasoning,
-      intentProjectIds: projectIds.length ? projectIds : null,
-      intentNextAction: intent.next_action,
+    const conversation = await prisma.chatSession.create({
+      data: {
+        tenantId,
+        conversation: storedMessages.map((entry) => ({
+          role: entry.role,
+          content: entry.text,
+          createdAt: now,
+        })),
+      },
     });
 
     const leadId = await upsertChatLead(
-      db,
       tenantId,
       storedMessages,
       payload.message,
-      conversationRef.id,
+      conversation.id,
       {
         email: emailMatch,
         phone: phoneMatch,
@@ -258,7 +225,7 @@ ${agentKnowledge}
 
     const responseData = {
       reply,
-      threadId: conversationRef.id,
+      threadId: conversation.id,
       history: storedMessages,
       leadIntent,
       lead_id: leadId,
@@ -340,7 +307,6 @@ ${agentKnowledge}
 }
 
 async function upsertChatLead(
-  db: ReturnType<typeof getAdminDb>,
   tenantId: string,
   messages: Array<{ role: 'user' | 'agent'; text: string }>,
   latestMessage: string,
@@ -364,14 +330,15 @@ async function upsertChatLead(
     const emailNormalized = normalizeEmail(emailMatch);
     const phoneNormalized = normalizePhone(phoneMatch);
 
-    const existing = await findExistingLead(db, tenantId, {
+    const existing = await findExistingLead(tenantId, {
       email: emailNormalized,
       phone: phoneNormalized,
     });
 
     if (existing) {
-      await existing.ref.update(
-        buildLeadTouchUpdate({
+      await prisma.lead.update({
+        where: { id: existing.id },
+        data: buildLeadTouchUpdate({
           name: existing.data?.name || null,
           email: emailMatch || existing.data?.email || null,
           phone: phoneMatch || existing.data?.phone || null,
@@ -380,26 +347,15 @@ async function upsertChatLead(
           intentScore: intent.intentScore,
           intentFocus: intent.intentFocus,
           intentReasoning: intent.intentReasoning,
-          intentProjectIds: intent.intentProjectIds ?? null,
+          intentProjectIds: intent.intentProjectIds ?? undefined,
           intentNextAction: intent.intentNextAction,
-        })
-      );
-      await db
-        .collection('tenants')
-        .doc(tenantId)
-        .collection('chatThreads')
-        .doc(threadId)
-        .set({ leadId: existing.id }, { merge: true });
+        }),
+      });
       return existing.id;
     }
 
-    await enforceUsageLimit(db, tenantId, 'leads', 1);
-
-    const leadRef = await db
-      .collection('tenants')
-      .doc(tenantId)
-      .collection('leads')
-      .add({
+    const lead = await prisma.lead.create({
+      data: {
         tenantId,
         name: null,
         email: emailMatch || null,
@@ -411,23 +367,16 @@ async function upsertChatLead(
         status: 'New',
         priority: 'Warm',
         touches: 1,
-        lastSeenAt: FieldValue.serverTimestamp(),
-        createdAt: FieldValue.serverTimestamp(),
-        updatedAt: FieldValue.serverTimestamp(),
+        lastSeenAt: new Date(),
         context: { threadId, channel: 'chat' },
         intentScore: intent.intentScore,
         intentFocus: intent.intentFocus,
         intentReasoning: intent.intentReasoning,
-        intentProjectIds: intent.intentProjectIds ?? null,
+        intentProjectIds: intent.intentProjectIds ?? [],
         intentNextAction: intent.intentNextAction,
-      });
-    await db
-      .collection('tenants')
-      .doc(tenantId)
-      .collection('chatThreads')
-      .doc(threadId)
-      .set({ leadId: leadRef.id }, { merge: true });
-    return leadRef.id;
+      },
+    });
+    return lead.id;
   } catch (error) {
     console.error('[bot/main/chat] lead upsert failed', error);
     throw error;

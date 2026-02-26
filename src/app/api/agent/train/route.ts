@@ -2,23 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { ADMIN_ROLES } from '@/lib/server/roles';
 import {
-  enforceUsageLimit,
   PlanLimitError,
   planLimitErrorResponse,
 } from '@/lib/server/billing';
 import { put } from '@vercel/blob';
 import { prisma } from '@/server/db';
-import { USE_NEON } from '@/lib/server/env';
 
 export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {
   try {
     const { tenantId } = await requireRole(req, ADMIN_ROLES);
-    if (!USE_NEON) {
-      const { getAdminDb } = await import('@/server/firebase-admin');
-      await enforceUsageLimit(getAdminDb(), tenantId, 'ai_agents', 1);
-    }
     const formData = await req.formData();
     const file = formData.get('file') as File | null;
 

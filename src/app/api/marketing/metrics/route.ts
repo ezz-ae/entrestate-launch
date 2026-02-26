@@ -1,26 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminDb } from '@/server/firebase-admin';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { DEFAULT_MARKETING_METRICS } from '@/data/marketing-metrics';
 import { ALL_ROLES } from '@/lib/server/roles';
 
 export const dynamic = 'force-dynamic';
 
-const COLLECTION = 'analytics';
-const DOC_ID = 'marketing';
-
 export async function GET(req: NextRequest) {
   try {
-    const { tenantId } = await requireRole(req, ALL_ROLES);
-
-    const db = getAdminDb();
-    const docRef = db.collection('tenants').doc(tenantId).collection(COLLECTION).doc(DOC_ID);
-    const snapshot = await docRef.get();
-
-    if (snapshot.exists) {
-      return NextResponse.json({ data: snapshot.data() });
-    }
-
+    await requireRole(req, ALL_ROLES);
     return NextResponse.json({ data: DEFAULT_MARKETING_METRICS });
   } catch (error) {
     console.error('[marketing/metrics] error', error);

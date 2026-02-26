@@ -3,7 +3,6 @@ export const dynamic = 'force-dynamic';
 import { NextRequest } from 'next/server';
 import { requireRole } from '@/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
-import { getAdminDb } from '@/server/firebase-admin';
 import { logError } from '@/lib/server/log';
 import {
   createRequestId,
@@ -30,8 +29,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const { tenantId } = await requireRole(req, ALL_ROLES);
-    const db = getAdminDb();
-    const { candidates, sourceTotals } = await collectLeadPipeCandidates(db, tenantId);
+    const { candidates, sourceTotals } = await collectLeadPipeCandidates(tenantId);
     const deduped = deduplicateLeads(candidates);
     const records = buildLeadPipeRecords(deduped).sort(
       (a, b) => b.activeProbability - a.activeProbability

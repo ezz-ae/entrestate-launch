@@ -2,7 +2,6 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
-import { getAdminDb } from '@/server/firebase-admin';
 import { ADMIN_ROLES } from '@/lib/server/roles';
 import {
   requirePlanFeature,
@@ -11,32 +10,29 @@ import {
   PlanLimitError,
   planLimitErrorResponse
 } from '@/lib/server/billing';
+import { prisma } from '@/server/db';
 
 export async function GET(req: NextRequest) {
   try {
     const { tenantId } = await requireRole(req, ADMIN_ROLES);
-    const db = getAdminDb();
-    
-    // Check if the plan allows this feature
-    await requirePlanFeature(db, tenantId, 'google_ads');
-    
-    const snapshot = await db
-      .collection('tenants')
-      .doc(tenantId)
-      .collection('ads_campaigns')
-      .limit(50)
-      .get();
+    await requirePlanFeature({} as any, tenantId, 'google_ads');
 
-    if (snapshot.empty) {
+    const campaigns = await prisma.adsCampaign.findMany({
+      where: { tenantId },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
+
+    if (!campaigns.length) {
       return NextResponse.json({ data: [] });
     }
 
-     const campaigns = snapshot.docs.map((doc: any) => ({
-      id: doc.id,
-       ...doc.data(),
-    }));
-    
-    return NextResponse.json({ data: campaigns });
+    return NextResponse.json({
+      data: campaigns.map((campaign) => ({
+        id: campaign.id,
+        ...(campaign.dataJson as Record<string, unknown>),
+      })),
+    });
   } catch (error) {
     if (error instanceof PlanLimitError) {
         return NextResponse.json(planLimitErrorResponse(error), { status: 402 });

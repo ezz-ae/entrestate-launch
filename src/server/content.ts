@@ -1,4 +1,3 @@
-import { getAdminDb } from '@/server/firebase-admin';
 import { shouldUseRemoteContent } from '@/server/remote-config';
 
 export interface BlogPost {
@@ -24,27 +23,8 @@ export async function fetchBlogPosts(limit = 6): Promise<BlogPost[]> {
     if (!shouldUseRemoteContent) {
       return [];
     }
-    const db = getAdminDb();
-    const snapshot = await db
-      .collection('content_posts')
-      .orderBy('publishedAt', 'desc')
-      .limit(limit)
-      .get();
-
-    return snapshot.docs.map((doc: any) => {
-      const data = doc.data() as any;
-      return {
-        id: doc.id,
-        title: data.title,
-        excerpt: data.excerpt,
-        author: data.author,
-        date: data.publishedAt,
-        category: data.category,
-        icon: data.icon || ICON_MAP[data.category?.toLowerCase()] || 'Sparkles',
-        heroImage: data.heroImage,
-        slug: data.slug || doc.id,
-      } satisfies BlogPost;
-    });
+    void limit;
+    return [];
   } catch (error) {
     console.error('[fetchBlogPosts] Failed to load content_posts', error);
     return [];

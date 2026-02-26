@@ -1,5 +1,3 @@
-import { FieldValue } from 'firebase-admin/firestore';
-import { tryGetAdminDb } from '@/server/firebase-admin';
 import type {
   AdsCampaign,
   AdsDeployment,
@@ -8,6 +6,7 @@ import type {
   StrategicBlueprint,
 } from '@/modules/googleAds/types';
 import { DEFAULT_SCENARIO_THRESHOLDS } from '@/modules/googleAds/scenarios';
+import { prisma } from '@/server/db';
 
 export class FirestoreUnavailableError extends Error {
   constructor(message = 'Firestore admin is not configured.') {
@@ -16,54 +15,52 @@ export class FirestoreUnavailableError extends Error {
   }
 }
 
-function requireDb() {
-  const db = tryGetAdminDb();
-  if (!db) {
-    throw new FirestoreUnavailableError();
-  }
-  return db;
-}
-
 export async function getScenarioConfig(): Promise<ScenarioThresholdConfig> {
-  const db = requireDb();
-  const snap = await db.collection('config').doc('ads').get();
-  if (!snap.exists) return DEFAULT_SCENARIO_THRESHOLDS;
-  return { ...DEFAULT_SCENARIO_THRESHOLDS, ...(snap.data() as ScenarioThresholdConfig) };
+  return DEFAULT_SCENARIO_THRESHOLDS;
 }
 
 export async function createBlueprint(blueprint: StrategicBlueprint) {
-  const db = requireDb();
-  await db.collection('adsBlueprints').doc(blueprint.id).set({ ...blueprint });
+  await prisma.adsBlueprint.create({
+    data: {
+      id: blueprint.id,
+      tenantId: blueprint.tenantId,
+      siteId: blueprint.siteId || null,
+      dataJson: blueprint,
+    },
+  });
 }
 
 export async function getBlueprint(blueprintId: string): Promise<StrategicBlueprint | null> {
-  const db = requireDb();
-  const snap = await db.collection('adsBlueprints').doc(blueprintId).get();
-  if (!snap.exists) return null;
-  return snap.data() as StrategicBlueprint;
+  const record = await prisma.adsBlueprint.findUnique({ where: { id: blueprintId } });
+  return (record?.dataJson as StrategicBlueprint) || null;
 }
 
 export async function createCampaign(campaign: AdsCampaign) {
-  const db = requireDb();
-  await db.collection('adsCampaigns').doc(campaign.id).set({ ...campaign });
+  await prisma.adsCampaign.create({
+    data: {
+      id: campaign.id,
+      tenantId: campaign.tenantId,
+      status: campaign.status,
+      dataJson: campaign,
+    },
+  });
 }
 
 export async function updateCampaignStatus(campaignId: string, status: AdsCampaign['status']) {
-  const db = requireDb();
-  await db.collection('adsCampaigns').doc(campaignId).set(
-    {
+  const existing = await prisma.adsCampaign.findUnique({ where: { id: campaignId } });
+  const dataJson = (existing?.dataJson as AdsCampaign | null) || null;
+  await prisma.adsCampaign.update({
+    where: { id: campaignId },
+    data: {
       status,
-      updatedAt: new Date().toISOString(),
+      dataJson: dataJson ? { ...dataJson, status, updatedAt: new Date().toISOString() } : { status },
     },
-    { merge: true },
-  );
+  });
 }
 
 export async function getCampaign(campaignId: string): Promise<AdsCampaign | null> {
-  const db = requireDb();
-  const snap = await db.collection('adsCampaigns').doc(campaignId).get();
-  if (!snap.exists) return null;
-  return snap.data() as AdsCampaign;
+  const record = await prisma.adsCampaign.findUnique({ where: { id: campaignId } });
+  return (record?.dataJson as AdsCampaign) || null;
 }
 
 export async function listCampaigns(options: {
@@ -71,33 +68,58 @@ export async function listCampaigns(options: {
   status?: AdsCampaign['status'];
   limit?: number;
 }) {
-  const db = requireDb();
-  let query = db.collection('adsCampaigns').where('tenantId', '==', options.tenantId);
-  if (options.status) {
-    query = query.where('status', '==', options.status);
-  }
-  const snap = await query.orderBy('createdAt', 'desc').limit(options.limit ?? 25).get();
-  return snap.docs.map((doc) => doc.data() as AdsCampaign);
+  const records = await prisma.adsCampaign.findMany({
+    where: {
+      tenantId: options.tenantId,
+      status: options.status,
+    },
+    orderBy: { createdAt: 'desc' },
+    take: options.limit ?? 25,
+  });
+  return records.map((record) => record.dataJson as AdsCampaign);
 }
 
 export async function createDeployment(deployment: AdsDeployment) {
-  const db = requireDb();
-  await db.collection('adsDeployments').doc(deployment.id).set({ ...deployment });
+  await prisma.adsDeployment.create({
+    data: {
+      id: deployment.id,
+      campaignId: deployment.campaignId,
+      status: deployment.status,
+      payload: deployment.payload,
+    },
+  });
 }
 
 export async function writeDailyReport(campaignId: string, dateId: string, data: Record<string, unknown>) {
-  const db = requireDb();
-  await db
-    .collection('adsReports')
-    .doc(campaignId)
-    .collection('daily')
-    .doc(dateId)
-    .set({ ...data, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+  await prisma.adsReport.upsert({
+    where: {
+      campaignId_dateId: {
+        campaignId,
+        dateId,
+      },
+    },
+    update: {
+      dataJson: data,
+      updatedAt: new Date(),
+    },
+    create: {
+      campaignId,
+      dateId,
+      dataJson: data,
+    },
+  });
 }
 
 export async function recordLearningSignal(signal: LearningSignal) {
-  const db = requireDb();
-  await db.collection('learningSignals').doc(signal.id).set(signal);
+  await prisma.adsLearningSignal.create({
+    data: {
+      id: signal.id,
+      tenantId: signal.tenantId,
+      campaignId: signal.campaignId,
+      dataJson: signal,
+      recordedAt: new Date(signal.recordedAt),
+    },
+  });
 }
 
 export async function saveRefinerResult(options: {
@@ -105,13 +127,14 @@ export async function saveRefinerResult(options: {
   siteId: string;
   result: Record<string, unknown>;
 }) {
-  const db = requireDb();
   const refId = `${options.siteId}-${Date.now()}`;
-  await db.collection('adsRefinerRuns').doc(refId).set({
-    tenantId: options.tenantId,
-    siteId: options.siteId,
-    result: options.result,
-    createdAt: new Date().toISOString(),
+  await prisma.adsRefinerRun.create({
+    data: {
+      id: refId,
+      tenantId: options.tenantId,
+      siteId: options.siteId,
+      result: options.result,
+    },
   });
   return refId;
 }

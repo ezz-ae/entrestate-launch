@@ -4,13 +4,10 @@ import { NextRequest } from 'next/server';
 import { generateText } from 'ai';
 import { z } from 'zod';
 import { getGoogleModel, FLASH_MODEL } from '@/lib/ai/google';
-import { getAdminDb } from '@/server/firebase-admin';
-import { FieldValue } from 'firebase-admin/firestore';
 import { formatProjectContext } from '@/server/inventory';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
 import {
-  enforceUsageLimit,
   PlanLimitError,
   planLimitErrorResponse,
 } from '@/lib/server/billing';
@@ -28,6 +25,7 @@ import {
   normalizeEmail,
   normalizePhone,
 } from '@/lib/server/lead-dedupe';
+import { prisma } from '@/server/db';
 
 const requestSchema = z.object({
   message: z.string().min(1),
@@ -65,7 +63,6 @@ export async function POST(req: NextRequest, { params: paramsPromise }: { params
   try {
     const params = await paramsPromise;
     const { tenantId } = await requireRole(req, ALL_ROLES);
-    await enforceUsageLimit(getAdminDb(), tenantId, 'ai_conversations', 1);
     const ip = req.headers.get('x-forwarded-for') || 'anon';
     if (!consumeRateLimit(`${params.botId}:${ip}`)) {
       return respond(
@@ -152,16 +149,16 @@ User (${params.botId}): ${payload.message}
         : 'I can help with UAE projects, pricing ranges, and next steps. What area and budget should I focus on?';
     }
 
-    const db = getAdminDb();
-    const existing = await findExistingLead(db, tenantId, {
+    const existing = await findExistingLead(tenantId, {
       email: emailNormalized,
       phone: phoneNormalized,
     });
 
     let leadId = '';
     if (existing) {
-      await existing.ref.update(
-        buildLeadTouchUpdate({
+      await prisma.lead.update({
+        where: { id: existing.id },
+        data: buildLeadTouchUpdate({
           name: existing.data?.name || null,
           email: emailMatch || existing.data?.email || null,
           phone: phoneMatch || existing.data?.phone || null,
@@ -172,15 +169,12 @@ User (${params.botId}): ${payload.message}
           intentReasoning: intent.reasoning,
           intentProjectIds: projectIds,
           intentNextAction: intent.next_action,
-        })
-      );
+        }),
+      });
       leadId = existing.id;
     } else {
-      const leadRef = await db
-        .collection('tenants')
-        .doc(tenantId)
-        .collection('leads')
-        .add({
+      const lead = await prisma.lead.create({
+        data: {
           tenantId,
           name: null,
           email: emailMatch || null,
@@ -192,17 +186,16 @@ User (${params.botId}): ${payload.message}
           status: 'New',
           priority: 'Warm',
           touches: 1,
-          lastSeenAt: FieldValue.serverTimestamp(),
-          createdAt: FieldValue.serverTimestamp(),
-          updatedAt: FieldValue.serverTimestamp(),
+          lastSeenAt: new Date(),
           context: { botId: params.botId, siteId: payload.siteId || null },
           intentScore: intent.intent_score,
           intentFocus: intent.focus,
           intentReasoning: intent.reasoning,
           intentProjectIds: projectIds,
           intentNextAction: intent.next_action,
-        });
-      leadId = leadRef.id;
+        },
+      });
+      leadId = lead.id;
     }
 
     console.log(

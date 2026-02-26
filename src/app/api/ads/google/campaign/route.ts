@@ -1,10 +1,9 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminDb } from '@/server/firebase-admin';
 import { requireRole } from '@/server/auth';
-import { FieldValue } from 'firebase-admin/firestore';
 import { ALL_ROLES } from '@/lib/server/roles';
+import { prisma } from '@/server/db';
 
 // Placeholder for Google Ads API campaign creation
 // import { createGoogleAdsCampaign } from '@/lib/google-ads';
@@ -16,25 +15,35 @@ export async function POST(request: NextRequest) {
     if (!budget || budget <= 0) {
       return NextResponse.json({ error: 'Invalid budget' }, { status: 400 });
     }
-    const db = getAdminDb();
-    const walletRef = db.collection('tenants').doc(tenantId).collection('wallet').doc('main');
-    const walletSnap = await walletRef.get();
-    const walletData = walletSnap.data();
-    const balance = walletData?.balance ?? 0;
-    if (balance < budget) {
-      return NextResponse.json({ error: 'Insufficient wallet balance' }, { status: 402 });
+    try {
+      await prisma.$transaction(async (tx) => {
+        const wallet = await tx.wallet.upsert({
+          where: { tenantId },
+          update: {},
+          create: { tenantId, balance: 0 },
+        });
+        const balance = Number(wallet.balance || 0);
+        if (balance < budget) {
+          throw new Error('INSUFFICIENT_WALLET_BALANCE');
+        }
+        await tx.wallet.update({
+          where: { id: wallet.id },
+          data: { balance: { decrement: budget } },
+        });
+        await tx.walletTransaction.create({
+          data: {
+            walletId: wallet.id,
+            type: 'spend',
+            amount: budget,
+          },
+        });
+      });
+    } catch (error) {
+      if (error instanceof Error && error.message === 'INSUFFICIENT_WALLET_BALANCE') {
+        return NextResponse.json({ error: 'Insufficient wallet balance' }, { status: 402 });
+      }
+      throw error;
     }
-    // Deduct budget from wallet
-    await walletRef.set({
-      balance: FieldValue.increment(-budget),
-      updatedAt: new Date(),
-    }, { merge: true });
-    await walletRef.collection('transactions').add({
-      type: 'spend',
-      amount: budget,
-      description: 'Google Ads campaign',
-      createdAt: new Date(),
-    });
     // TODO: Call Google Ads API to create campaign
     // const campaignResult = await createGoogleAdsCampaign(tenantId, campaignDetails, budget);
     // return NextResponse.json({ success: true, campaign: campaignResult });

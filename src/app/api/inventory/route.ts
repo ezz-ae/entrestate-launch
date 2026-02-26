@@ -1,9 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest } from 'next/server';
-import { FieldPath, FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
-import { getAdminDb } from '@/server/firebase-admin';
 import { requireRole } from '@/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
 import { logError } from '@/lib/server/log';
@@ -12,6 +10,7 @@ import {
   errorResponse,
   jsonWithRequestId,
 } from '@/lib/server/request-id';
+import { prisma } from '@/server/db';
 
 const DEFAULT_LIMIT = 12;
 const CACHE_TTL_MS = 30_000;
@@ -80,26 +79,30 @@ export async function GET(request: NextRequest) {
       return respond({ ok: true, data: cached.payload, requestId });
     }
 
-    const db = getAdminDb();
-    let query = db
-      .collection('tenants')
-      .doc(tenantId)
-      .collection('inventory')
-      .orderBy('createdAt', 'desc')
-      .orderBy(FieldPath.documentId(), 'desc');
-
     const decoded = decodeCursor(parsed.cursor);
-    if (decoded) {
-      query = query.startAfter(new Date(decoded.time), decoded.id);
-    }
+    const where = decoded
+      ? {
+          tenantId,
+          OR: [
+            { createdAt: { lt: new Date(decoded.time) } },
+            {
+              createdAt: new Date(decoded.time),
+              id: { lt: decoded.id },
+            },
+          ],
+        }
+      : { tenantId };
 
-    const snapshot = await query.limit(DEFAULT_LIMIT).get();
-    const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    const items = await prisma.inventoryItem.findMany({
+      where,
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: DEFAULT_LIMIT,
+    });
 
-    const lastDoc = snapshot.docs[snapshot.docs.length - 1];
-    const lastCreatedAt = lastDoc?.data()?.createdAt?.toDate?.();
-    const nextCursor =
-      lastDoc && lastCreatedAt ? encodeCursor(lastCreatedAt, lastDoc.id) : null;
+    const lastItem = items[items.length - 1];
+    const nextCursor = lastItem
+      ? encodeCursor(lastItem.createdAt, lastItem.id)
+      : null;
 
     console.log(
       JSON.stringify({
@@ -113,7 +116,12 @@ export async function GET(request: NextRequest) {
     );
 
     const payload = {
-      items,
+      items: items.map((item) => ({
+        id: item.id,
+        name: item.name,
+        status: item.status,
+        ...(item.dataJson as Record<string, unknown> | null),
+      })),
       nextCursor,
       returnedCount: items.length,
       cursorUsed: cursor || '<start>',
@@ -125,7 +133,7 @@ export async function GET(request: NextRequest) {
       payload,
     });
 
-    return respond({ ok: true, data: payload, requestId });
+    return respond({ ok: true, data: payload, items: payload.items, requestId });
   } catch (error) {
     logError(scope, error, { requestId, path: request.url });
     if (error instanceof z.ZodError) {
@@ -151,18 +159,21 @@ export async function POST(request: NextRequest) {
   try {
     const { tenantId } = await requireRole(request, ALL_ROLES);
     const data = await request.json();
-    const db = getAdminDb();
-    const ref = await db
-      .collection('tenants')
-      .doc(tenantId)
-      .collection('inventory')
-      .add({
-        ...data,
-        status: data.status || 'active',
-        createdAt: FieldValue.serverTimestamp(),
-        updatedAt: FieldValue.serverTimestamp(),
-      });
-    return respond({ ok: true, data: { id: ref.id }, requestId }, { status: 201 });
+    const name = String(data?.name || '').trim();
+    if (!name) {
+      return respond({ ok: false, error: 'Missing name', requestId }, { status: 400 });
+    }
+    const status = String(data?.status || 'active');
+    const { name: _name, status: _status, ...rest } = data || {};
+    const record = await prisma.inventoryItem.create({
+      data: {
+        tenantId,
+        name,
+        status,
+        dataJson: rest,
+      },
+    });
+    return respond({ ok: true, data: { id: record.id }, requestId }, { status: 201 });
   } catch (error) {
     logError(scope, error, { requestId });
     return errorResponse(requestId, scope);
@@ -183,19 +194,17 @@ export async function PATCH(request: NextRequest) {
     if (!id) {
       return respond({ ok: false, error: 'Missing id', requestId }, { status: 400 });
     }
-    const db = getAdminDb();
-    await db
-      .collection('tenants')
-      .doc(tenantId)
-      .collection('inventory')
-      .doc(id)
-      .set(
-        {
-          ...data,
-          updatedAt: FieldValue.serverTimestamp(),
-        },
-        { merge: true }
-      );
+    const name = data?.name ? String(data.name) : undefined;
+    const status = data?.status ? String(data.status) : undefined;
+    const { name: _name, status: _status, ...rest } = data;
+    await prisma.inventoryItem.updateMany({
+      where: { id, tenantId },
+      data: {
+        name,
+        status,
+        dataJson: rest,
+      },
+    });
     return respond({ ok: true, data: { id }, requestId });
   } catch (error) {
     logError(scope, error, { requestId });
@@ -215,13 +224,9 @@ export async function DELETE(request: NextRequest) {
     if (!id) {
       return respond({ ok: false, error: 'Missing id', requestId }, { status: 400 });
     }
-    const db = getAdminDb();
-    await db
-      .collection('tenants')
-      .doc(tenantId)
-      .collection('inventory')
-      .doc(id)
-      .delete();
+    await prisma.inventoryItem.deleteMany({
+      where: { id, tenantId },
+    });
     return respond({ ok: true, data: { id }, requestId });
   } catch (error) {
     logError(scope, error, { requestId });

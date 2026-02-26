@@ -1,28 +1,17 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminDb } from '@/server/firebase-admin';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
 import { getBillingSummary } from '@/lib/server/billing';
+import { prisma } from '@/server/db';
 
 export async function GET(req: NextRequest) {
   try {
     const { tenantId } = await requireRole(req, ALL_ROLES);
-    const db = getAdminDb();
-    const summary = await getBillingSummary(db, tenantId);
-
-    const [membersSnap, invitesSnap] = await Promise.all([
-      db.collection('tenants').doc(tenantId).collection('members').get(),
-      db
-        .collection('tenants')
-        .doc(tenantId)
-        .collection('teamInvites')
-        .where('status', '==', 'pending')
-        .get(),
-    ]);
-
-    const seatsUsed = Math.max(1, membersSnap.size + 1) + invitesSnap.size;
+    const summary = await getBillingSummary({} as any, tenantId);
+    const usersCount = await prisma.user.count({ where: { tenantId } });
+    const seatsUsed = Math.max(1, usersCount);
     const seatsLimit = summary.limits.seats ?? null;
 
     const providers = {

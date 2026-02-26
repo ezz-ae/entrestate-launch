@@ -2,32 +2,29 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
-import { getAdminDb } from '@/server/firebase-admin';
 import { ADMIN_ROLES } from '@/lib/server/roles';
+import { prisma } from '@/server/db';
 
 export async function GET(req: NextRequest) {
   try {
     const { tenantId } = await requireRole(req, ADMIN_ROLES);
-    const db = getAdminDb();
-    
-    const snapshot = await db
-      .collection('tenants')
-      .doc(tenantId)
-      .collection('marketing_plans')
-      .orderBy('createdAt', 'desc')
-      .limit(50)
-      .get();
+    const plans = await prisma.campaign.findMany({
+      where: { tenantId, platform: 'marketing_plan' },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
 
-    if (snapshot.empty) {
+    if (!plans.length) {
       return NextResponse.json({ data: [] });
     }
 
-     const plans = snapshot.docs.map((doc: any) => ({
-      id: doc.id,
-       ...doc.data(),
-    }));
-    
-    return NextResponse.json({ data: plans });
+    return NextResponse.json({
+      data: plans.map((plan) => ({
+        id: plan.id,
+        ...(plan.metaJson as Record<string, unknown>),
+        createdAt: plan.createdAt,
+      })),
+    });
   } catch (error) {
     if (error instanceof UnauthorizedError) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

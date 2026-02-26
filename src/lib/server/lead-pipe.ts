@@ -1,4 +1,4 @@
-import type { Firestore } from 'firebase-admin/firestore';
+import { prisma } from '@/server/db';
 
 const ACTIVE_KEYWORDS = [
   'buy',
@@ -105,76 +105,65 @@ function analyzeLead(candidate: LeadPipeCandidate): Pick<LeadPipeRecord, 'active
   };
 }
 
-export async function collectLeadPipeCandidates(db: Firestore, tenantId: string) {
-  const leadsRef = db
-    .collection('tenants')
-    .doc(tenantId)
-    .collection('leads')
-    .orderBy('createdAt', 'desc')
-    .limit(80);
-  const chatRef = db
-    .collection('tenants')
-    .doc(tenantId)
-    .collection('chatThreads')
-    .orderBy('updatedAt', 'desc')
-    .limit(40);
-
-  const [leadSnap, chatSnap] = await Promise.all([
-    leadsRef.get(),
-    chatRef.get(),
+export async function collectLeadPipeCandidates(tenantId: string) {
+  const [leadRows, chatRows] = await Promise.all([
+    prisma.lead.findMany({
+      where: { tenantId },
+      orderBy: { createdAt: 'desc' },
+      take: 80,
+    }),
+    prisma.chatSession.findMany({
+      where: { tenantId },
+      orderBy: { updatedAt: 'desc' },
+      take: 40,
+    }),
   ]);
 
   const candidates: LeadPipeCandidate[] = [];
-  leadSnap.docs.forEach((doc) => {
-    const data = doc.data();
+  leadRows.forEach((lead) => {
     if (
-      data.pipelineDecision === 'reject' ||
-      data.pipelineDecision === 'rejected' ||
-      data.status === 'ignored'
+      lead.pipelineDecision === 'reject' ||
+      lead.pipelineDecision === 'rejected' ||
+      lead.status === 'ignored'
     ) {
       return;
     }
-    const createdAt = toIsoString(
-      data.createdAt?.toDate?.() ??
-        (data.createdAt instanceof Date ? data.createdAt : undefined)
-    );
     candidates.push({
-      id: `lead:${doc.id}`,
-      name: normalizeContact(data.name || data.fullName || ''),
-      email: normalizeContact(data.email),
-      phone: mapNumber(data.phone),
-      message: normalizeContact(data.message || data.source || ''),
+      id: `lead:${lead.id}`,
+      name: normalizeContact(lead.name || ''),
+      email: normalizeContact(lead.email),
+      phone: mapNumber(lead.phone),
+      message: normalizeContact(lead.message || lead.source || ''),
       source: 'site',
-      intentScore: typeof data.intentScore === 'number' ? data.intentScore : null,
-      intentReasoning: data.intentReasoning || null,
-      focus: data.intentFocus || null,
-      createdAt,
+      intentScore: typeof lead.intentScore === 'number' ? lead.intentScore : null,
+      intentReasoning: lead.intentReasoning || null,
+      focus: lead.intentFocus || null,
+      createdAt: toIsoString(lead.createdAt),
     });
   });
 
-  chatSnap.docs.forEach((doc) => {
-    const data = doc.data();
-    const createdAt = toIsoString(
-      data.updatedAt?.toDate?.() ??
-        (data.updatedAt instanceof Date ? data.updatedAt : undefined)
-    );
-    const lastMessage = normalizeContact(data.lastUserMessage || data.preview || '');
+  chatRows.forEach((session) => {
+    const conversation = Array.isArray(session.conversation) ? session.conversation : [];
+    const lastUserMessage = [...conversation]
+      .reverse()
+      .find((entry: any) => entry?.role === 'user' || entry?.role === 'client');
+    const preview = lastUserMessage?.content || lastUserMessage?.text || '';
     candidates.push({
-      id: `chat:${doc.id}`,
-      name: normalizeContact(data.name || data.userName || ''),
+      id: `chat:${session.id}`,
+      name: normalizeContact((lastUserMessage?.name as string | undefined) || ''),
       email: null,
       phone: null,
-      message: lastMessage,
+      message: normalizeContact(preview),
       source: 'chat',
-      createdAt,
+      createdAt: toIsoString(session.updatedAt),
     });
   });
 
   return {
     candidates,
     sourceTotals: {
-      site: leadSnap.size,
-      chat: chatSnap.size,
+      site: leadRows.length,
+      chat: chatRows.length,
     },
   };
 }

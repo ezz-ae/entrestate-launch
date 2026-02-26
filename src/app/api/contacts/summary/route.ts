@@ -1,7 +1,6 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest } from 'next/server';
-import { getAdminDb } from '@/server/firebase-admin';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
 import { logError } from '@/lib/server/log';
@@ -10,6 +9,7 @@ import {
   errorResponse,
   jsonWithRequestId,
 } from '@/lib/server/request-id';
+import { prisma } from '@/server/db';
 
 const ALLOWED_CHANNELS = new Set(['email', 'sms']);
 
@@ -27,25 +27,20 @@ export async function GET(req: NextRequest) {
     }
 
     const { tenantId } = await requireRole(req, ALL_ROLES);
-    const db = getAdminDb();
-
-    const importedSnap = await db
-      .collection('contacts')
-      .where('tenantId', '==', tenantId)
-      .where('channel', '==', channel)
-      .get();
-
-    const pilotSnap = await db
-      .collection('contacts')
-      .where('tenantId', '==', 'pilot')
-      .where('channel', '==', channel)
-      .get();
+    const [importedCount, pilotCount] = await Promise.all([
+      prisma.contact.count({
+        where: { tenantId, channel },
+      }),
+      prisma.contact.count({
+        where: { tenantId: 'pilot', channel },
+      }),
+    ]);
 
     return respond({
       ok: true,
       data: {
-        importedCount: importedSnap.size,
-        pilotCount: pilotSnap.size,
+        importedCount,
+        pilotCount,
       },
       requestId,
     });

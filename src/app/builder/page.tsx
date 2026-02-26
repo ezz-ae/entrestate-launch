@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import BuilderClient from './builder-client';
-import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { prisma } from '@/server/db';
+import type { ProjectData } from '@/lib/types';
 
 export default async function BuilderPage({ 
   searchParams 
@@ -11,13 +12,25 @@ export default async function BuilderPage({
   let initialData = null;
 
   if (projectId) {
-    const supabase = await createSupabaseServerClient();
-    const { data } = await supabase
-      .from('projects')
-      .select('*')
-      .eq('id', projectId)
-      .single();
-    initialData = data;
+    const project = await prisma.project.findUnique({
+      where: { id: projectId },
+    });
+    if (project) {
+      const dataJson = project.dataJson as ProjectData | null;
+      initialData = dataJson && typeof dataJson === 'object'
+        ? { id: project.id, name: project.title || dataJson.name, ...dataJson }
+        : {
+            id: project.id,
+            name: project.title || 'Untitled Project',
+            developer: project.developer || undefined,
+            location: project.city
+              ? {
+                  city: project.city,
+                  area: project.community || project.city,
+                }
+              : undefined,
+          };
+    }
   }
 
   return (

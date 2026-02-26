@@ -1,11 +1,9 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest } from 'next/server';
-import { FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
 import { requireRole } from '@/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
-import { getAdminDb } from '@/server/firebase-admin';
 import { logError } from '@/lib/server/log';
 import {
   createRequestId,
@@ -18,6 +16,7 @@ import {
   normalizeEmail,
   normalizePhone,
 } from '@/lib/server/lead-dedupe';
+import { prisma } from '@/server/db';
 
 const requestSchema = z.object({
   leadId: z.string().min(1),
@@ -33,27 +32,26 @@ export async function POST(req: NextRequest) {
   try {
     const { tenantId } = await requireRole(req, ALL_ROLES);
     const payload = requestSchema.parse(await req.json());
-    const db = getAdminDb();
 
-    const resolved = await resolveLeadFromPipe(db, tenantId, payload.leadId);
+    const resolved = await resolveLeadFromPipe(tenantId, payload.leadId);
     if (!resolved) {
       return respond({ ok: false, error: 'Lead not found.', requestId }, { status: 404 });
     }
 
-    const jobRef = await db
-      .collection('tenants')
-      .doc(tenantId)
-      .collection('lead_outreach_jobs')
-      .add({
-        leadId: resolved.leadId,
-        sourceLeadId: payload.leadId,
-        channel: payload.channel,
+    const job = await prisma.job.create({
+      data: {
+        tenantId,
+        type: 'lead_outreach',
         status: 'draft',
-        createdAt: FieldValue.serverTimestamp(),
-        updatedAt: FieldValue.serverTimestamp(),
-      });
+        payload: {
+          leadId: resolved.leadId,
+          sourceLeadId: payload.leadId,
+          channel: payload.channel,
+        },
+      },
+    });
 
-    return respond({ ok: true, data: { jobId: jobRef.id }, requestId }, { status: 201 });
+    return respond({ ok: true, data: { jobId: job.id }, requestId }, { status: 201 });
   } catch (error) {
     logError(scope, error, { requestId });
     if (error instanceof z.ZodError) {
@@ -66,11 +64,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-async function resolveLeadFromPipe(
-  db: ReturnType<typeof getAdminDb>,
-  tenantId: string,
-  leadId: string
-) {
+async function resolveLeadFromPipe(tenantId: string, leadId: string) {
   if (leadId.startsWith('lead:')) {
     return { leadId: leadId.replace('lead:', '') };
   }
@@ -80,52 +74,42 @@ async function resolveLeadFromPipe(
   }
 
   const threadId = leadId.replace('chat:', '');
-  const threadRef = db
-    .collection('tenants')
-    .doc(tenantId)
-    .collection('chatThreads')
-    .doc(threadId);
-  const threadSnap = await threadRef.get();
-  if (!threadSnap.exists) {
+  const session = await prisma.chatSession.findUnique({ where: { id: threadId } });
+  if (!session) {
     return null;
   }
-  const thread = threadSnap.data() || {};
-  const existingLeadId = thread.leadId as string | undefined;
-  if (existingLeadId) {
-    return { leadId: existingLeadId };
-  }
-
-  const message = thread.lastUserMessage as string | undefined;
+  const conversation = Array.isArray(session.conversation) ? session.conversation : [];
+  const lastUserMessage = [...conversation]
+    .reverse()
+    .find((entry: any) => entry?.role === 'user' || entry?.role === 'client');
+  const message = (lastUserMessage?.content || lastUserMessage?.text) as string | undefined;
   const emailMatch = message?.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0] ?? null;
   const phoneMatch = message?.match(/\+?\d[\d\s-]{6,}\d/)?.[0] ?? null;
 
   const emailNormalized = normalizeEmail(emailMatch);
   const phoneNormalized = normalizePhone(phoneMatch);
 
-  const existing = await findExistingLead(db, tenantId, {
+  const existing = await findExistingLead(tenantId, {
     email: emailNormalized,
     phone: phoneNormalized,
   });
 
   if (existing) {
-    await existing.ref.update(
-      buildLeadTouchUpdate({
+    await prisma.lead.update({
+      where: { id: existing.id },
+      data: buildLeadTouchUpdate({
         name: existing.data?.name || null,
         email: emailMatch || existing.data?.email || null,
         phone: phoneMatch || existing.data?.phone || null,
         message: message || null,
         source: 'Chat Agent',
-      })
-    );
-    await threadRef.set({ leadId: existing.id }, { merge: true });
+      }),
+    });
     return { leadId: existing.id };
   }
 
-  const leadRef = await db
-    .collection('tenants')
-    .doc(tenantId)
-    .collection('leads')
-    .add({
+  const lead = await prisma.lead.create({
+    data: {
       tenantId,
       name: null,
       email: emailMatch,
@@ -137,12 +121,10 @@ async function resolveLeadFromPipe(
       status: 'New',
       priority: 'Warm',
       touches: 1,
-      lastSeenAt: FieldValue.serverTimestamp(),
-      createdAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp(),
+      lastSeenAt: new Date(),
       context: { threadId, channel: 'chat' },
-    });
+    },
+  });
 
-  await threadRef.set({ leadId: leadRef.id }, { merge: true });
-  return { leadId: leadRef.id };
+  return { leadId: lead.id };
 }

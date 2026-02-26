@@ -3,9 +3,9 @@ export const dynamic = 'force-dynamic';
 import { NextRequest } from 'next/server';
 import { requireRole } from '@/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
-import { getAdminDb } from '@/server/firebase-admin';
 import { logError } from '@/lib/server/log';
 import { createRequestId, errorResponse, jsonWithRequestId } from '@/lib/server/request-id';
+import { prisma } from '@/server/db';
 
 const CLAMP = (value?: string, fallback = 'Untitled Project'): string =>
   (value?.trim()?.slice(0, 100) || fallback);
@@ -17,40 +17,45 @@ export async function POST(req: NextRequest) {
     jsonWithRequestId(requestId, body, init);
 
   try {
-    const { tenantId } = await requireRole(req, ALL_ROLES);
+    const { tenantId, uid } = await requireRole(req, ALL_ROLES);
     const body = await req.json().catch(() => ({}));
-    const db = getAdminDb();
     const now = new Date().toISOString();
-    const draftRef = db
-      .collection('tenants')
-      .doc(tenantId)
-      .collection('drafts')
-      .doc();
-
-    const draft = {
-      id: draftRef.id,
-      owner: tenantId,
-      status: 'draft',
-      createdAt: now,
-      updatedAt: now,
-      title: CLAMP(body?.title || body?.prompt),
-      prompt: body?.prompt || null,
-      source: body?.source || null,
-    };
-
-    await draftRef.set(draft);
+    const draft = await prisma.projectDraft.create({
+      data: {
+        tenantId,
+        ownerUid: uid || null,
+        status: 'draft',
+        title: CLAMP(body?.title || body?.prompt),
+        prompt: body?.prompt || null,
+        source: body?.source || null,
+      },
+    });
 
     console.log(
       JSON.stringify({
         event: 'builder.start',
         tenantId,
-        draftId: draftRef.id,
+        draftId: draft.id,
         source: body?.source || null,
         requestId,
       })
     );
 
-    return respond({ ok: true, data: { draftId: draftRef.id, draft }, requestId });
+    return respond(
+      {
+        ok: true,
+        data: {
+          draftId: draft.id,
+          draft: {
+            ...draft,
+            owner: tenantId,
+            createdAt: draft.createdAt.toISOString(),
+            updatedAt: draft.updatedAt.toISOString(),
+          },
+        },
+        requestId,
+      }
+    );
   } catch (error) {
     logError(scope, error, { requestId });
     return errorResponse(requestId, scope);

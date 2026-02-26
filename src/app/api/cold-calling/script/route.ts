@@ -1,9 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest } from 'next/server';
-import { FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
-import { getAdminDb } from '@/server/firebase-admin';
 import { requireRole } from '@/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
 import { logError } from '@/lib/server/log';
@@ -12,6 +10,7 @@ import {
   errorResponse,
   jsonWithRequestId,
 } from '@/lib/server/request-id';
+import { prisma } from '@/server/db';
 
 const requestSchema = z.object({
   coldCallId: z.string().min(1),
@@ -53,21 +52,16 @@ export async function POST(req: NextRequest) {
   try {
     const { tenantId } = await requireRole(req, ALL_ROLES);
     const payload = requestSchema.parse(await req.json());
-    const db = getAdminDb();
-    const leadRef = db
-      .collection('tenants')
-      .doc(tenantId)
-      .collection('cold_call_leads')
-      .doc(payload.coldCallId);
-    const leadSnap = await leadRef.get();
-    if (!leadSnap.exists) {
+    const lead = await prisma.lead.findFirst({
+      where: { id: payload.coldCallId, tenantId },
+    });
+    if (!lead) {
       return respond(
         { ok: false, error: 'Cold call lead not found', requestId },
         { status: 404 }
       );
     }
 
-    const lead = leadSnap.data() || {};
     const script = buildScript({
       name: lead.name || null,
       phone: lead.phone || null,
@@ -76,30 +70,31 @@ export async function POST(req: NextRequest) {
       language: payload.language,
     });
 
-    const scriptRef = await db
-      .collection('tenants')
-      .doc(tenantId)
-      .collection('cold_call_scripts')
-      .add({
-        coldCallId: payload.coldCallId,
-        language: payload.language,
-        focus: payload.focus,
-        projects: payload.projects || [],
-        script,
-        createdAt: FieldValue.serverTimestamp(),
-      });
-
-    await leadRef.set(
-      {
-        lastScriptId: scriptRef.id,
-        updatedAt: FieldValue.serverTimestamp(),
+    const scriptId = `script_${Date.now()}`;
+    const meta = (lead.metadata as Record<string, any> | null) || {};
+    const coldCall = meta.coldCall || {};
+    const nextMetadata = {
+      ...meta,
+      coldCall: {
+        ...coldCall,
+        lastScriptId: scriptId,
+        lastScriptAt: new Date().toISOString(),
+        lastScript: {
+          language: payload.language,
+          focus: payload.focus,
+          projects: payload.projects || [],
+          script,
+        },
       },
-      { merge: true }
-    );
+    };
+    await prisma.lead.update({
+      where: { id: lead.id },
+      data: { metadata: nextMetadata, updatedAt: new Date() },
+    });
 
     return respond({
       ok: true,
-      data: { scriptId: scriptRef.id, script },
+      data: { scriptId, script },
       requestId,
     });
   } catch (error) {

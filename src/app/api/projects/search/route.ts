@@ -3,24 +3,19 @@ export const dynamic = 'force-dynamic';
 import { NextRequest } from 'next/server';
 import { filterProjects, type ProjectSearchFilters } from '@/lib/projects/filter';
 import type { ProjectData } from '@/lib/types';
-import { decodeFirestoreFields, normalizeProjectData } from '@/server/inventory';
+import { normalizeProjectData } from '@/server/inventory';
 import { enforceRateLimit, getRequestIp } from '@/lib/server/rateLimit';
 import { ENTRESTATE_INVENTORY } from '@/data/entrestate-inventory';
-import { SERVER_ENV, USE_NEON } from '@/lib/server/env';
+import { SERVER_ENV } from '@/lib/server/env';
 import { logError } from '@/lib/server/log';
 import { createRequestId, errorResponse, jsonWithRequestId } from '@/lib/server/request-id';
-import { getAdminDb } from '@/server/firebase-admin';
 import { resolveEntitlementsForTenant } from '@/lib/server/entitlements';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
-import { firebaseConfig } from '@/lib/firebase/config';
 import { prisma } from '@/server/db';
 
 const DEFAULT_PAGE_SIZE = 12;
 const STATIC_CURSOR_PREFIX = 'static:';
-const QUOTA_ERROR_KEYWORDS = ['RESOURCE_EXHAUSTED', 'DEADLINE_EXCEEDED'];
-const MAX_FIRESTORE_PAGES = 4;
-
 interface ParsedFilters {
   query: string;
   city: string;
@@ -83,15 +78,6 @@ async function resolveOptionalAuth(req: NextRequest) {
   }
 }
 
-const PUBLIC_PROJECT_ID =
-  process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ||
-  process.env.FIREBASE_PROJECT_ID ||
-  process.env.project_id ||
-  firebaseConfig?.projectId;
-
-const PUBLIC_API_KEY =
-  process.env.NEXT_PUBLIC_FIREBASE_API_KEY || firebaseConfig?.apiKey;
-
 export async function GET(req: NextRequest) {
   const scope = 'api/projects/search';
   const requestId = createRequestId();
@@ -111,9 +97,8 @@ export async function GET(req: NextRequest) {
       return respond({ ok: false, error: 'Rate limit exceeded', requestId }, { status: 429 });
     }
 
-    if (authContext && !USE_NEON) {
-      const db = getAdminDb();
-      const entitlements = await resolveEntitlementsForTenant(db, authContext.tenantId);
+    if (authContext) {
+      const entitlements = await resolveEntitlementsForTenant(null, authContext.tenantId);
       if (!entitlements.features.inventoryAccess.allowed) {
         return respond(
           {
@@ -146,11 +131,10 @@ export async function GET(req: NextRequest) {
     let totalApprox: number | undefined;
     let dataSource = 'static';
 
-    let firestoreSucceeded = false;
     let neonSucceeded = false;
 
     // ---------- Neon Pagination ----------
-    if (USE_NEON && !useStaticInventory && !cursor.startsWith(STATIC_CURSOR_PREFIX)) {
+    if (!useStaticInventory && !cursor.startsWith(STATIC_CURSOR_PREFIX)) {
       try {
         const tenantId = authContext?.tenantId ?? 'public';
         const neonCursor = decodeCursor(cursor);
@@ -225,69 +209,6 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // ---------- Firestore Lazy Pagination ----------
-    if (!useStaticInventory && !neonSucceeded) {
-      try {
-        const db = getAdminDb();
-        let firestoreCursor = cursor && !cursor.startsWith(STATIC_CURSOR_PREFIX) ? decodeCursor(cursor) : undefined;
-        let pagesFetched = 0;
-
-        while (pagesFetched < MAX_FIRESTORE_PAGES && items.length < DEFAULT_PAGE_SIZE) {
-          pagesFetched++;
-
-          let query = db.collection('inventory_projects').orderBy('createdAt');
-
-          // Start after cursor if exists
-          if (firestoreCursor) {
-            const lastDocSnapshot = await db.collection('inventory_projects').doc(firestoreCursor.id).get();
-            if (lastDocSnapshot.exists) query = query.startAfter(lastDocSnapshot);
-          }
-
-          // Apply filters if possible (Firestore indexes recommended)
-          if (filters.city !== 'all') query = query.where('city', '==', filters.city);
-          if (filters.status !== 'all') query = query.where('status', '==', filters.status);
-          if (filters.developer) query = query.where('developer', '==', filters.developer);
-
-          try {
-            const snapshot = await query.limit(DEFAULT_PAGE_SIZE).get();
-            if (snapshot.empty) break;
-
-            const normalized = snapshot.docs.map((doc) => normalizeProjectData(doc.data(), doc.id));
-            const filtered = filterProjects(normalized, searchFilters);
-
-            const remaining = DEFAULT_PAGE_SIZE - items.length;
-            items.push(...filtered.slice(0, remaining));
-
-            const lastDoc = snapshot.docs[snapshot.docs.length - 1];
-            if (lastDoc) {
-              const lastCreatedAt = lastDoc.data()?.createdAt?.toDate();
-              if (lastCreatedAt) {
-                firestoreCursor = { time: lastCreatedAt.getTime(), id: lastDoc.id };
-                nextCursor = encodeCursor(lastCreatedAt, lastDoc.id);
-              } else {
-                firestoreCursor = undefined;
-              }
-            }
-
-            firestoreSucceeded = true;
-
-            if (!firestoreCursor || items.length >= DEFAULT_PAGE_SIZE) break;
-          } catch (queryError: any) {
-            console.warn(
-              '[projects/search] Individual Firestore query page failed:',
-              queryError.message
-            );
-            // Continue to next page attempt or break if too many failures
-            break; // Break and fall back to static if a page query fails
-          }
-        }
-
-        dataSource = firestoreSucceeded ? 'firestore' : dataSource;
-      } catch (firestoreError) {
-        console.warn('[projects/search] Firestore query failed, will fallback to static.', firestoreError);
-      }
-    }
-
     // ---------- Static Fallback ----------
     if (items.length < DEFAULT_PAGE_SIZE) {
       const normalizedStatic = ENTRESTATE_INVENTORY.map((project) => normalizeProjectData(project, project.id));
@@ -306,7 +227,7 @@ export async function GET(req: NextRequest) {
         nextCursor = buildStaticCursor(staticPage + 1);
       }
 
-      if (!firestoreSucceeded && !neonSucceeded) dataSource = 'static';
+      if (!neonSucceeded) dataSource = 'static';
     }
 
     console.log(

@@ -2,10 +2,9 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { FieldValue } from 'firebase-admin/firestore';
-import { getAdminDb } from '@/server/firebase-admin';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
+import { prisma } from '@/server/db';
 
 const payloadSchema = z.object({
   firstName: z.string().trim().min(1).optional().nullable(),
@@ -25,15 +24,12 @@ export async function GET(req: NextRequest) {
   try {
     const { tenantId } = await requireRole(req, ALL_ROLES);
 
-    const db = getAdminDb();
-    const docSnap = await db
-      .collection('tenants')
-      .doc(tenantId)
-      .collection('settings')
-      .doc('profile')
-      .get();
+    const tenant = await prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: { profileJson: true },
+    });
 
-    return NextResponse.json({ profile: docSnap.exists ? docSnap.data() : null });
+    return NextResponse.json({ profile: tenant?.profileJson || null });
   } catch (error) {
     console.error('[profile] error', error);
     if (error instanceof UnauthorizedError) {
@@ -51,8 +47,13 @@ export async function POST(req: NextRequest) {
     const payload = payloadSchema.parse(await req.json());
     const { tenantId } = await requireRole(req, ALL_ROLES);
 
+    const existing = await prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: { profileJson: true },
+    });
     const updateData: Record<string, unknown> = {
-      updatedAt: FieldValue.serverTimestamp(),
+      ...(existing?.profileJson as Record<string, unknown> | null),
+      updatedAt: new Date().toISOString(),
     };
 
     if (payload.firstName !== undefined) updateData.firstName = payload.firstName || null;
@@ -67,13 +68,10 @@ export async function POST(req: NextRequest) {
       };
     }
 
-    const db = getAdminDb();
-    await db
-      .collection('tenants')
-      .doc(tenantId)
-      .collection('settings')
-      .doc('profile')
-      .set(updateData, { merge: true });
+    await prisma.tenant.update({
+      where: { id: tenantId },
+      data: { profileJson: updateData },
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

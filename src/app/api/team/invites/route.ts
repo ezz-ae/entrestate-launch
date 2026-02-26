@@ -2,19 +2,15 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { FieldValue } from 'firebase-admin/firestore';
-import { getAdminDb } from '@/server/firebase-admin';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { CAP } from '@/lib/capabilities';
 import { resend, fromEmail } from '@/lib/resend';
 import { ADMIN_ROLES } from '@/lib/server/roles';
 import {
   PlanLimitError,
-  ensureSubscription,
-  getEffectiveLimit,
-  getSuggestedUpgrade,
   planLimitErrorResponse,
 } from '@/lib/server/billing';
+import { prisma } from '@/server/db';
 
 const payloadSchema = z.object({
   email: z.string().email(),
@@ -25,16 +21,11 @@ export async function GET(req: NextRequest) {
   try {
     const { tenantId } = await requireRole(req, ADMIN_ROLES);
 
-    const db = getAdminDb();
-    const snapshot = await db
-      .collection('tenants')
-      .doc(tenantId)
-      .collection('teamInvites')
-      .orderBy('createdAt', 'desc')
-      .limit(50)
-      .get();
-
-    const invites = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
+    const invites = await prisma.teamInvite.findMany({
+      where: { tenantId },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
     return NextResponse.json({ invites });
   } catch (error) {
     console.error('[team/invites] error', error);
@@ -53,48 +44,21 @@ export async function POST(req: NextRequest) {
     const payload = payloadSchema.parse(await req.json());
     const { tenantId, email: inviterEmail, uid } = await requireRole(req, ADMIN_ROLES);
 
-    const db = getAdminDb();
-    const subscription = await ensureSubscription(db, tenantId);
-    const seatLimit = getEffectiveLimit(subscription.plan, 'seats', subscription.addOns);
-
-    if (seatLimit !== null) {
-      const [membersSnap, invitesSnap] = await Promise.all([
-        db.collection('tenants').doc(tenantId).collection('members').get(),
-        db
-          .collection('tenants')
-          .doc(tenantId)
-          .collection('teamInvites')
-          .where('status', '==', 'pending')
-          .get(),
-      ]);
-      const baseSeats = Math.max(1, membersSnap.size + 1);
-      const seatsUsed = baseSeats + invitesSnap.size;
-      if (seatsUsed + 1 > seatLimit) {
-        throw new PlanLimitError({
-          metric: 'seats',
-          limit: seatLimit,
-          currentUsage: seatsUsed,
-          plan: subscription.plan,
-          status: subscription.status,
-          suggestedUpgrade: getSuggestedUpgrade(subscription.plan),
-        });
-      }
-    }
-    const inviteRef = db
-      .collection('tenants')
-      .doc(tenantId)
-      .collection('teamInvites')
-      .doc();
-
     const inviteData = {
       email: payload.email,
       role: payload.role,
       status: 'pending',
       invitedBy: inviterEmail || uid,
-      createdAt: FieldValue.serverTimestamp(),
     };
-
-    await inviteRef.set(inviteData);
+    const invite = await prisma.teamInvite.create({
+      data: {
+        tenantId,
+        email: inviteData.email,
+        role: inviteData.role,
+        status: inviteData.status,
+        invitedBy: inviteData.invitedBy,
+      },
+    });
 
     if (CAP.resend && resend) {
       await resend.emails.send({
@@ -112,7 +76,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    return NextResponse.json({ success: true, invite: { id: inviteRef.id, ...inviteData } });
+    return NextResponse.json({ success: true, invite: { id: invite.id, ...inviteData } });
   } catch (error) {
     console.error('[team/invites] error', error);
     if (error instanceof PlanLimitError) {

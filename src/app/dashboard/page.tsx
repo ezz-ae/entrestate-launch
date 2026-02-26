@@ -1,23 +1,12 @@
-import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
+import { prisma } from '@/server/db';
 import Link from 'next/link';
 import { FileText, Plus, ArrowRight, Clock, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default async function DashboardPage() {
-  const supabase = await createSupabaseServerClient();
-  
-  const { data: { user } } = await supabase.auth.getUser();
-
-  // Temporarily disabled auth check for testing
-  // if (!user) {
-  //   redirect('/start');
-  // }
-
-  const { data: projects } = await supabase
-    .from('projects')
-    .select('*')
-    .order('created_at', { ascending: false });
+  const projects = await prisma.project.findMany({
+    orderBy: { createdAt: 'desc' },
+  });
 
   return (
     <div className="min-h-screen bg-black text-white p-6 pt-24">
@@ -41,7 +30,7 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {projects && projects.length > 0 ? (
+        {projects.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {projects.map((project) => (
               <div key={project.id} className="group relative bg-zinc-900/50 border border-white/10 rounded-2xl p-6 hover:bg-zinc-900 transition-all hover:border-blue-500/30">
@@ -50,21 +39,26 @@ export default async function DashboardPage() {
                     <FileText className="h-6 w-6" />
                   </div>
                   <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest bg-white/5 px-2 py-1 rounded-md">
-                    {new Date(project.created_at).toLocaleDateString()}
+                    {project.createdAt ? new Date(project.createdAt).toLocaleDateString() : ''}
                   </span>
                 </div>
                 
                 <h3 className="text-lg font-bold mb-2 line-clamp-1 group-hover:text-blue-400 transition-colors">
-                  {project.headline || 'Untitled Project'}
+                  {(project.dataJson as any)?.headline || project.title || 'Untitled Project'}
                 </h3>
                 <p className="text-sm text-zinc-400 line-clamp-3 mb-6 leading-relaxed">
-                  {project.description || 'No description available.'}
+                  {(project.dataJson as any)?.description || 'No description available.'}
                 </p>
 
                 <div className="flex items-center justify-between mt-auto pt-4 border-t border-white/5">
                     <div className="flex items-center gap-2 text-xs text-zinc-500">
                         <Clock className="h-3 w-3" />
-                        {new Date(project.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {project.createdAt
+                          ? new Date(project.createdAt).toLocaleTimeString([], {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })
+                          : ''}
                     </div>
                     <Link href={`/projects/${project.id}`}>
                       <Button variant="ghost" size="sm" className="h-8 text-xs font-bold uppercase tracking-wider hover:bg-white/10">

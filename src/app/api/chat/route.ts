@@ -2,7 +2,6 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest } from 'next/server';
 import { generateText } from 'ai';
-import { FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
 import { mainSystemPrompt } from '@/config/prompts';
 import { getGoogleModel, FLASH_MODEL } from '@/lib/ai/google';
@@ -10,11 +9,9 @@ import { formatProjectContext } from '@/server/inventory';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
 import {
-  enforceUsageLimit,
   PlanLimitError,
   planLimitErrorResponse,
 } from '@/lib/server/billing';
-import { getAdminDb } from '@/server/firebase-admin';
 import { logError } from '@/lib/server/log';
 import {
   createRequestId,
@@ -29,6 +26,7 @@ import {
   normalizeEmail,
   normalizePhone,
 } from '@/lib/server/lead-dedupe';
+import { prisma } from '@/server/db';
 
 const requestSchema = z.object({
   message: z.string().min(1),
@@ -52,7 +50,6 @@ export async function POST(req: NextRequest) {
   try {
     const authResult = await requireRole(req, ALL_ROLES);
     tenantId = authResult.tenantId;
-    await enforceUsageLimit(getAdminDb(), tenantId, 'ai_conversations', 1);
     const body = await req.json();
     payload = requestSchema.parse(body);
   } catch (error) {
@@ -99,23 +96,16 @@ export async function POST(req: NextRequest) {
     return errorResponse(requestId, scope, 400);
   }
 
-  const db = getAdminDb();
   let agentKnowledge = '';
   try {
-    const agentSnapshot = await db.collection('tenants').doc(tenantId).collection('agents').limit(1).get();
-    if (!agentSnapshot.empty) {
-      const agentId = agentSnapshot.docs[0].id;
-      const knowledgeSnapshot = await db.collection('tenants').doc(tenantId).collection('agents').doc(agentId).collection('knowledge').get();
-      if (!knowledgeSnapshot.empty) {
-        knowledgeSnapshot.docs.forEach((doc: any) => {
-          const data = doc.data();
-          agentKnowledge += `\n- Chat Name: ${data.chatName || 'N/A'}`;
-          agentKnowledge += `\n- Company Details: ${data.companyDetails || 'N/A'}`;
-          agentKnowledge += `\n- Important Info: ${data.importantInfo || 'N/A'}`;
-          agentKnowledge += `\n- Exclusive Listing: ${data.exclusiveListing || 'N/A'}`;
-          agentKnowledge += `\n- Contact Details: ${data.contactDetails || 'N/A'}`;
-        });
-      }
+    const agent = await prisma.chatAgent.findFirst({
+      where: { tenantId },
+      orderBy: { updatedAt: 'desc' },
+    });
+    if (agent) {
+      agentKnowledge += `\n- Chat Name: ${agent.name || 'N/A'}`;
+      agentKnowledge += `\n- Company Details: ${agent.companyName || 'N/A'}`;
+      agentKnowledge += `\n- Contact Details: ${agent.contact ? JSON.stringify(agent.contact) : 'N/A'}`;
     }
   } catch (error) {
     console.error('[chat] Error fetching agent knowledge:', error);
@@ -200,15 +190,16 @@ ${agentKnowledge}
       : 'I can help with UAE projects, pricing ranges, and next steps. What area and budget should I focus on?';
   }
 
-  const existing = await findExistingLead(db, tenantId, {
+  const existing = await findExistingLead(tenantId, {
     email: emailNormalized,
     phone: phoneNormalized,
   });
 
   let leadId = '';
   if (existing) {
-    await existing.ref.update(
-      buildLeadTouchUpdate({
+    await prisma.lead.update({
+      where: { id: existing.id },
+      data: buildLeadTouchUpdate({
         name: existing.data?.name || null,
         email: emailMatch || existing.data?.email || null,
         phone: phoneMatch || existing.data?.phone || null,
@@ -219,15 +210,12 @@ ${agentKnowledge}
         intentReasoning: intent.reasoning,
         intentProjectIds: projectIds,
         intentNextAction: intent.next_action,
-      })
-    );
+      }),
+    });
     leadId = existing.id;
   } else {
-    const leadRef = await db
-      .collection('tenants')
-      .doc(tenantId)
-      .collection('leads')
-      .add({
+    const lead = await prisma.lead.create({
+      data: {
         tenantId,
         name: null,
         email: emailMatch || null,
@@ -239,17 +227,16 @@ ${agentKnowledge}
         status: 'New',
         priority: 'Warm',
         touches: 1,
-        lastSeenAt: FieldValue.serverTimestamp(),
-        createdAt: FieldValue.serverTimestamp(),
-        updatedAt: FieldValue.serverTimestamp(),
+        lastSeenAt: new Date(),
         context: { channel: 'chat' },
         intentScore: intent.intent_score,
         intentFocus: intent.focus,
         intentReasoning: intent.reasoning,
         intentProjectIds: projectIds,
         intentNextAction: intent.next_action,
-      });
-    leadId = leadRef.id;
+      },
+    });
+    leadId = lead.id;
   }
 
   console.log(

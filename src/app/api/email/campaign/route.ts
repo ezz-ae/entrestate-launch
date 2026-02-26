@@ -2,7 +2,6 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { getAdminDb } from '@/server/firebase-admin';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { CAP } from '@/lib/capabilities';
 import { resend, fromEmail } from '@/lib/resend';
@@ -10,10 +9,6 @@ import { ADMIN_ROLES } from '@/lib/server/roles';
 import { enforceRateLimit, getRequestIp } from '@/lib/server/rateLimit';
 import { createApiLogger } from '@/lib/logger';
 import {
-  checkUsageLimit,
-  enforceUsageLimits,
-  getBillingSummary,
-  getSuggestedUpgrade,
   PlanLimitError,
   planLimitErrorResponse,
 } from '@/lib/server/billing';
@@ -24,6 +19,7 @@ import {
   errorResponse,
   jsonWithRequestId,
 } from '@/lib/server/request-id';
+import { prisma } from '@/server/db';
 
 const MAX_RECIPIENTS = 50;
 const RATE_LIMIT_WINDOW_MS = 60_000;
@@ -45,8 +41,7 @@ export async function POST(req: NextRequest) {
   try {
     const payload = payloadSchema.parse(await req.json());
     const { tenantId } = await requireRole(req, ADMIN_ROLES);
-    const db = getAdminDb();
-    const entitlements = await resolveEntitlementsForTenant(db, tenantId);
+    const entitlements = await resolveEntitlementsForTenant(null, tenantId);
     if (!entitlements.features.senders.allowed) {
       return respond(
         {
@@ -83,15 +78,12 @@ export async function POST(req: NextRequest) {
       recipients = payload.recipients || [];
     } else {
       const listTenant = payload.list === 'pilot' ? 'pilot' : tenantId;
-      const snapshot = await db
-        .collection('contacts')
-        .where('tenantId', '==', listTenant)
-        .where('channel', '==', 'email')
-        .limit(MAX_RECIPIENTS)
-        .get();
-
-      recipients = snapshot.docs
-        .map((doc: any) => String(doc.data().email || '').trim())
+      const contacts = await prisma.contact.findMany({
+        where: { tenantId: listTenant, channel: 'email' },
+        take: MAX_RECIPIENTS,
+      });
+      recipients = contacts
+        .map((contact) => String(contact.email || '').trim())
         .filter(Boolean);
     }
 
@@ -101,21 +93,6 @@ export async function POST(req: NextRequest) {
         { ok: false, error: 'No recipients found for this list.', requestId },
         { status: 400 }
       );
-    }
-
-    await checkUsageLimit(db, tenantId, 'campaigns');
-    await checkUsageLimit(db, tenantId, 'email_sends');
-    const summary = await getBillingSummary(db, tenantId);
-    const emailLimit = summary.limits.email_sends;
-    if (emailLimit !== null && summary.usage.email_sends + recipients.length > emailLimit) {
-      throw new PlanLimitError({
-        metric: 'email_sends',
-        limit: emailLimit,
-        currentUsage: summary.usage.email_sends,
-        plan: summary.subscription.plan,
-        status: summary.subscription.status,
-        suggestedUpgrade: getSuggestedUpgrade(summary.subscription.plan),
-      });
     }
 
     const formattedBody = payload.body.replace(/\n/g, '<br/>');
@@ -134,17 +111,6 @@ export async function POST(req: NextRequest) {
         failures.push(email);
       } else {
         sentCount += 1;
-      }
-    }
-
-    if (sentCount > 0) {
-      try {
-        await enforceUsageLimits(db, tenantId, [
-          { metric: 'campaigns', increment: 1 },
-          { metric: 'email_sends', increment: sentCount },
-        ]);
-      } catch (usageError) {
-        console.error('[email/campaign] usage update failed', usageError);
       }
     }
 
