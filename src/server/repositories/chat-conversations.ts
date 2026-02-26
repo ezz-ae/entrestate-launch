@@ -17,8 +17,9 @@ const normalizeMessages = (value: unknown): ChatMessage[] => {
     .filter((item) => item && typeof item === 'object')
     .map((item) => {
       const msg = item as { role?: string; text?: string; timestamp?: string };
+      const role: ChatMessage['role'] = msg.role === 'assistant' ? 'assistant' : 'user';
       return {
-        role: msg.role === 'assistant' ? 'assistant' : 'user',
+        role,
         text: String(msg.text ?? ''),
         timestamp: msg.timestamp ? new Date(msg.timestamp).toISOString() : new Date(0).toISOString(),
       };

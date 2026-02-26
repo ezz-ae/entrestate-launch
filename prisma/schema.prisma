@@ -33,6 +33,20 @@ model Tenant {
   editRequests   EditRequest[]
   jobs           Job[]
   chatAgents     ChatAgent[]
+  teamInvites    TeamInvite[]
+  sites          Site[]
+  chatSessions   ChatSession[]
+  leadSetting    LeadSetting?
+  domainRequests DomainRequest[]
+  contacts       Contact[]
+  inventoryItems InventoryItem[]
+  projectDrafts  ProjectDraft[]
+  adsBlueprints  AdsBlueprint[]
+  adsCampaigns   AdsCampaign[]
+  adsLearningSignals AdsLearningSignal[]
+  adsRefinerRuns AdsRefinerRun[]
+  wallet         Wallet?
+  projectActions ProjectAction[]
 }
 
 model User {
@@ -99,6 +113,9 @@ model Project {
   uploads Upload[]
   agentTraining AgentTraining[]
   orders Order[]
+  shareLinks ShareLink[]
+  projectDrafts ProjectDraft[]
+  projectActions ProjectAction[]
 
   @@unique([tenantId, slug])
 }

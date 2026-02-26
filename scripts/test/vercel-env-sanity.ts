@@ -16,7 +16,7 @@ async function run() {
   console.log('Vercel env sanity flags:', flags);
 
   const supabase = await createSupabaseServerClient();
-  console.log('Supabase server client type:', supabase?.from ? 'ready' : 'missing from()');
+  console.log('Supabase server client type:', typeof supabase.from);
 
   console.log('Vercel env sanity check passed.');
 }

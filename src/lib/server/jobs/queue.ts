@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client';
+import { Prisma, type Job } from '@prisma/client';
 import { prisma } from '@/server/db';
 
 const JOB_LOCK_TIMEOUT_MS = 5 * 60 * 1000;
@@ -54,7 +54,7 @@ export async function claimJobs(limit = 5) {
     take: limit * 3,
   });
 
-  const claimed = [];
+  const claimed: Job[] = [];
   for (const candidate of candidates) {
     const updated = await prisma.job.updateMany({
       where: {

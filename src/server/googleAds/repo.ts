@@ -6,6 +6,7 @@ import type {
   StrategicBlueprint,
 } from '@/modules/googleAds/types';
 import { DEFAULT_SCENARIO_THRESHOLDS } from '@/modules/googleAds/scenarios';
+import type { Prisma } from '@prisma/client';
 import { prisma } from '@/server/db';
 
 export class FirestoreUnavailableError extends Error {
@@ -19,13 +20,17 @@ export async function getScenarioConfig(): Promise<ScenarioThresholdConfig> {
   return DEFAULT_SCENARIO_THRESHOLDS;
 }
 
+function toJsonValue(value: unknown): Prisma.InputJsonValue {
+  return JSON.parse(JSON.stringify(value ?? null)) as Prisma.InputJsonValue;
+}
+
 export async function createBlueprint(blueprint: StrategicBlueprint) {
   await prisma.adsBlueprint.create({
     data: {
       id: blueprint.id,
       tenantId: blueprint.tenantId,
       siteId: blueprint.siteId || null,
-      dataJson: blueprint,
+      dataJson: toJsonValue(blueprint),
     },
   });
 }
@@ -41,7 +46,7 @@ export async function createCampaign(campaign: AdsCampaign) {
       id: campaign.id,
       tenantId: campaign.tenantId,
       status: campaign.status,
-      dataJson: campaign,
+      dataJson: toJsonValue(campaign),
     },
   });
 }
@@ -85,7 +90,7 @@ export async function createDeployment(deployment: AdsDeployment) {
       id: deployment.id,
       campaignId: deployment.campaignId,
       status: deployment.status,
-      payload: deployment.payload,
+      payload: toJsonValue(deployment.payload),
     },
   });
 }
@@ -99,13 +104,13 @@ export async function writeDailyReport(campaignId: string, dateId: string, data:
       },
     },
     update: {
-      dataJson: data,
+      dataJson: toJsonValue(data),
       updatedAt: new Date(),
     },
     create: {
       campaignId,
       dateId,
-      dataJson: data,
+      dataJson: toJsonValue(data),
     },
   });
 }
@@ -116,7 +121,7 @@ export async function recordLearningSignal(signal: LearningSignal) {
       id: signal.id,
       tenantId: signal.tenantId,
       campaignId: signal.campaignId,
-      dataJson: signal,
+      dataJson: toJsonValue(signal),
       recordedAt: new Date(signal.recordedAt),
     },
   });
@@ -133,7 +138,7 @@ export async function saveRefinerResult(options: {
       id: refId,
       tenantId: options.tenantId,
       siteId: options.siteId,
-      result: options.result,
+      result: toJsonValue(options.result),
     },
   });
   return refId;

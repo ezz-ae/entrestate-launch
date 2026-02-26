@@ -13,8 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { authorizedFetch } from '@/lib/auth-fetch';
-import { useAuth } from '@/lib/AuthContext';
-import { FIREBASE_AUTH_DISABLED } from '@/lib/firebase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 interface AddLeadDialogProps {
   open: boolean;
@@ -41,7 +40,7 @@ export function AddLeadDialog({ open, onOpenChange, onLeadAdded }: AddLeadDialog
     setSubmitting(true);
 
     try {
-      if (!user && !FIREBASE_AUTH_DISABLED) {
+      if (!user) {
         throw new Error('You must be logged in to add a lead.');
       }
       const res = await authorizedFetch('/api/leads/create', {

@@ -1,4 +1,5 @@
 import type { GoogleAdsApi as GoogleAdsApiType } from 'google-ads-api';
+import { Prisma } from '@prisma/client';
 import { OAuth2Client } from 'google-auth-library';
 import { prisma } from '@/server/db';
 
@@ -6,6 +7,18 @@ const CLIENT_ID = process.env.GOOGLE_ADS_CLIENT_ID;
 const CLIENT_SECRET = process.env.GOOGLE_ADS_CLIENT_SECRET;
 const DEVELOPER_TOKEN = process.env.GOOGLE_ADS_DEVELOPER_TOKEN;
 const REDIRECT_URI = process.env.GOOGLE_ADS_REDIRECT_URI;
+
+type GoogleAdsTokens = {
+  refresh_token?: string;
+  [key: string]: unknown;
+};
+
+function normalizeTokens(raw: Prisma.JsonValue | null): GoogleAdsTokens | null {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+    return null;
+  }
+  return raw as GoogleAdsTokens;
+}
 
 export async function getGoogleAdsCustomer(tenantId?: string) {
   if (!CLIENT_ID || !CLIENT_SECRET || !DEVELOPER_TOKEN) {
@@ -26,7 +39,7 @@ export async function getGoogleAdsCustomer(tenantId?: string) {
   let CUSTOMER_ID = process.env.GOOGLE_ADS_CUSTOMER_ID; // Your Manager Account or Ad Account ID
 
   if (tenantId) {
-    const tokens = await getGoogleAdsTokensFromFirestore(tenantId);
+    const tokens = normalizeTokens(await getGoogleAdsTokensFromFirestore(tenantId));
     if (tokens?.refresh_token) {
       REFRESH_TOKEN = tokens.refresh_token;
       // In a real multi-tenant app, you'd also store/retrieve the customer_id per tenant
@@ -115,6 +128,6 @@ export async function refreshAccessToken(refreshToken: string) {
 export async function removeGoogleAdsTokensFromFirestore(tenantId: string) {
   await prisma.tenant.update({
     where: { id: tenantId },
-    data: { googleAdsTokens: null },
+    data: { googleAdsTokens: Prisma.DbNull },
   });
 }

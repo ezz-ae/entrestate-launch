@@ -25,7 +25,7 @@ async function handleRun(req: NextRequest) {
   const limit = Number(req.nextUrl.searchParams.get('limit') || '5');
   const jobs = await claimJobs(limit);
 
-  const results = [];
+  const results: Array<Awaited<ReturnType<typeof processJob>>> = [];
   for (const job of jobs) {
     results.push(await processJob(job));
   }

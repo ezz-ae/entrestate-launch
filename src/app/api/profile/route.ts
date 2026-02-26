@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
 import { prisma } from '@/server/db';
+import { Prisma } from '@prisma/client';
 
 const payloadSchema = z.object({
   firstName: z.string().trim().min(1).optional().nullable(),
@@ -68,9 +69,10 @@ export async function POST(req: NextRequest) {
       };
     }
 
+    const profileJson = JSON.parse(JSON.stringify(updateData)) as Prisma.InputJsonValue;
     await prisma.tenant.update({
       where: { id: tenantId },
-      data: { profileJson: updateData },
+      data: { profileJson },
     });
 
     return NextResponse.json({ success: true });

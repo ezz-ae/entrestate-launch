@@ -9,7 +9,7 @@ export default async function BuilderPage({
   searchParams: Promise<{ projectId?: string }> 
 }) {
   const { projectId } = await searchParams;
-  let initialData = null;
+  let initialData: ProjectData | null = null;
 
   if (projectId) {
     const project = await prisma.project.findUnique({
@@ -18,7 +18,7 @@ export default async function BuilderPage({
     if (project) {
       const dataJson = project.dataJson as ProjectData | null;
       initialData = dataJson && typeof dataJson === 'object'
-        ? { id: project.id, name: project.title || dataJson.name, ...dataJson }
+        ? { ...dataJson, id: project.id, name: project.title || dataJson.name }
         : {
             id: project.id,
             name: project.title || 'Untitled Project',

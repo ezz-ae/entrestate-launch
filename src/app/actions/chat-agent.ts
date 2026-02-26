@@ -27,34 +27,45 @@ export async function updateChatAgentKnowledge(userId: string, data: any) {
 
   const validatedData = result.data
 
-  const agent = await prisma.chatAgent.upsert({
-    where: {
-      userId: userId,
-    },
-    update: {
-      name: validatedData.agentName,
-      companyName: validatedData.companyName,
-      style: validatedData.communicationStyle,
-      details: validatedData.companyDetails,
-      listings: validatedData.exclusiveListing,
-      contact: validatedData.contactDetails,
-      rawText: validatedData.textData,
-      state: validatedData.state,
-      fileUrls: validatedData.fileUrls,
-    },
-    create: {
-      userId: userId,
-      name: validatedData.agentName,
-      companyName: validatedData.companyName,
-      style: validatedData.communicationStyle,
-      details: validatedData.companyDetails,
-      listings: validatedData.exclusiveListing,
-      contact: validatedData.contactDetails,
-      rawText: validatedData.textData,
-      state: validatedData.state || 'configured',
-      fileUrls: validatedData.fileUrls,
-    },
-  })
+  const existing = await prisma.chatAgent.findFirst({ where: { userId } });
+  const profile = {
+    companyDetails: validatedData.companyDetails ?? null,
+    textData: validatedData.textData ?? null,
+  };
+  const listings = validatedData.exclusiveListing
+    ? { notes: validatedData.exclusiveListing }
+    : undefined;
+  const contact = validatedData.contactDetails
+    ? { details: validatedData.contactDetails }
+    : undefined;
+
+  const agent = existing
+    ? await prisma.chatAgent.update({
+        where: { id: existing.id },
+        data: {
+          name: validatedData.agentName,
+          companyName: validatedData.companyName,
+          style: validatedData.communicationStyle,
+          profile,
+          listings,
+          contact,
+          state: validatedData.state,
+          fileUrls: validatedData.fileUrls,
+        },
+      })
+    : await prisma.chatAgent.create({
+        data: {
+          userId,
+          name: validatedData.agentName,
+          companyName: validatedData.companyName,
+          style: validatedData.communicationStyle,
+          profile,
+          listings,
+          contact,
+          state: validatedData.state || 'configured',
+          fileUrls: validatedData.fileUrls,
+        },
+      })
 
   return { success: true, data: agent }
 }

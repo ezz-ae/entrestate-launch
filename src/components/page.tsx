@@ -45,7 +45,7 @@ export default async function SharedDashboardPage({ params }: SharedDashboardPag
     <div className="min-h-screen bg-black text-white p-6 pt-24">
       <div className="max-w-6xl mx-auto space-y-8">
         <div className="bg-blue-900/20 border border-blue-500/20 p-4 rounded-xl text-center text-blue-200 text-sm mb-8">
-          You are viewing a shared read-only report for <strong>{project.headline}</strong>.
+          You are viewing a shared read-only report for <strong>{projectView.headline}</strong>.
         </div>
 
         {agent && (

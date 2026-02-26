@@ -5,6 +5,7 @@ import { prisma } from '@/server/db';
 import { compileEditRequest } from '@/lib/server/edits/compiler';
 import { enqueueJob } from '@/lib/server/jobs/queue';
 import { requireOrderEntitlement } from '@/lib/server/entitlements/guard';
+import { Prisma } from '@prisma/client';
 
 type Context = { params: Promise<{ orderId: string }> };
 
@@ -26,6 +27,9 @@ export async function POST(req: NextRequest, ctx: Context) {
 
   const compiled = compileEditRequest(rawText);
 
+  const compiledTasks = JSON.parse(JSON.stringify(compiled)) as Prisma.InputJsonValue;
+  const inputsJson = JSON.parse(JSON.stringify(body?.inputs || {})) as Prisma.InputJsonValue;
+
   const edit = await prisma.editRequest.create({
     data: {
       tenantId: order.tenantId,
@@ -33,8 +37,8 @@ export async function POST(req: NextRequest, ctx: Context) {
       deploymentId: order.deployment.id,
       status: 'submitted',
       rawText,
-      compiledTasks: compiled,
-      inputsJson: body?.inputs || {},
+      compiledTasks,
+      inputsJson,
       submittedAt: new Date(),
     },
   });

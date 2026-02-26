@@ -9,6 +9,7 @@ import {
   planLimitErrorResponse,
 } from '@/lib/server/billing';
 import { SitePage, Block } from '@/lib/types';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/server/db';
 
 export async function POST(req: NextRequest) {
@@ -23,10 +24,17 @@ export async function POST(req: NextRequest) {
         const prompt = `Generate a landing page for a real estate project based on the following text. The language is ${language || 'en'}.\n\n${extractedText}`;
 
         const { object: siteData } = await generateSiteStructure(prompt);
+        const slug = String(siteData.title || 'landing')
+            .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '')
+            .slice(0, 48) || 'landing';
 
         const newSite: SitePage = {
             id: '',
             title: siteData.title,
+            slug,
             blocks: siteData.blocks.map((block: Omit<Block, 'blockId' | 'order'>, index: number) => ({
                 ...block,
                 blockId: `block-${index}`,
@@ -41,15 +49,17 @@ export async function POST(req: NextRequest) {
             updatedAt: new Date().toISOString(),
         };
 
+        const dataJson = JSON.parse(JSON.stringify({
+            ...newSite,
+            projectId: projectId || null,
+        })) as Prisma.InputJsonValue;
+
         const created = await prisma.site.create({
             data: {
                 tenantId,
                 ownerUid: uid,
                 title: newSite.title,
-                dataJson: {
-                    ...newSite,
-                    projectId: projectId || null,
-                },
+                dataJson,
             },
         });
         const pageId = created.id;

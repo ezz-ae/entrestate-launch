@@ -131,7 +131,8 @@ async function getSessionToken(req: NextRequest | Request) {
   if (!NEXTAUTH_SECRET) {
     throw new Error('NEXTAUTH_SECRET is not configured');
   }
-  const token = await getToken({ req, secret: NEXTAUTH_SECRET });
+  const nextReq = req instanceof NextRequest ? req : new NextRequest(req);
+  const token = await getToken({ req: nextReq, secret: NEXTAUTH_SECRET });
   return token;
 }
 
@@ -176,7 +177,7 @@ export async function verifyFirebaseIdToken(req: NextRequest | Request) {
 function resolveTenantAndRoles(claims: AuthClaims) {
   const tenantId = claims.tenantId ?? claims.uid ?? 'public';
   const roles = normalizeRoles(claims.roles ?? (claims.role ? [claims.role] : []));
-  const finalRoles = roles.length ? roles : ['agency_admin'];
+  const finalRoles: Role[] = roles.length ? roles : ['agency_admin'];
   return { tenantId, roles: finalRoles };
 }
 

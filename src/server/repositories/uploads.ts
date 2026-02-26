@@ -7,7 +7,7 @@ export function createUpload(data: Prisma.UploadCreateInput) {
 
 export function listUploads(filters: {
   tenantId: string;
-  kind?: Prisma.UploadKindFilter;
+  kind?: Prisma.UploadWhereInput['kind'];
   limit?: number;
   offset?: number;
 }) {

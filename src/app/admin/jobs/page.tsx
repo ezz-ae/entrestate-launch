@@ -168,7 +168,7 @@ export default function JobsDashboard() {
                                         </div>
                                     </TableCell>
                                     <TableCell className="text-zinc-500 text-xs text-right px-8 font-mono">
-                                        {job.createdAt ? formatDistanceToNow(job.createdAt.toDate(), { addSuffix: true }) : 'Now'}
+                                        {job.createdAt ? formatDistanceToNow(new Date(job.createdAt), { addSuffix: true }) : 'Now'}
                                     </TableCell>
                                     <TableCell className="text-right px-8">
                                         {job.type === 'site_refiner' && job.plan?.params?.siteId ? (

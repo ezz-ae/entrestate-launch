@@ -10,8 +10,7 @@ import { Loader2, MessageSquare, Send, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ImportSmsContactsDialog } from './sms-import-contacts-dialog';
 import { authorizedFetch } from '@/lib/auth-fetch';
-import { useAuth } from '@/lib/AuthContext';
-import { FIREBASE_AUTH_DISABLED } from '@/lib/firebase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 export function SmsCampaignDashboard() {
   const { toast } = useToast();
@@ -86,7 +85,7 @@ export function SmsCampaignDashboard() {
       return;
     }
 
-    if (mode === 'test' && !testNumber && !user?.phoneNumber && !FIREBASE_AUTH_DISABLED) {
+    if (mode === 'test' && !testNumber) {
       toast({ title: 'Add a test number', variant: 'destructive' });
       return;
     }
@@ -102,7 +101,7 @@ export function SmsCampaignDashboard() {
         mode === 'test'
           ? {
               list: 'manual',
-              recipients: [testNumber || user?.phoneNumber].filter(Boolean),
+              recipients: [testNumber].filter(Boolean),
               message,
             }
           : {

@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/server/db';
 
 export type ChatAgentProfileInput = {
@@ -15,6 +16,12 @@ export type ChatAgentProfileInput = {
   fileUrls?: string[] | null;
   state?: string | null;
 };
+
+function toNullableJson(value: unknown) {
+  if (value === undefined) return undefined;
+  if (value === null) return Prisma.DbNull;
+  return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
+}
 
 export async function getChatAgentByUserId(userId: string) {
   return prisma.chatAgent.findFirst({
@@ -43,11 +50,11 @@ export async function upsertChatAgentProfile(input: ChatAgentProfileInput) {
           companyName: input.companyName ?? undefined,
           style: input.style ?? undefined,
           systemPrompt: input.systemPrompt ?? undefined,
-          profile: input.profile ?? undefined,
-          listings: input.listings ?? undefined,
-          tools: input.tools ?? undefined,
-          contact: input.contact ?? undefined,
-          constraints: input.constraints ?? undefined,
+          profile: toNullableJson(input.profile),
+          listings: toNullableJson(input.listings),
+          tools: toNullableJson(input.tools),
+          contact: toNullableJson(input.contact),
+          constraints: toNullableJson(input.constraints),
           fileUrls: input.fileUrls ?? undefined,
           state: input.state ?? undefined,
           version: nextVersion,
@@ -61,11 +68,11 @@ export async function upsertChatAgentProfile(input: ChatAgentProfileInput) {
           companyName: input.companyName ?? undefined,
           style: input.style ?? undefined,
           systemPrompt: input.systemPrompt ?? undefined,
-          profile: input.profile ?? undefined,
-          listings: input.listings ?? undefined,
-          tools: input.tools ?? undefined,
-          contact: input.contact ?? undefined,
-          constraints: input.constraints ?? undefined,
+          profile: toNullableJson(input.profile),
+          listings: toNullableJson(input.listings),
+          tools: toNullableJson(input.tools),
+          contact: toNullableJson(input.contact),
+          constraints: toNullableJson(input.constraints),
           fileUrls: input.fileUrls ?? undefined,
           state: input.state ?? undefined,
           version: nextVersion,
@@ -77,9 +84,9 @@ export async function upsertChatAgentProfile(input: ChatAgentProfileInput) {
       agentId: agent.id,
       version: agent.version,
       systemPrompt: agent.systemPrompt ?? null,
-      profile: agent.profile ?? null,
-      listings: agent.listings ?? null,
-      constraints: agent.constraints ?? null,
+      profile: toNullableJson(agent.profile),
+      listings: toNullableJson(agent.listings),
+      constraints: toNullableJson(agent.constraints),
     },
   });
 

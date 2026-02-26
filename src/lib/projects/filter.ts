@@ -28,24 +28,24 @@ export function filterProjects(projects: ProjectData[], filters: ProjectSearchFi
   return projects.filter((project) => {
     if (query) {
       const matchesQuery =
-        project.name.toLowerCase().includes(query) ||
-        project.developer.toLowerCase().includes(query) ||
-        project.location.city.toLowerCase().includes(query) ||
-        project.location.area.toLowerCase().includes(query);
+        normalizeValue(project.name).includes(query) ||
+        normalizeValue(project.developer).includes(query) ||
+        normalizeValue(project.location?.city).includes(query) ||
+        normalizeValue(project.location?.area).includes(query);
       if (!matchesQuery) {
         return false;
       }
     }
 
-    if (filters.city && city !== 'all' && normalizeKey(project.location.city) !== city) {
+    if (filters.city && city !== 'all' && normalizeKey(project.location?.city) !== city) {
       return false;
     }
 
-    if (developer && !project.developer.toLowerCase().includes(developer)) {
+    if (developer && !normalizeValue(project.developer).includes(developer)) {
       return false;
     }
 
-    if (status && status !== 'all' && project.availability.toLowerCase() !== status) {
+    if (status && status !== 'all' && normalizeValue(project.availability) !== status) {
       return false;
     }
 

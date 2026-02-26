@@ -55,6 +55,13 @@ function mapNumber(value?: string | null) {
   return digits.length >= 7 ? `+${digits}` : value;
 }
 
+function normalizeConversation(value: unknown): Array<Record<string, unknown>> {
+  if (!Array.isArray(value)) return [];
+  return value.filter((entry) => entry && typeof entry === 'object' && !Array.isArray(entry)) as Array<
+    Record<string, unknown>
+  >;
+}
+
 function buildDedupeKey(candidate: LeadPipeCandidate) {
   if (candidate.email) {
     return `email:${candidate.email.toLowerCase()}`;
@@ -143,14 +150,19 @@ export async function collectLeadPipeCandidates(tenantId: string) {
   });
 
   chatRows.forEach((session) => {
-    const conversation = Array.isArray(session.conversation) ? session.conversation : [];
-    const lastUserMessage = [...conversation]
-      .reverse()
-      .find((entry: any) => entry?.role === 'user' || entry?.role === 'client');
-    const preview = lastUserMessage?.content || lastUserMessage?.text || '';
+    const conversation = normalizeConversation(session.conversation);
+    const lastUserMessage = [...conversation].reverse().find((entry) => {
+      const role = typeof entry.role === 'string' ? entry.role : '';
+      return role === 'user' || role === 'client';
+    });
+    const preview =
+      (typeof lastUserMessage?.content === 'string' && lastUserMessage.content) ||
+      (typeof lastUserMessage?.text === 'string' && lastUserMessage.text) ||
+      '';
+    const name = typeof lastUserMessage?.name === 'string' ? lastUserMessage.name : '';
     candidates.push({
       id: `chat:${session.id}`,
-      name: normalizeContact((lastUserMessage?.name as string | undefined) || ''),
+      name: normalizeContact(name),
       email: null,
       phone: null,
       message: normalizeContact(preview),

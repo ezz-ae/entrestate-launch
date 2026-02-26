@@ -73,6 +73,6 @@ export function buildLeadTouchUpdate(payload: {
     intentProjectIds: payload.intentProjectIds ?? undefined,
     intentNextAction: payload.intentNextAction ?? null,
     siteId: payload.siteId ?? null,
-    metadata: payload.metadata ?? null,
+    metadata: payload.metadata ?? undefined,
   };
 }

@@ -71,7 +71,7 @@ async function resolvePublicTenant(payload: LeadPayload) {
     (payload.context?.pageSlug as string | undefined);
   if (!siteKey) return null;
   const publishedSite = await getPublishedSite(siteKey);
-  if (!publishedSite?.published) return null;
+  if (!publishedSite) return null;
   const tenantId = publishedSite.tenantId || publishedSite.ownerUid || null;
   if (!tenantId) return null;
   return { tenantId, siteId: publishedSite.id };
@@ -216,9 +216,9 @@ export async function POST(req: NextRequest) {
           priority: 'Warm',
           touches: 1,
           lastSeenAt: new Date(),
-          utmJson: payload.attribution || null,
-          context: payload.context || null,
-          metadata: payload.metadata || null,
+          utmJson: payload.attribution ?? undefined,
+          context: payload.context ?? undefined,
+          metadata: payload.metadata ?? undefined,
         },
       });
       leadId = lead.id;

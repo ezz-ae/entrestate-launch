@@ -78,7 +78,9 @@ async function resolveLeadFromPipe(tenantId: string, leadId: string) {
   if (!session) {
     return null;
   }
-  const conversation = Array.isArray(session.conversation) ? session.conversation : [];
+  const conversation = Array.isArray(session.conversation)
+    ? (session.conversation as Array<Record<string, any>>)
+    : [];
   const lastUserMessage = [...conversation]
     .reverse()
     .find((entry: any) => entry?.role === 'user' || entry?.role === 'client');

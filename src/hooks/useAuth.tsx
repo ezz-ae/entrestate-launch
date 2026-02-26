@@ -7,6 +7,8 @@ type AppUser = {
   uid: string;
   email?: string | null;
   displayName?: string | null;
+  image?: string | null;
+  photoURL?: string | null;
   roles?: string[];
   mode: 'nextauth';
 };
@@ -35,11 +37,14 @@ async function handleCredentialsSignIn(email: string, password: string) {
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { data: session, status } = useSession();
+  const sessionError = (session as { error?: string } | null)?.error ?? undefined;
   const user: AppUser | null = session?.user
     ? {
         uid: session.user.id,
         email: session.user.email ?? null,
         displayName: session.user.name ?? null,
+        image: session.user.image ?? null,
+        photoURL: session.user.image ?? null,
         roles: session.user.role ? [session.user.role] : undefined,
         mode: 'nextauth',
       }
@@ -70,12 +75,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     () => ({
       user,
       loading: status === 'loading',
-      error: session?.error ?? undefined,
+      error: sessionError,
       logIn,
       signUp,
       logOut,
     }),
-    [user, status, session?.error]
+    [user, status, sessionError]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

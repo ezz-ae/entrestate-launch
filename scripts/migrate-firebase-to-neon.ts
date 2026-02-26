@@ -16,18 +16,20 @@ const toNumber = (value: unknown) => {
   return undefined;
 };
 
-const toString = (value: unknown, fallback?: string) => {
+const toString = (value: unknown, ...fallbacks: Array<string | undefined>) => {
   if (typeof value === 'string') return value;
-  if (value === undefined || value === null) return fallback;
+  if (value === undefined || value === null) {
+    return fallbacks.find((fallback) => typeof fallback === 'string');
+  }
   if (typeof value === 'number') return String(value);
   if (typeof value === 'object') {
     return JSON.stringify(value);
   }
-  return fallback;
+  return fallbacks.find((fallback) => typeof fallback === 'string');
 };
 
 const toJson = (value: unknown) => {
-  if (value === undefined || value === null) return null;
+  if (value === undefined || value === null) return undefined;
   if (typeof value === 'object') return value;
   return String(value);
 };
@@ -38,8 +40,8 @@ async function migrateProjects(tenantId: string, collectionName: string) {
   console.log(`[migrate] tenant=${tenantId} projects from ${collectionName}: ${snapshot.size}`);
   for (const doc of snapshot.docs) {
     const data = doc.data();
-    const slug = toString(data.slug, doc.id);
-    const title = toString(data.title, data.name, 'Untitled Project');
+    const slug = toString(data.slug, doc.id) ?? doc.id;
+    const title = toString(data.title, data.name, 'Untitled Project') ?? 'Untitled Project';
     await prisma.project.upsert({
       where: {
         tenantId_slug: {
@@ -119,11 +121,13 @@ async function migrateCampaigns(tenantId: string, collectionName: string) {
   console.log(`[migrate] tenant=${tenantId} campaigns from ${collectionName}: ${snapshot.size}`);
   for (const doc of snapshot.docs) {
     const data = doc.data();
+    const platform = toString(data.platform, data.channel, 'marketing') ?? 'marketing';
+    const name = toString(data.name ?? data.campaignName, 'Campaign') ?? 'Campaign';
     await prisma.campaign.upsert({
       where: { id: doc.id },
       update: {
-        platform: toString(data.platform, data.channel, 'marketing'),
-        name: toString(data.name ?? data.campaignName),
+        platform,
+        name,
         utmSource: toString(data.utmSource ?? data.utm_source),
         utmCampaign: toString(data.utmCampaign ?? data.utm_campaign),
         spend: toNumber(data.spend ?? data.spendAmount),
@@ -132,8 +136,8 @@ async function migrateCampaigns(tenantId: string, collectionName: string) {
       create: {
         id: doc.id,
         tenantId,
-        platform: toString(data.platform, data.channel, 'marketing'),
-        name: toString(data.name ?? data.campaignName ?? 'Campaign'),
+        platform,
+        name,
         utmSource: toString(data.utmSource ?? data.utm_source),
         utmCampaign: toString(data.utmCampaign ?? data.utm_campaign),
         spend: toNumber(data.spend ?? data.spendAmount),
@@ -173,24 +177,32 @@ async function migrateUploads(tenantId: string, collectionName: string) {
   console.log(`[migrate] tenant=${tenantId} uploads from ${collectionName}: ${snapshot.size}`);
   for (const doc of snapshot.docs) {
     const data = doc.data();
+    const rawKind = toString(data.kind, 'image') ?? 'image';
+    const kind =
+      rawKind === 'brochure' || rawKind === 'logo' || rawKind === 'image'
+        ? rawKind
+        : 'image';
+    const filename = toString(data.filename, data.path, doc.id) ?? doc.id;
+    const mime = toString(data.mimeType, data.contentType, 'application/octet-stream') ?? 'application/octet-stream';
+    const url = toString(data.url ?? data.downloadUrl, '') ?? '';
     await prisma.upload.upsert({
       where: { id: doc.id },
       update: {
-        kind: toString(data.kind, 'image') as any,
-        filename: toString(data.filename, data.path, doc.id),
-        mime: toString(data.mimeType, data.contentType, 'application/octet-stream'),
+        kind: kind as any,
+        filename,
+        mime,
         size: typeof data.size === 'number' ? data.size : toNumber(data.size) ?? 0,
-        url: toString(data.url ?? data.downloadUrl, ''),
+        url,
         projectId: toString(data.projectId),
       },
       create: {
         id: doc.id,
         tenantId,
-        kind: toString(data.kind, 'image') as any,
-        filename: toString(data.filename, data.path, doc.id),
-        mime: toString(data.mimeType, data.contentType, 'application/octet-stream'),
+        kind: kind as any,
+        filename,
+        mime,
         size: typeof data.size === 'number' ? data.size : toNumber(data.size) ?? 0,
-        url: toString(data.url ?? data.downloadUrl, ''),
+        url,
         projectId: toString(data.projectId),
       },
     });

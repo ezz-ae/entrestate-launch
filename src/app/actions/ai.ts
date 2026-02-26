@@ -194,7 +194,7 @@ export async function generateReviveLeadMessageAction(leadId: string, projectId:
     The message should:
     1. Be professional yet conversational (WhatsApp style).
     2. Reference their background as a ${jobTitle} if relevant.
-    3. Mention a new update or exclusive insight about ${project.headline}.
+    3. Mention a new update or exclusive insight about ${projectTitle}.
     4. End with a low-friction question to start a conversation.
     5. Use emojis sparingly.
     6. Keep it under 300 characters.

@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest } from 'next/server';
 import { createRequestId, errorResponse, jsonWithRequestId } from '@/lib/server/request-id';
-import type { ChatConversationResponse } from '@/shared/types/chat-agent';
+import type { ChatConversationResponse, ChatMessage } from '@/shared/types/chat-agent';
 import { appendInstagramMessage } from '@/server/repositories';
 
 export async function POST(request: NextRequest) {
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const message = {
+    const message: ChatMessage = {
       role: 'assistant',
       text: String(text),
       timestamp: new Date().toISOString(),

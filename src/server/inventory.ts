@@ -170,7 +170,7 @@ export function normalizeProjectData(raw: any, id: string): ProjectData {
       : 'stable';
 
   const handoverRaw = raw.handover || raw.handoverDate || raw.delivery?.handover;
-  let handover: ProjectData['handover'] = null;
+  let handover: ProjectData['handover'];
   if (handoverRaw && typeof handoverRaw === 'object') {
     const quarter = normalizeNumber(handoverRaw.quarter || handoverRaw.q);
     const year = normalizeNumber(handoverRaw.year || handoverRaw.y);

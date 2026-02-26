@@ -140,6 +140,7 @@ async function processJob(jobId: string, jobData: JobDoc) {
     refinedSnapshot || snapshot || {
       id: 'refiner',
       title: 'Refiner Draft',
+      slug: 'refiner',
       blocks: [],
       canonicalListings: [],
       brochureUrl: '',

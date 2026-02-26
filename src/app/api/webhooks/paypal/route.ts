@@ -100,6 +100,6 @@ export async function POST(req: NextRequest) {
   logger.logSuccess(200, { outcome: 'neon_noop', tenantId });
   return NextResponse.json({ received: true });
 
-  logger.logSuccess(200, { outcome: 'subscription_updated', tenantId, sku });
+  logger.logSuccess(200, { outcome: 'subscription_updated', tenantId });
   return NextResponse.json({ received: true });
 }
