@@ -12,6 +12,8 @@ model Tenant {
   name      String
   email     String?
   phone     String?
+  brandKit  Json?
+  googleAdsTokens Json?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
@@ -86,9 +88,47 @@ model Project {
   @@unique([tenantId, slug])
 }
 
+model Site {
+  id             String   @id @default(cuid())
+  tenantId       String?
+  ownerUid       String?
+  title          String?
+  subdomain      String?
+  customDomain   String?
+  published      Boolean  @default(false)
+  publishedUrl   String?
+  status         String?
+  dataJson       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  lastPublishedAt DateTime?
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([ownerUid])
+  @@index([subdomain])
+  @@index([customDomain])
+}
+
+model ChatSession {
+  id            String   @id @default(cuid())
+  tenantId      String
+  projectId     String?
+  humanTakeover Boolean  @default(false)
+  conversation  Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, projectId])
+}
+
 model Lead {
   id        String   @id @default(cuid())
   tenantId  String
+  siteId    String?
   projectId String?
   orderId   String?
   deploymentId String?
@@ -105,6 +145,8 @@ model Lead {
   project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
   order Order? @relation(fields: [orderId], references: [id], onDelete: SetNull)
   deployment Deployment? @relation(fields: [deploymentId], references: [id], onDelete: SetNull)
+
+  @@index([siteId])
 }
 
 model LeadSetting {
@@ -117,6 +159,34 @@ model LeadSetting {
   updatedAt         DateTime @updatedAt
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+}
+
+model DomainRequest {
+  id           String   @id @default(cuid())
+  tenantId     String
+  domain       String
+  provider     String
+  siteId       String?
+  status       String
+  requestedBy  Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, createdAt])
+}
+
+model ShareLink {
+  id        String   @id @default(cuid())
+  projectId String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
 }
 
 model Campaign {
@@ -293,6 +363,7 @@ model EditRequest {
 model Job {
   id           String   @id @default(cuid())
   tenantId     String
+  ownerUid     String?
   orderId      String?
   deploymentId String?
   type         String

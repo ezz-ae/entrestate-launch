@@ -1,61 +1,66 @@
 'use server';
 
-import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { getGoogleAdsCustomer, validateGoogleAdsCredentials, generateAuthUrl, refreshAccessToken, removeGoogleAdsTokensFromFirestore } from '@/lib/google-ads';
+import { getGoogleAdsCustomer, validateGoogleAdsCredentials, generateAuthUrl, refreshAccessToken } from '@/lib/google-ads';
 import { generateText } from 'ai';
 import crypto from 'crypto';
+import { prisma } from '@/server/db';
 
 export async function getUserProjects() {
-  const supabase = await createSupabaseServerClient();
-  // Fetch projects to populate the dropdown
-  const { data } = await supabase
-    .from('projects')
-    .select('id, headline, description, original_filename')
-    .order('created_at', { ascending: false });
-    
-  return data || [];
+  const projects = await prisma.project.findMany({
+    select: {
+      id: true,
+      title: true,
+      dataJson: true,
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+  return projects.map((project) => ({
+    id: project.id,
+    headline: project.title || (project.dataJson as any)?.headline,
+    description: (project.dataJson as any)?.description || null,
+    original_filename: (project.dataJson as any)?.original_filename || null,
+  }));
 }
 
 /**
  * Creates a campaign record with 'Draft' status to allow users to save progress.
  */
 export async function createCampaignDraft(projectId: string, adConfig: any) {
-  const supabase = await createSupabaseServerClient();
-  
-  const { data, error } = await supabase
-    .from('ads')
-    .insert({
-      project_id: projectId,
-      status: 'Draft',
-      headlines: adConfig.headlines,
-      descriptions: adConfig.descriptions,
-      keywords: adConfig.baseKeywords,
-      budget: adConfig.budget || 0,
-      estimated_cpc: adConfig.estimatedCpc
-    })
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
+  const campaign = await prisma.campaign.create({
+    data: {
+      tenantId: 'public',
+      platform: 'google_ads',
+      name: 'Draft Campaign',
+      metaJson: {
+        projectId,
+        status: 'Draft',
+        headlines: adConfig.headlines,
+        descriptions: adConfig.descriptions,
+        keywords: adConfig.baseKeywords,
+        budget: adConfig.budget || 0,
+        estimatedCpc: adConfig.estimatedCpc,
+      },
+    },
+  });
+  return { id: campaign.id, ...(campaign.metaJson as any) };
 }
 
 /**
  * AI-driven analysis of the project source to generate ad copy and intent.
  */
 export async function analyzeSource(source: string) {
-  const supabase = await createSupabaseServerClient();
-
   let project: any = null;
   const isUrl = source.startsWith('http');
 
   if (!isUrl) {
-    const { data } = await supabase
-      .from('projects')
-      .select('*')
-      .eq('id', source)
-      .single();
-    project = data;
+    const record = await prisma.project.findUnique({ where: { id: source } });
+    project = record
+      ? {
+          headline: record.title || (record.dataJson as any)?.headline,
+          description: (record.dataJson as any)?.description,
+          city: record.city,
+        }
+      : null;
   } else {
     // Scrape logic would go here. For now, we'll use the URL as context.
     project = {
@@ -153,24 +158,23 @@ export async function analyzeSource(source: string) {
  * Syncs the campaign with Google Ads and sets up the Lead Pipeline webhook.
  */
 export async function syncCampaign(adId: string) {
-  const supabase = await createSupabaseServerClient();
-  
-  const { data: ad } = await supabase.from('ads').select('*').eq('id', adId).single();
-  if (!ad) throw new Error("Ad not found");
+  const campaign = await prisma.campaign.findUnique({ where: { id: adId } });
+  if (!campaign) throw new Error("Ad not found");
 
   // Lead Pipeline Integration: Point to ingestion endpoint
   const webhookUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/leads/ingest`;
 
   // Update status and attach webhook for lead form extensions
-  const { error } = await supabase
-    .from('ads')
-    .update({ 
-      status: 'Live', 
-      webhook_url: webhookUrl 
-    })
-    .eq('id', adId);
-
-  if (error) throw error;
+  await prisma.campaign.update({
+    where: { id: adId },
+    data: {
+      metaJson: {
+        ...(campaign.metaJson as any),
+        status: 'Live',
+        webhook_url: webhookUrl,
+      },
+    },
+  });
 
   return { success: true, webhookUrl };
 }
@@ -197,41 +201,38 @@ export async function getCompetitorAnalysis(projectId: string) {
 }
 
 export async function generateShareLink(projectId: string) {
-  const supabase = await createSupabaseServerClient();
   const token = crypto.randomBytes(32).toString('hex');
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
-  const { error } = await supabase
-    .from('share_links')
-    .insert({
-      project_id: projectId,
-      token: token,
-      expires_at: expiresAt.toISOString()
-    });
-
-  if (error) throw error;
+  await prisma.shareLink.create({
+    data: {
+      projectId,
+      token,
+      expiresAt,
+    },
+  });
   
   return { url: `/dashboard/google-ads/share/${token}` };
 }
 
 export async function getCampaignStatus(projectId: string) {
-  const supabase = await createSupabaseServerClient();
-  
-  const { data: ad } = await supabase
-    .from('ads')
-    .select('status, impressions, clicks, cost')
-    .eq('project_id', projectId)
-    .single();
+  const campaign = await prisma.campaign.findFirst({
+    where: {
+      platform: 'google_ads',
+      metaJson: { path: ['projectId'], equals: projectId } as any,
+    },
+    orderBy: { createdAt: 'desc' },
+  });
 
-  if (!ad) {
+  if (!campaign) {
     return { status: 'No Campaign', impressions: 0, clicks: 0, cost: 0 };
   }
 
   return {
-    status: ad.status || 'Idle',
-    impressions: ad.impressions || 0,
-    clicks: ad.clicks || 0,
-    cost: ad.cost || 0,
+    status: (campaign.metaJson as any)?.status || 'Idle',
+    impressions: (campaign.metaJson as any)?.impressions || 0,
+    clicks: (campaign.metaJson as any)?.clicks || 0,
+    cost: (campaign.metaJson as any)?.cost || 0,
   };
 }
 
@@ -246,9 +247,6 @@ export async function refreshGoogleAdsToken(refreshToken: string) {
 }
 
 export async function disconnectGoogleAds() {
-  const { resolveTenantForExport } = await import('./leads');
-  const tenantId = await resolveTenantForExport();
-  const db = (await import('@/server/firebase-admin')).getAdminDb();
-  await removeGoogleAdsTokensFromFirestore(tenantId, db);
+  // Tokens not persisted in Neon yet.
   return { success: true };
 }

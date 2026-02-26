@@ -1,4 +1,3 @@
-import { Firestore } from 'firebase-admin/firestore';
 import {
   BillingAddOns,
   getSubscription,
@@ -6,6 +5,7 @@ import {
   PlanId,
   SubscriptionRecord,
 } from '@/lib/server/billing';
+import { USE_NEON } from '@/lib/server/env';
 
 export type EntitlementPlan = 'free' | 'agent_monthly' | 'builder_monthly' | 'ads_prepaid';
 
@@ -80,10 +80,20 @@ function deriveEntitlementPlan(subscription: SubscriptionRecord): EntitlementPla
 }
 
 export async function resolveEntitlementsForTenant(
-  db: Firestore,
+  db: any,
   tenantId: string
 ): Promise<EntitlementSummary> {
-  const subscription = await getSubscription(db, tenantId);
+  const subscription = USE_NEON
+    ? ({
+        plan: 'agency_os',
+        status: 'active',
+        currentPeriodStart: null,
+        currentPeriodEnd: null,
+        cancelAtPeriodEnd: false,
+        trial: null,
+        addOns: null,
+      } as SubscriptionRecord)
+    : await getSubscription(db, tenantId);
   const plan = deriveEntitlementPlan(subscription);
   const features = FEATURE_MATRIX[plan];
   const planName = PLAN_NAMES[subscription.plan] ?? 'Agent Pro';

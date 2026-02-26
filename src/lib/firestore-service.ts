@@ -1,15 +1,3 @@
-import {
-  collection,
-  doc,
-  addDoc,
-  onSnapshot,
-  serverTimestamp,
-  query,
-  where,
-  getDocs,
-  setDoc,
-} from 'firebase/firestore';
-import { getDbSafe } from '@/lib/firebase/client';
 import type { SitePage } from './types';
 import { authorizedFetch } from '@/lib/auth-fetch';
 
@@ -34,19 +22,6 @@ export interface UserProfile {
   credits: number;
 }
 
-let hasWarnedMissingDb = false;
-const getDb = () => {
-  const firestore = getDbSafe();
-  if (!firestore) {
-    if (!hasWarnedMissingDb) {
-      console.warn('[firestore] Client Firestore is not configured.');
-      hasWarnedMissingDb = true;
-    }
-    return null;
-  }
-  return firestore;
-};
-
 // --- Site Operations ---
 
 export const saveSite = async (ownerUid: string, site: SitePage) => {
@@ -64,8 +39,6 @@ export const saveSite = async (ownerUid: string, site: SitePage) => {
 };
 
 export const updateSiteMetadata = async (siteId: string, data: Partial<SitePage>) => {
-  const firestore = getDb();
-  if (!firestore) return;
   if (!siteId) {
     throw new Error('Site ID is required to update metadata.');
   }
@@ -78,50 +51,20 @@ export const updateSiteMetadata = async (siteId: string, data: Partial<SitePage>
   if (Object.keys(updates).length === 0) {
     return;
   }
-  updates.updatedAt = serverTimestamp();
-  await setDoc(doc(firestore, 'sites', siteId), updates, { merge: true });
+  const response = await authorizedFetch('/api/sites', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ site: { id: siteId, ...updates } }),
+  });
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null);
+    throw new Error(payload?.error || 'Failed to update site metadata.');
+  }
 };
 
 export const getUserSites = async (ownerUid: string) => {
-  const firestore = getDb();
-  if (!firestore) return [];
-  const q = query(collection(firestore, 'sites'), where('ownerUid', '==', ownerUid));
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map(d => d.data() as SitePage);
-};
-
-// --- Job System (The Engine) ---
-
-/**
- * Creates a job that your Python/Cloud Run workers will pick up.
- * This is the "Fire and Forget" trigger for AI agents.
- */
-export const createJob = async (ownerUid: string, type: Job['type'], data: any) => {
-  const firestore = getDb();
-  if (!firestore) return '';
-  const jobData = {
-    ownerUid,
-    type,
-    status: 'queued',
-    data,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  };
-  
-  const docRef = await addDoc(collection(firestore, 'jobs'), jobData);
-  return docRef.id;
-};
-
-/**
- * Real-time listener for job status updates.
- * Use this in the UI to show progress bars / "AI Thinking" states.
- */
-export const subscribeToJob = (jobId: string, callback: (job: Job) => void) => {
-  const firestore = getDb();
-  if (!firestore) return () => {};
-  return onSnapshot(doc(firestore, 'jobs', jobId), (doc) => {
-    if (doc.exists()) {
-      callback({ id: doc.id, ...doc.data() } as Job);
-    }
-  });
+  const response = await authorizedFetch('/api/sites', { method: 'GET' });
+  if (!response.ok) return [];
+  const payload = await response.json().catch(() => null);
+  return (payload?.sites || []) as SitePage[];
 };

@@ -1,5 +1,6 @@
 import type { GoogleAdsApi as GoogleAdsApiType } from 'google-ads-api';
 import { OAuth2Client } from 'google-auth-library';
+import { prisma } from '@/server/db';
 
 const CLIENT_ID = process.env.GOOGLE_ADS_CLIENT_ID;
 const CLIENT_SECRET = process.env.GOOGLE_ADS_CLIENT_SECRET;
@@ -25,8 +26,7 @@ export async function getGoogleAdsCustomer(tenantId?: string) {
   let CUSTOMER_ID = process.env.GOOGLE_ADS_CUSTOMER_ID; // Your Manager Account or Ad Account ID
 
   if (tenantId) {
-    const db = (await import('@/server/firebase-admin')).getAdminDb();
-    const tokens = await getGoogleAdsTokensFromFirestore(tenantId, db);
+    const tokens = await getGoogleAdsTokensFromFirestore(tenantId);
     if (tokens?.refresh_token) {
       REFRESH_TOKEN = tokens.refresh_token;
       // In a real multi-tenant app, you'd also store/retrieve the customer_id per tenant
@@ -72,20 +72,20 @@ export async function exchangeAuthCodeForTokens(authCode: string, redirectUri: s
   return tokens;
 }
 
-export async function saveGoogleAdsTokensToFirestore(tenantId: string, tokens: any, db: any) {
-  // Placeholder for saving tokens to Firestore
+export async function saveGoogleAdsTokensToFirestore(tenantId: string, tokens: any) {
   console.log('Saving Google Ads tokens for tenant', tenantId);
-  if (db && typeof db.collection === 'function') {
-    await db.collection('tenants').doc(tenantId).collection('integrations').doc('google_ads').set(tokens, { merge: true });
-  }
+  await prisma.tenant.update({
+    where: { id: tenantId },
+    data: { googleAdsTokens: tokens },
+  });
 }
 
-export async function getGoogleAdsTokensFromFirestore(tenantId: string, db: any) {
-  if (db && typeof db.collection === 'function') {
-    const doc = await db.collection('tenants').doc(tenantId).collection('integrations').doc('google_ads').get();
-    return doc.exists ? doc.data() : null;
-  }
-  return null;
+export async function getGoogleAdsTokensFromFirestore(tenantId: string) {
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: tenantId },
+    select: { googleAdsTokens: true },
+  });
+  return tenant?.googleAdsTokens || null;
 }
 
 export function generateAuthUrl(redirectUri: string) {
@@ -112,8 +112,9 @@ export async function refreshAccessToken(refreshToken: string) {
   return credentials;
 }
 
-export async function removeGoogleAdsTokensFromFirestore(tenantId: string, db: any) {
-  if (db && typeof db.collection === 'function') {
-    await db.collection('tenants').doc(tenantId).collection('integrations').doc('google_ads').delete();
-  }
+export async function removeGoogleAdsTokensFromFirestore(tenantId: string) {
+  await prisma.tenant.update({
+    where: { id: tenantId },
+    data: { googleAdsTokens: null },
+  });
 }

@@ -2,8 +2,8 @@ export const dynamic = 'force-dynamic';
 
 
 import { NextRequest } from 'next/server';
-import { FieldValue } from 'firebase-admin/firestore';
-import { getAdminDb } from '@/server/firebase-admin';
+import { prisma } from '@/server/db';
+import { USE_NEON } from '@/lib/server/env';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
 import {
@@ -43,35 +43,47 @@ export async function POST(request: NextRequest) {
     }
 
     const { tenantId, uid } = await requireRole(request, ALL_ROLES);
-    const db = getAdminDb();
-    const entitlements = await resolveEntitlementsForTenant(db, tenantId);
-    if (!entitlements.features.builderPublish.allowed) {
-      return respond(
-        {
-          ok: false,
-          error:
-            entitlements.features.builderPublish.reason ||
-            'Publishing requires an active Builder plan.',
-          requestId,
-        },
-        { status: 403 }
-      );
-    }
-    const siteRef = db.collection('sites').doc(siteId);
-    const siteSnap = await siteRef.get();
-
-    if (!siteSnap.exists) {
-      return respond({ ok: false, error: 'Site not found', requestId }, { status: 404 });
-    }
-
-    const siteData = siteSnap.data() || {};
-    const ownerUid = siteData.ownerUid as string | undefined;
-    const siteTenantId = siteData.tenantId as string | undefined;
-    if (siteTenantId && siteTenantId !== tenantId) {
-      return respond({ ok: false, error: 'Forbidden', requestId }, { status: 403 });
-    }
-    if (!siteTenantId && ownerUid && ownerUid !== uid) {
-      return respond({ ok: false, error: 'Forbidden', requestId }, { status: 403 });
+    let siteData: any = null;
+    if (USE_NEON) {
+      siteData = await prisma.site.findUnique({ where: { id: siteId } });
+      if (!siteData) {
+        return respond({ ok: false, error: 'Site not found', requestId }, { status: 404 });
+      }
+      if (siteData.tenantId && siteData.tenantId !== tenantId) {
+        return respond({ ok: false, error: 'Forbidden', requestId }, { status: 403 });
+      }
+      if (!siteData.tenantId && siteData.ownerUid && siteData.ownerUid !== uid) {
+        return respond({ ok: false, error: 'Forbidden', requestId }, { status: 403 });
+      }
+    } else {
+      const db = (await import('@/server/firebase-admin')).getAdminDb();
+      const entitlements = await resolveEntitlementsForTenant(db, tenantId);
+      if (!entitlements.features.builderPublish.allowed) {
+        return respond(
+          {
+            ok: false,
+            error:
+              entitlements.features.builderPublish.reason ||
+              'Publishing requires an active Builder plan.',
+            requestId,
+          },
+          { status: 403 }
+        );
+      }
+      const siteRef = db.collection('sites').doc(siteId);
+      const siteSnap = await siteRef.get();
+      if (!siteSnap.exists) {
+        return respond({ ok: false, error: 'Site not found', requestId }, { status: 404 });
+      }
+      siteData = siteSnap.data() || {};
+      const ownerUid = siteData.ownerUid as string | undefined;
+      const siteTenantId = siteData.tenantId as string | undefined;
+      if (siteTenantId && siteTenantId !== tenantId) {
+        return respond({ ok: false, error: 'Forbidden', requestId }, { status: 403 });
+      }
+      if (!siteTenantId && ownerUid && ownerUid !== uid) {
+        return respond({ ok: false, error: 'Forbidden', requestId }, { status: 403 });
+      }
     }
 
     const rootDomain = normalizeDomain(process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'entrestate.com');
@@ -83,19 +95,33 @@ export async function POST(request: NextRequest) {
     const customDomain = typeof siteData.customDomain === 'string' ? siteData.customDomain : '';
     const publishedUrl = customDomain ? `https://${customDomain}` : `https://${subdomain}.${siteDomain}`;
 
-    await checkUsageLimit(db, tenantId, 'landing_pages');
+    if (USE_NEON) {
+      await prisma.site.update({
+        where: { id: siteId },
+        data: {
+          published: true,
+          publishedUrl,
+          subdomain,
+          lastPublishedAt: new Date(),
+        },
+      });
+    } else {
+      const { FieldValue } = await import('firebase-admin/firestore');
+      const db = (await import('@/server/firebase-admin')).getAdminDb();
+      await checkUsageLimit(db, tenantId, 'landing_pages');
+      const siteRef = db.collection('sites').doc(siteId);
+      await siteRef.set(
+        {
+          published: true,
+          publishedUrl,
+          subdomain,
+          lastPublishedAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
 
-    await siteRef.set(
-      {
-        published: true,
-        publishedUrl,
-        subdomain,
-        lastPublishedAt: FieldValue.serverTimestamp(),
-      },
-      { merge: true }
-    );
-
-    await recordTrialEvent(db, tenantId, 'landing_page_published');
+      await recordTrialEvent(db, tenantId, 'landing_page_published');
+    }
 
     return respond({
       ok: true,

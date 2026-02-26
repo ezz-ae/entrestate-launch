@@ -2,7 +2,8 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getAdminDb } from '@/server/firebase-admin';
+import { prisma } from '@/server/db';
+import { USE_NEON } from '@/lib/server/env';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
 
@@ -21,13 +22,21 @@ export async function POST(req: NextRequest) {
     const { siteIds } = payloadSchema.parse(body);
     const { tenantId } = await requireRole(req, ALL_ROLES);
 
-    const db = getAdminDb();
-    const tenantRef = db.collection('tenants').doc(tenantId);
-    const leadsRef = tenantRef.collection('leads');
-    const eventsRef = tenantRef.collection('events');
-
     const entries = await Promise.all(
       siteIds.map(async (siteId) => {
+        if (USE_NEON) {
+          const leads = await prisma.lead.count({
+            where: { tenantId, siteId },
+          });
+          const stats: SiteStats = { leads, views: 0 };
+          return [siteId, stats] as const;
+        }
+
+        const db = (await import('@/server/firebase-admin')).getAdminDb();
+        const tenantRef = db.collection('tenants').doc(tenantId);
+        const leadsRef = tenantRef.collection('leads');
+        const eventsRef = tenantRef.collection('events');
+
         const [leadsSnapshot, eventsSnapshot] = await Promise.all([
           leadsRef.where('siteId', '==', siteId).get(),
           eventsRef.where('siteId', '==', siteId).get(),

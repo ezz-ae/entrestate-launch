@@ -1,6 +1,6 @@
-import { getAdminDb } from '@/server/firebase-admin';
 import type { SitePage } from '@/lib/types';
-import type { DocumentSnapshot } from 'firebase-admin/firestore';
+import { prisma } from '@/server/db';
+import { USE_NEON } from '@/lib/server/env';
 
 function normalizeTimestamp(value: any) {
   if (value?.toDate) {
@@ -9,23 +9,48 @@ function normalizeTimestamp(value: any) {
   return value;
 }
 
-function normalizeSite(doc: DocumentSnapshot) {
-  const data = doc.data() || {};
+function normalizeSiteRecord(record: any): SitePage {
   return {
-    id: doc.id,
-    ...data,
-    createdAt: normalizeTimestamp(data.createdAt),
-    updatedAt: normalizeTimestamp(data.updatedAt),
-    lastPublishedAt: normalizeTimestamp(data.lastPublishedAt),
+    id: record.id,
+    ...record,
+    createdAt: normalizeTimestamp(record.createdAt),
+    updatedAt: normalizeTimestamp(record.updatedAt),
+    lastPublishedAt: normalizeTimestamp(record.lastPublishedAt),
   } as SitePage;
 }
 
 export async function getPublishedSite(siteIdOrSlug: string): Promise<SitePage | null> {
   try {
-    const db = getAdminDb();
+    if (USE_NEON) {
+      const direct = await prisma.site.findFirst({
+        where: { id: siteIdOrSlug, published: true },
+      });
+      if (direct) return normalizeSiteRecord(direct);
+
+      const bySubdomain = await prisma.site.findFirst({
+        where: { subdomain: siteIdOrSlug, published: true },
+      });
+      if (bySubdomain) return normalizeSiteRecord(bySubdomain);
+
+      const byCustomDomain = await prisma.site.findFirst({
+        where: { customDomain: siteIdOrSlug, published: true },
+      });
+      if (byCustomDomain) return normalizeSiteRecord(byCustomDomain);
+
+      return null;
+    }
+
+    const db = (await import('@/server/firebase-admin')).getAdminDb();
     const direct = await db.collection('sites').doc(siteIdOrSlug).get();
     if (direct.exists && direct.data()?.published) {
-      return normalizeSite(direct);
+      const data = direct.data() || {};
+      return {
+        id: direct.id,
+        ...data,
+        createdAt: normalizeTimestamp(data.createdAt),
+        updatedAt: normalizeTimestamp(data.updatedAt),
+        lastPublishedAt: normalizeTimestamp(data.lastPublishedAt),
+      } as SitePage;
     }
 
     const bySubdomain = await db
@@ -36,7 +61,14 @@ export async function getPublishedSite(siteIdOrSlug: string): Promise<SitePage |
     if (!bySubdomain.empty) {
       const doc = bySubdomain.docs[0];
       if (doc.data()?.published) {
-        return normalizeSite(doc);
+        const data = doc.data() || {};
+        return {
+          id: doc.id,
+          ...data,
+          createdAt: normalizeTimestamp(data.createdAt),
+          updatedAt: normalizeTimestamp(data.updatedAt),
+          lastPublishedAt: normalizeTimestamp(data.lastPublishedAt),
+        } as SitePage;
       }
     }
 
@@ -48,7 +80,14 @@ export async function getPublishedSite(siteIdOrSlug: string): Promise<SitePage |
     if (!byCustomDomain.empty) {
       const doc = byCustomDomain.docs[0];
       if (doc.data()?.published) {
-        return normalizeSite(doc);
+        const data = doc.data() || {};
+        return {
+          id: doc.id,
+          ...data,
+          createdAt: normalizeTimestamp(data.createdAt),
+          updatedAt: normalizeTimestamp(data.updatedAt),
+          lastPublishedAt: normalizeTimestamp(data.lastPublishedAt),
+        } as SitePage;
       }
     }
 

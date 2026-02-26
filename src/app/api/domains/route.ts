@@ -3,7 +3,6 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
-import { getAdminDb } from '@/server/firebase-admin';
 import { CAP } from '@/lib/capabilities';
 import { ADMIN_ROLES } from '@/lib/server/roles';
 import {
@@ -12,6 +11,8 @@ import {
   PlanLimitError,
   planLimitErrorResponse,
 } from '@/lib/server/billing';
+import { prisma } from '@/server/db';
+import { USE_NEON } from '@/lib/server/env';
 
 const VERCEL_TOKEN = process.env.VERCEL_API_TOKEN;
 const PROJECT_ID = process.env.VERCEL_PROJECT_ID;
@@ -33,7 +34,9 @@ export async function POST(req: NextRequest) {
 
     const { domain, siteId } = requestSchema.parse(await req.json());
     const normalizedDomain = normalizeDomain(domain);
-    await checkUsageLimit(getAdminDb(), tenantId, 'domains');
+    if (!USE_NEON) {
+      await checkUsageLimit((await import('@/server/firebase-admin')).getAdminDb(), tenantId, 'domains');
+    }
 
     const response = await fetch(`https://api.vercel.com/v9/projects/${PROJECT_ID}/domains${TEAM_ID ? `?teamId=${TEAM_ID}` : ''}`, {
       method: 'POST',
@@ -51,30 +54,52 @@ export async function POST(req: NextRequest) {
     }
 
     if (siteId) {
-      const db = getAdminDb();
-      const siteRef = db.collection('sites').doc(siteId);
-      const siteSnap = await siteRef.get();
-      if (!siteSnap.exists) {
-        return NextResponse.json({ error: 'Site not found' }, { status: 404 });
-      }
-      const siteData = siteSnap.data() || {};
-      if (siteData.tenantId && siteData.tenantId !== tenantId) {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-      }
-      if (!siteData.tenantId && siteData.ownerUid && siteData.ownerUid !== uid) {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-      }
+      if (USE_NEON) {
+        const site = await prisma.site.findUnique({ where: { id: siteId } });
+        if (!site) {
+          return NextResponse.json({ error: 'Site not found' }, { status: 404 });
+        }
+        if (site.tenantId && site.tenantId !== tenantId) {
+          return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
+        if (!site.tenantId && site.ownerUid && site.ownerUid !== uid) {
+          return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
+        await prisma.site.update({
+          where: { id: siteId },
+          data: {
+            customDomain: normalizedDomain,
+            publishedUrl: site.published ? `https://${normalizedDomain}` : site.publishedUrl || null,
+          },
+        });
+      } else {
+        const db = (await import('@/server/firebase-admin')).getAdminDb();
+        const siteRef = db.collection('sites').doc(siteId);
+        const siteSnap = await siteRef.get();
+        if (!siteSnap.exists) {
+          return NextResponse.json({ error: 'Site not found' }, { status: 404 });
+        }
+        const siteData = siteSnap.data() || {};
+        if (siteData.tenantId && siteData.tenantId !== tenantId) {
+          return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
+        if (!siteData.tenantId && siteData.ownerUid && siteData.ownerUid !== uid) {
+          return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
 
-      await siteRef.set(
-        {
-          customDomain: normalizedDomain,
-          publishedUrl: siteData.published ? `https://${normalizedDomain}` : siteData.publishedUrl || null,
-        },
-        { merge: true }
-      );
+        await siteRef.set(
+          {
+            customDomain: normalizedDomain,
+            publishedUrl: siteData.published ? `https://${normalizedDomain}` : siteData.publishedUrl || null,
+          },
+          { merge: true }
+        );
+      }
     }
 
-    await enforceUsageLimit(getAdminDb(), tenantId, 'domains', 1);
+    if (!USE_NEON) {
+      await enforceUsageLimit((await import('@/server/firebase-admin')).getAdminDb(), tenantId, 'domains', 1);
+    }
 
     return NextResponse.json({
       success: true,

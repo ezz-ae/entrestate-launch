@@ -1,4 +1,4 @@
-import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { prisma } from '@/server/db';
 
 interface LeadData {
   name: string;
@@ -8,16 +8,12 @@ interface LeadData {
 
 export async function sendLeadNotification(projectId: string, lead: LeadData) {
   try {
-    const supabase = await createSupabaseServerClient();
-    
-    // Fetch project details to customize the email
-    const { data: project } = await supabase
-      .from('projects')
-      .select('headline')
-      .eq('id', projectId)
-      .single();
+    const project = await prisma.project.findUnique({
+      where: { id: projectId },
+      select: { title: true },
+    });
 
-    const projectName = project?.headline || 'Untitled Project';
+    const projectName = project?.title || 'Untitled Project';
 
     // TODO: Integrate with a real email service like Resend, SendGrid, or AWS SES.
     // Example: await resend.emails.send({ ... })

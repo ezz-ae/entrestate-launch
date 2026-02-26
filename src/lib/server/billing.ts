@@ -1,5 +1,6 @@
 import type { DocumentReference, DocumentSnapshot, Firestore } from 'firebase-admin/firestore';
 import { FieldValue } from 'firebase-admin/firestore';
+import { USE_NEON } from '@/lib/server/env';
 
 export type PlanId = 'agent_pro' | 'agent_growth' | 'agency_os';
 export type UsageMetric =
@@ -406,6 +407,9 @@ export async function logBillingEvent(
   tenantId: string,
   event: Record<string, unknown>,
 ) {
+  if (USE_NEON) {
+    return;
+  }
   try {
     await db
       .collection('tenants')
@@ -445,6 +449,17 @@ export async function logBillingEvent(
 }
 
 export async function ensureSubscription(db: Firestore, tenantId: string): Promise<SubscriptionRecord> {
+  if (USE_NEON) {
+    return {
+      plan: DEFAULT_PLAN,
+      status: 'active',
+      trial: null,
+      currentPeriodStart: null,
+      currentPeriodEnd: null,
+      cancelAtPeriodEnd: false,
+      addOns: {},
+    };
+  }
   const ref = db.collection('subscriptions').doc(tenantId);
   const snap = await ref.get();
   if (snap.exists) {
@@ -481,6 +496,17 @@ export async function ensureSubscription(db: Firestore, tenantId: string): Promi
 }
 
 export async function getSubscription(db: Firestore, tenantId: string): Promise<SubscriptionRecord> {
+  if (USE_NEON) {
+    return {
+      plan: DEFAULT_PLAN,
+      status: 'active',
+      trial: null,
+      currentPeriodStart: null,
+      currentPeriodEnd: null,
+      cancelAtPeriodEnd: false,
+      addOns: {},
+    };
+  }
   const doc = await db.collection('subscriptions').doc(tenantId).get();
   if (!doc.exists) {
     return {
@@ -515,6 +541,9 @@ export async function enforceUsageLimits(
   tenantId: string,
   updates: UsageUpdate[],
 ) {
+  if (USE_NEON) {
+    return;
+  }
   const subscriptionRef = db.collection('subscriptions').doc(tenantId);
   const now = new Date();
   let trialEndedReason: string | null = null;
@@ -712,6 +741,9 @@ export async function checkUsageLimit(
   tenantId: string,
   metric: UsageMetric,
 ) {
+  if (USE_NEON) {
+    return;
+  }
   const now = new Date();
   const subscriptionRef = db.collection('subscriptions').doc(tenantId);
   const subscriptionSnap = await subscriptionRef.get();
@@ -781,6 +813,9 @@ export async function recordTrialEvent(
   tenantId: string,
   event: 'landing_page_published' | 'lead_captured',
 ) {
+  if (USE_NEON) {
+    return;
+  }
   const now = new Date();
   const subscriptionRef = db.collection('subscriptions').doc(tenantId);
   const subscriptionSnap = await subscriptionRef.get();
@@ -840,6 +875,17 @@ export async function requirePlanFeature(
   tenantId: string,
   feature: PlanFeature,
 ) {
+  if (USE_NEON) {
+    return {
+      plan: DEFAULT_PLAN,
+      status: 'active',
+      trial: null,
+      currentPeriodStart: null,
+      currentPeriodEnd: null,
+      cancelAtPeriodEnd: false,
+      addOns: {},
+    };
+  }
   const subscription = await ensureSubscription(db, tenantId);
   if (!isUsageAllowed(subscription.status)) {
     throw new PlanLimitError({
@@ -860,6 +906,9 @@ export async function requirePlanFeature(
 }
 
 export async function getUsageSnapshot(db: Firestore, tenantId: string) {
+  if (USE_NEON) {
+    return {} as Record<UsageMetric, number>;
+  }
   const metrics = getUsageMetrics();
   const now = new Date();
   const docIds = new Set(metrics.map((metric) => getUsageDocId(metric, now)));
@@ -883,6 +932,23 @@ export async function getUsageSnapshot(db: Firestore, tenantId: string) {
 }
 
 export async function getBillingSummary(db: Firestore, tenantId: string) {
+  if (USE_NEON) {
+    return {
+      subscription: {
+        plan: DEFAULT_PLAN,
+        status: 'active',
+        trial: null,
+        currentPeriodStart: null,
+        currentPeriodEnd: null,
+        cancelAtPeriodEnd: false,
+        addOns: {},
+      },
+      usage: {},
+      limits: PLAN_LIMITS[DEFAULT_PLAN],
+      warnings: {},
+      suggestedUpgrade: getSuggestedUpgrade(DEFAULT_PLAN),
+    };
+  }
   const subscription = await ensureSubscription(db, tenantId);
   const usage = await getUsageSnapshot(db, tenantId);
   const limits: Record<UsageMetric, number | null> = {} as Record<UsageMetric, number | null>;

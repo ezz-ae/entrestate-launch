@@ -1,7 +1,8 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest } from 'next/server';
-import { getAdminDb } from '@/server/firebase-admin';
+import { prisma } from '@/server/db';
+import { USE_NEON } from '@/lib/server/env';
 import { requireRole } from '@/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
 import { resolveEntitlementsForTenant } from '@/lib/server/entitlements';
@@ -21,19 +22,21 @@ export async function POST(request: NextRequest) {
 
   try {
     const { tenantId } = await requireRole(request, ALL_ROLES);
-    const db = getAdminDb();
-    const entitlements = await resolveEntitlementsForTenant(db, tenantId);
-    if (!entitlements.features.builderPublish.allowed) {
-      return respond(
-        {
-          ok: false,
-          error:
-            entitlements.features.builderPublish.reason ||
-            'Publishing requires an active Builder plan.',
-          requestId,
-        },
-        { status: 403 }
-      );
+    if (!USE_NEON) {
+      const db = (await import('@/server/firebase-admin')).getAdminDb();
+      const entitlements = await resolveEntitlementsForTenant(db, tenantId);
+      if (!entitlements.features.builderPublish.allowed) {
+        return respond(
+          {
+            ok: false,
+            error:
+              entitlements.features.builderPublish.reason ||
+              'Publishing requires an active Builder plan.',
+            requestId,
+          },
+          { status: 403 }
+        );
+      }
     }
     const { siteId, action } = await request.json();
     if (!siteId || !['publish', 'unpublish'].includes(action)) {
@@ -43,12 +46,24 @@ export async function POST(request: NextRequest) {
       );
     }
     // Simulate publish/unpublish
-    const siteRef = db.collection('sites').doc(siteId);
-    await siteRef.set({
-      status: action === 'publish' ? 'published' : 'draft',
-      publishedAt: action === 'publish' ? new Date() : null,
-      updatedAt: new Date(),
-    }, { merge: true });
+    if (USE_NEON) {
+      await prisma.site.update({
+        where: { id: siteId },
+        data: {
+          status: action === 'publish' ? 'published' : 'draft',
+          published: action === 'publish',
+          lastPublishedAt: action === 'publish' ? new Date() : null,
+        },
+      });
+    } else {
+      const db = (await import('@/server/firebase-admin')).getAdminDb();
+      const siteRef = db.collection('sites').doc(siteId);
+      await siteRef.set({
+        status: action === 'publish' ? 'published' : 'draft',
+        publishedAt: action === 'publish' ? new Date() : null,
+        updatedAt: new Date(),
+      }, { merge: true });
+    }
     
     // Note: For dynamic sites (ISR/SSR), updating the database is sufficient to "publish" content.
     // If static generation (SSG) was used, we would call Vercel Deploy Hooks here.

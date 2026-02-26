@@ -1,10 +1,8 @@
 'use server';
 
 import { generateAdsFromPageContent, GenerateAdsInput, suggestNextBlocksFlow, SuggestNextBlocksInput, generateText } from '@/ai';
-import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { resolveTenantForExport } from './leads';
-import { getAdminDb } from '@/server/firebase-admin';
-import { FieldValue } from 'firebase-admin/firestore';
+import { prisma } from '@/server/db';
 
 /**
  * Server action to generate Google Ads from page content.
@@ -95,19 +93,18 @@ export async function generateSmsAction(input: any) {
  * Generates a system prompt and script for an AI Cold Calling voice agent.
  */
 export async function generateColdCallScriptAction(projectId: string, focus: string) {
-  const supabase = await createSupabaseServerClient();
-  const { data: project } = await supabase
-    .from('projects')
-    .select('*')
-    .eq('id', projectId)
-    .single();
+  const project = await prisma.project.findUnique({
+    where: { id: projectId },
+  });
 
   if (!project) throw new Error("Project not found");
+  const projectTitle = project.title || (project.dataJson as any)?.headline || 'Project';
+  const projectCity = project.city || (project.dataJson as any)?.city || 'UAE';
 
   const prompt = `
     Generate a cold calling script for an AI voice agent.
-    Project: ${project.headline}
-    Location: ${project.city || 'UAE'}
+    Project: ${projectTitle}
+    Location: ${projectCity}
     Focus: ${focus} (e.g., Luxury Investment, First-time Buyer)
     
     The script should include:
@@ -138,17 +135,13 @@ export async function generateColdCallScriptAction(projectId: string, focus: str
  * Generates an AI summary of a lead's professional background and interest.
  */
 export async function summarizeLeadAction(leadId: string) {
-  const supabase = await createSupabaseServerClient();
-  
-  const { data: lead } = await supabase
-    .from('leads')
-    .select('*, screening_data')
-    .eq('id', leadId)
-    .single();
+  const lead = await prisma.lead.findUnique({
+    where: { id: leadId },
+  });
 
   if (!lead) throw new Error("Lead not found");
 
-  const enrichment = lead.screening_data?.enrichment;
+  const enrichment = (lead.utmJson as any)?.screening?.enrichment;
   if (!enrichment || !enrichment.job_title) {
     return { success: true, summary: "Professional background data not available for this lead." };
   }
@@ -181,31 +174,22 @@ export async function summarizeLeadAction(leadId: string) {
  * Generates a personalized WhatsApp message to revive a lead.
  */
 export async function generateReviveLeadMessageAction(leadId: string, projectId: string) {
-  const supabase = await createSupabaseServerClient();
-  
-  const { data: lead } = await supabase
-    .from('leads')
-    .select('*, screening_data')
-    .eq('id', leadId)
-    .single();
-
-  const { data: project } = await supabase
-    .from('projects')
-    .select('*')
-    .eq('id', projectId)
-    .single();
+  const lead = await prisma.lead.findUnique({ where: { id: leadId } });
+  const project = await prisma.project.findUnique({ where: { id: projectId } });
 
   if (!lead || !project) throw new Error("Lead or Project not found");
 
-  const jobTitle = lead.screening_data?.enrichment?.job_title || 'Investor';
+  const jobTitle = (lead.utmJson as any)?.screening?.enrichment?.job_title || 'Investor';
   const name = lead.name || 'there';
+  const projectTitle = project.title || (project.dataJson as any)?.headline || 'Project';
+  const projectCity = project.city || (project.dataJson as any)?.city || 'UAE';
 
   const prompt = `
     Write a short, personalized WhatsApp message to re-engage a real estate lead.
     Lead Name: ${name}
     Lead Job Title: ${jobTitle}
-    Project: ${project.headline}
-    Location: ${project.city || 'UAE'}
+    Project: ${projectTitle}
+    Location: ${projectCity}
     
     The message should:
     1. Be professional yet conversational (WhatsApp style).
@@ -234,31 +218,25 @@ export async function generateReviveLeadMessageAction(leadId: string, projectId:
  * Generates a personalized follow-up campaign for a group of high-intent leads.
  */
 export async function generateBulkReviveCampaignAction(leadIds: string[], projectId: string) {
-  const supabase = await createSupabaseServerClient();
-  
-  const { data: leads } = await supabase
-    .from('leads')
-    .select('*, screening_data')
-    .in('id', leadIds);
-
-  const { data: project } = await supabase
-    .from('projects')
-    .select('*')
-    .eq('id', projectId)
-    .single();
+  const leads = await prisma.lead.findMany({
+    where: { id: { in: leadIds } },
+  });
+  const project = await prisma.project.findUnique({ where: { id: projectId } });
 
   if (!leads || !project) throw new Error("Data not found");
 
   const leadSummaries = leads.map(l => 
-    `- ${l.name} (${l.screening_data?.enrichment?.job_title || 'Investor'})`
+    `- ${l.name} (${(l.utmJson as any)?.screening?.enrichment?.job_title || 'Investor'})`
   ).join('\n');
+  const projectTitle = project.title || (project.dataJson as any)?.headline || 'Project';
+  const projectCity = project.city || (project.dataJson as any)?.city || 'UAE';
 
   const prompt = `
     Generate a personalized follow-up campaign strategy for the following high-intent leads:
     ${leadSummaries}
 
-    Project: ${project.headline}
-    Location: ${project.city || 'UAE'}
+    Project: ${projectTitle}
+    Location: ${projectCity}
 
     Provide:
     1. A unified campaign theme.
@@ -286,31 +264,25 @@ export async function generateBulkReviveCampaignAction(leadIds: string[], projec
  * Generates a smart sequence for a specific campaign type.
  */
 export async function generateSmartSequenceAction(leadIds: string[], projectId: string, campaignType: string) {
-  const supabase = await createSupabaseServerClient();
-  
-  const { data: leads } = await supabase
-    .from('leads')
-    .select('*, screening_data')
-    .in('id', leadIds);
-
-  const { data: project } = await supabase
-    .from('projects')
-    .select('*')
-    .eq('id', projectId)
-    .single();
+  const leads = await prisma.lead.findMany({
+    where: { id: { in: leadIds } },
+  });
+  const project = await prisma.project.findUnique({ where: { id: projectId } });
 
   if (!leads || !project) throw new Error("Data not found");
 
   const leadContext = leads.map(l => 
-    `${l.name} (${l.screening_data?.enrichment?.job_title || 'Investor'})`
+    `${l.name} (${(l.utmJson as any)?.screening?.enrichment?.job_title || 'Investor'})`
   ).join(', ');
+  const projectTitle = project.title || (project.dataJson as any)?.headline || 'Project';
+  const projectCity = project.city || (project.dataJson as any)?.city || 'UAE';
 
   const prompt = `
     Generate a 3-step smart sequence for a real estate outreach campaign.
     Campaign Type: ${campaignType}
     Leads: ${leadContext}
-    Project: ${project.headline}
-    Location: ${project.city || 'UAE'}
+    Project: ${projectTitle}
+    Location: ${projectCity}
 
     The sequence should include:
     1. Step 1: Immediate Hook (WhatsApp/SMS style)
@@ -338,18 +310,17 @@ export async function generateSmartSequenceAction(leadIds: string[], projectId: 
  * Fetches AI chat conversation logs for a specific project from Firestore.
  */
 export async function getChatsAction(projectId: string) {
-  const db = (await import('@/server/firebase-admin')).getAdminDb();
-  // Assuming chats are stored by projectId (which might be siteId in backend.json)
-  const snapshot = await db
-    .collection('chats')
-    .where('projectId', '==', projectId)
-    .orderBy('createdAt', 'desc')
-    .get();
+  const chats = await prisma.chatSession.findMany({
+    where: { projectId },
+    orderBy: { createdAt: 'desc' },
+  });
 
-  return snapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data(),
-    createdAt: (doc.data().createdAt as any)?.toDate?.() || doc.data().createdAt
+  return chats.map((chat) => ({
+    id: chat.id,
+    projectId: chat.projectId,
+    humanTakeover: chat.humanTakeover,
+    conversation: chat.conversation || [],
+    createdAt: chat.createdAt,
   }));
 }
 
@@ -357,11 +328,9 @@ export async function getChatsAction(projectId: string) {
  * Toggles human takeover for a chat session.
  */
 export async function toggleHumanTakeoverAction(chatId: string, enabled: boolean) {
-  const db = (await import('@/server/firebase-admin')).getAdminDb();
-  const { FieldValue } = await import('firebase-admin/firestore');
-  await db.collection('chats').doc(chatId).update({
-    humanTakeover: enabled,
-    updatedAt: FieldValue.serverTimestamp()
+  await prisma.chatSession.update({
+    where: { id: chatId },
+    data: { humanTakeover: enabled },
   });
   return { success: true };
 }
@@ -370,13 +339,18 @@ export async function toggleHumanTakeoverAction(chatId: string, enabled: boolean
  * Connects the chat agent to Instagram DMs.
  */
 export async function connectInstagramDMAction(projectId: string, handle: string) {
-  const db = (await import('@/server/firebase-admin')).getAdminDb();
-  const { FieldValue } = await import('firebase-admin/firestore');
-  // In production, this would involve OAuth with Meta
-  await db.collection('projects').doc(projectId).update({
+  const project = await prisma.project.findUnique({ where: { id: projectId } });
+  if (!project) {
+    throw new Error('Project not found');
+  }
+  const nextData = {
+    ...(project.dataJson as any),
     instagramHandle: handle,
     dmConnected: true,
-    updatedAt: FieldValue.serverTimestamp()
+  };
+  await prisma.project.update({
+    where: { id: projectId },
+    data: { dataJson: nextData },
   });
   return { success: true, message: `Successfully connected @${handle} to AI Assistant.` };
 }
@@ -385,17 +359,20 @@ export async function connectInstagramDMAction(projectId: string, handle: string
  * Sends a message as a human agent in a chat session.
  */
 export async function sendHumanMessageAction(chatId: string, content: string) {
-  const db = (await import('@/server/firebase-admin')).getAdminDb();
-  const { FieldValue } = await import('firebase-admin/firestore');
-  
-  await db.collection('chats').doc(chatId).update({
-    conversation: FieldValue.arrayUnion({
-      role: 'agent',
-      content: content,
-      timestamp: new Date().toISOString(),
-      isHuman: true
-    }),
-    updatedAt: FieldValue.serverTimestamp()
+  const session = await prisma.chatSession.findUnique({ where: { id: chatId } });
+  if (!session) {
+    throw new Error('Chat not found');
+  }
+  const conversation = Array.isArray(session.conversation) ? session.conversation : [];
+  conversation.push({
+    role: 'agent',
+    content,
+    timestamp: new Date().toISOString(),
+    isHuman: true,
+  });
+  await prisma.chatSession.update({
+    where: { id: chatId },
+    data: { conversation },
   });
   
   return { success: true };
@@ -406,9 +383,8 @@ export async function sendHumanMessageAction(chatId: string, content: string) {
  */
 export async function getBrandKitAction() {
   const tenantId = await resolveTenantForExport();
-  const db = getAdminDb();
-  const doc = await db.collection('users').doc(tenantId).get();
-  return doc.exists ? doc.data()?.brandKit || null : null;
+  const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
+  return tenant?.brandKit || null;
 }
 
 /**
@@ -416,12 +392,10 @@ export async function getBrandKitAction() {
  */
 export async function updateBrandKitAction(brandKit: { logo?: string, primaryColor?: string, quickReplies?: string[] }) {
   const tenantId = await resolveTenantForExport();
-  const db = getAdminDb();
-  
-  await db.collection('users').doc(tenantId).set({
-    brandKit: brandKit,
-    updatedAt: FieldValue.serverTimestamp()
-  }, { merge: true });
+  await prisma.tenant.update({
+    where: { id: tenantId },
+    data: { brandKit },
+  });
   
   return { success: true };
 }
@@ -430,16 +404,8 @@ export async function updateBrandKitAction(brandKit: { logo?: string, primaryCol
  * Fetches the branding kit for a specific project's owner.
  */
 export async function getProjectBrandingAction(projectId: string) {
-  const db = getAdminDb();
-  
-  // 1. Get project to find owner
-  const projectDoc = await db.collection('projects').doc(projectId).get();
-  if (!projectDoc.exists) return null;
-  
-  const ownerId = projectDoc.data()?.ownerId;
-  if (!ownerId) return null;
-
-  // 2. Get owner's brand kit
-  const userDoc = await db.collection('users').doc(ownerId).get();
-  return userDoc.exists ? userDoc.data()?.brandKit || null : null;
+  const project = await prisma.project.findUnique({ where: { id: projectId } });
+  if (!project?.tenantId) return null;
+  const tenant = await prisma.tenant.findUnique({ where: { id: project.tenantId } });
+  return tenant?.brandKit || null;
 }

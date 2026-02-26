@@ -204,6 +204,7 @@ export async function POST(req: NextRequest) {
         const lead = await prisma.lead.create({
           data: {
             tenantId,
+            siteId,
             projectId: payload.projectId || null,
             name: payload.name || null,
             email: payload.email || null,
