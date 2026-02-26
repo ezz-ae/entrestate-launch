@@ -1,6 +1,6 @@
 import React from 'react';
 import './mobile-styles.css';
-import { InstagramConversation, Message } from './ChatAgentDashboard'; // Import updated interfaces
+import { InstagramConversation, Message } from '@/components/ChatAgentDashboard'; // Import updated interfaces
 
 interface ConversationViewScreenProps {
   chat: InstagramConversation | null; // Use new interface

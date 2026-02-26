@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import StickyFooter from './StickyFooter';
 import ForgivingInput from './ForgivingInput';
-import { useAuth } from './AuthContext';
+import { useAuth } from '@/lib/AuthContext';
 
 interface SettingsScreenProps {
   onBack: () => void;

@@ -6,8 +6,7 @@ export type BillingSku =
   | 'addon_ai_conversations_1000'
   | 'addon_leads_500'
   | 'addon_domain_1'
-  | 'addon_sms_bundle'
-  | 'addon_chat_agent'; // AED 45/mo
+  | 'addon_sms_bundle';
 
 export type BillingSummary = {
   subscription: {

@@ -27,17 +27,16 @@ interface SeoSettingsDialogProps {
 }
 
 export function SeoSettingsDialog({ open, onOpenChange, page, onSave }: SeoSettingsDialogProps) {
-  const [title, setTitle] = useState(page.seo.title);
-  const [description, setDescription] = useState(page.seo.description);
-  const [keywords, setKeywords] = useState<string[]>(page.seo.keywords || []);
-  const [currentKeyword, setCurrentKeyword] = useState("");
+  const [title, setTitle] = useState(page.seo?.title);
+  const [description, setDescription] = useState(page.seo?.description);
+  const [keywords, setKeywords] = useState<string[]>(page.seo?.keywords || []);
+  const [currentKeyword, setCurrentKeyword] = useState('');
 
-  // Reset state when page changes
   useEffect(() => {
-    setTitle(page.seo.title);
-    setDescription(page.seo.description);
-    setKeywords(page.seo.keywords || []);
-  }, [page, open]);
+    setTitle(page.seo?.title);
+    setDescription(page.seo?.description);
+    setKeywords(page.seo?.keywords || []);
+  }, [page]);
 
   const handleAddKeyword = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && currentKeyword.trim()) {
@@ -91,23 +90,22 @@ export function SeoSettingsDialog({ open, onOpenChange, page, onSave }: SeoSetti
                             onChange={(e) => setTitle(e.target.value)}
                             placeholder="e.g. Luxury Apartments in Dubai Marina | Emaar"
                             />
-                            <p className="text-[10px] text-muted-foreground text-right">
-                            Recommended: 50-60 characters ({title.length})
-                            </p>
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="description">Meta Description</Label>
-                            <Textarea
+                             Recommended: 50-60 characters ({title?.length})
+                        
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="description">Meta Description</Label>
+                        <Textarea 
                             id="description"
-                            value={description}
+                            value={description} 
                             onChange={(e) => setDescription(e.target.value)}
-                            placeholder="e.g. Discover exclusive waterfront living at... Book your viewing today."
-                            className="h-24 resize-none"
-                            />
-                            <p className="text-[10px] text-muted-foreground text-right">
-                            Recommended: 150-160 characters ({description.length})
-                            </p>
-                        </div>
+                            className="bg-zinc-800 border-zinc-700 min-h-[100px]"
+                            placeholder="Enter a compelling summary for search engines."
+                        />
+                        <p className="text-xs text-zinc-500">
+                            Recommended: 150-160 characters ({description?.length})
+                        </p>
+                    </div>
                         <div className="grid gap-2">
                             <Label htmlFor="keywords">Keywords</Label>
                             <div className="flex flex-wrap gap-2 border rounded-md p-2 bg-background min-h-[40px]">
@@ -153,7 +151,7 @@ export function SeoSettingsDialog({ open, onOpenChange, page, onSave }: SeoSetti
                 </TabsContent>
 
                 <TabsContent value="ads" className="h-full">
-                    <GoogleAdsManager pageTitle={title} pageDescription={description} />
+                    <GoogleAdsManager pageTitle={title || ''} pageDescription={description || ''} />
                 </TabsContent>
             </Tabs>
         </div>

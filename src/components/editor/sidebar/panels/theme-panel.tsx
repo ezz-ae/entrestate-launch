@@ -1,8 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useTheme as useNextTheme } from "next-themes";
-import { useTheme } from '@/components/theme-provider';
+import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Palette, Sun, Moon } from 'lucide-react';
 
@@ -20,8 +19,8 @@ const colorPresets = [
 ];
 
 export function ThemePanel({ onClose }: ThemePanelProps) {
-  const { theme, setTheme } = useNextTheme();
-  const { brandColor, setBrandColor } = useTheme();
+  const { theme, setTheme } = useTheme();
+  const [brandColor, setBrandColor] = React.useState(colorPresets[0].color);
 
   return (
     <div className="w-full h-full flex flex-col">

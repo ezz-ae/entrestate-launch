@@ -1,4 +1,6 @@
 import React from 'react';
+import './mobile-styles.css';
+import Image from 'next/image';
 
 interface Template {
   id: number;
@@ -20,8 +22,8 @@ const PreviewModal: React.FC<PreviewModalProps> = ({ template, onClose, onSelect
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={e => e.stopPropagation()}>
         <div style={{ height: '300px', backgroundColor: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-           {template.image ? 
-             <img src={template.image} alt={template.title} style={{width:'100%', height:'100%', objectFit:'cover'}} /> 
+           {template.image ?
+             <Image src={template.image} alt={template.title} layout="fill" objectFit="cover" />
              : <span style={{fontSize: '40px'}}>📷</span>
            }
            <button 

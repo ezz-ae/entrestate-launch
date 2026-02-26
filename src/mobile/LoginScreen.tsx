@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import ForgivingInput from './ForgivingInput';
 import StickyFooter from './StickyFooter';
-import { useAuth, User } from './AuthContext';
+import { useAuth, User } from '@/lib/AuthContext';
 
 const LoginScreen: React.FC = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });

@@ -1,32 +1,56 @@
 'use server';
 
-import { getAdminDb } from '@/server/firebase-admin';
-import { FieldValue } from 'firebase-admin/firestore';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { sendLeadEmail } from '@/lib/notifications/email';
+import { sendLeadNotification } from '@/lib/notifications';
+import { screenLeadData, enrichLeadWithApollo } from './leads';
 
 export async function deleteProject(id: string) {
-  const db = getAdminDb();
-  await db.collection('sites').doc(id).delete();
+  const supabase = await createSupabaseServerClient();
+
+  // Auth check bypassed for local testing as requested
+  // const { data: { user } } = await supabase.auth.getUser();
+  // if (!user) {
+  //   throw new Error('Unauthorized');
+  // }
+
+  const { error } = await supabase
+    .from('projects')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    throw new Error('Failed to delete project');
+  }
+
   revalidatePath('/dashboard');
   redirect('/dashboard');
 }
 
 export async function updateProject(id: string, data: any) {
-  const db = getAdminDb();
-  await db.collection('sites').doc(id).set(data, { merge: true });
+  const supabase = await createSupabaseServerClient();
+  
+  const { error } = await supabase
+    .from('projects')
+    .update(data)
+    .eq('id', id);
+
+  if (error) throw new Error('Failed to update project');
+  
   revalidatePath(`/projects/${id}`);
   revalidatePath('/dashboard');
 }
 
 export async function publishProject(id: string) {
-  const db = getAdminDb();
-  await db.collection('sites').doc(id).set({
-    published: true,
-    publishedAt: FieldValue.serverTimestamp(),
-  }, { merge: true });
+  const supabase = await createSupabaseServerClient();
+  
+  // Optional: Update status to 'published' if you have a status column
+  // await supabase.from('projects').update({ status: 'published' }).eq('id', id);
 
+  // In a real app, you might trigger a Vercel deployment or similar here.
+  // For now, we just return the path to the dynamic public page we created.
+  // We also return the custom domain format as requested.
   return { 
     urlPath: `/p/${id}`,
     customDomain: `https://${id.slice(0,8)}.site.entrestate.com`
@@ -34,37 +58,30 @@ export async function publishProject(id: string) {
 }
 
 export async function submitLead(projectId: string, formData: FormData) {
-  const db = getAdminDb();
+  const supabase = await createSupabaseServerClient();
   
   const name = formData.get('name') as string;
   const email = formData.get('email') as string;
   const phone = formData.get('phone') as string;
 
-  // Resolve tenant from site
-  const siteSnap = await db.collection('sites').doc(projectId).get();
-  const siteData = siteSnap.data();
-  // If site doesn't exist or has no tenant, fallback to 'public' or error
-  const tenantId = siteData?.tenantId || siteData?.ownerUid || 'public'; 
+  // Trigger Smart Screening
+  const screeningResults = await screenLeadData(email, phone);
+  const enrichment = await enrichLeadWithApollo(email);
 
-  await db.collection('tenants').doc(tenantId).collection('leads').add({
-    siteId: projectId,
+  const { error } = await supabase.from('leads').insert({
+    project_id: projectId,
     name,
     email,
     phone,
     status: 'new',
     source: 'landing_page',
-    createdAt: FieldValue.serverTimestamp(),
+    screening_data: { ...screeningResults, enrichment }
   });
 
-  // Send email notification to the project owner (or notification email)
-  const notificationEmail = siteData?.notificationEmail || process.env.NOTIFY_EMAIL_TO;
-  if (notificationEmail) {
-    await sendLeadEmail(
-        notificationEmail,
-        `New Lead: ${siteData?.title || 'Landing Page'}`,
-        `<div>Name: ${name}<br>Email: ${email}<br>Phone: ${phone}</div>`
-    );
-  }
+  if (error) throw new Error('Failed to capture lead');
+
+  // Send email notification to the project owner
+  await sendLeadNotification(projectId, { name, email, phone });
 
   return { success: true };
 }

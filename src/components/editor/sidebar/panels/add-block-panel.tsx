@@ -57,9 +57,7 @@ export function AddBlockPanel({ page, onPageUpdate }: AddBlockPanelProps) {
       try {
         const result = await suggestNextBlocksAction({
           currentBlocks: page.blocks.map(b => b.type),
-          siteType: 'real estate property launch',
-          brand: page.title || 'Luxury Homes',
-          primaryColor: '#002F4B'
+          pageContext: `Site Type: real estate property launch, Brand: ${page.title || 'Luxury Homes'}`
         });
         setSuggestions(result);
       } catch (error) {

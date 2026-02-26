@@ -1,14 +1,14 @@
 import type { SitePage } from '@/lib/types';
 
-const templateTimestamp = () => ({
-  createdAt: '2024-01-01T00:00:00.000Z',
-  updatedAt: '2024-01-01T00:00:00.000Z',
+const baseTimestamp = () => ({
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
 });
 
-const id = (prefix: string, suffix: string) => `${prefix}-${suffix}`;
+const id = (prefix: string) => `${prefix}-${Math.random().toString(36).slice(2, 8)}`;
 
-const HERO_BLOCK = (title: string, subtitle: string, suffix = 'default') => ({
-  blockId: id('hero', suffix),
+const HERO_BLOCK = (title: string, subtitle: string) => ({
+  blockId: id('hero'),
   type: 'hero',
   order: 0,
   data: {
@@ -22,128 +22,98 @@ export const BLUEPRINT_TEMPLATES: Record<string, SitePage> = {
   portfolio: {
     id: '',
     title: 'Agent Portfolio',
+    slug: 'agent-portfolio',
     blocks: [
-      HERO_BLOCK('Your Dubai Real Estate Partner', 'Showcase experience, listings, and proof', 'portfolio'),
+      HERO_BLOCK('Your Dubai Real Estate Partner', 'Showcase experience, listings, and proof'),
       {
-        blockId: id('stats', 'portfolio'),
+        blockId: id('stats'),
         type: 'stats',
         order: 1,
         data: { headline: 'Trusted by investors globally.' },
       },
       {
-        blockId: id('listing', 'portfolio'),
+        blockId: id('listing'),
         type: 'listing-grid',
         order: 2,
         data: { headline: 'Featured Listings', subtext: 'Curated opportunities.' },
       },
       {
-        blockId: id('cta', 'portfolio'),
+        blockId: id('cta'),
         type: 'cta-form',
         order: 3,
         data: { headline: 'Book a Consultation' },
-      },
-      {
-        blockId: id('chat', 'portfolio'),
-        type: 'chat-widget',
-        order: 4,
-        data: { 
-          welcomeMessage: 'Hi! I am your portfolio assistant. How can I help?',
-          agentName: 'Portfolio Expert',
-          companyName: 'Entrestate',
-          collectLeads: true
-        },
       },
     ],
     canonicalListings: [],
     brochureUrl: '',
     seo: { title: 'Agent Portfolio', description: 'Personal agent site', keywords: [] },
-    ...templateTimestamp(),
+    ...baseTimestamp(),
   },
   launch: {
     id: '',
     title: 'Launch Blueprint',
+    slug: 'launch-blueprint',
     blocks: [
-      HERO_BLOCK('Project Launch', 'Countdown + offer summary', 'launch'),
+      HERO_BLOCK('Project Launch', 'Countdown + offer summary'),
       {
-        blockId: id('timeline', 'launch'),
+        blockId: id('timeline'),
         type: 'launch',
         order: 1,
         data: { headline: 'Launch Timeline' },
       },
       {
-        blockId: id('payment', 'launch'),
+        blockId: id('payment'),
         type: 'payment-plan',
         order: 2,
         data: { headline: 'Payment Plan' },
       },
       {
-        blockId: id('floor', 'launch'),
+        blockId: id('floor'),
         type: 'floor-plan',
         order: 3,
         data: { headline: 'Floor Plans' },
       },
       {
-        blockId: id('cta', 'launch'),
+        blockId: id('cta'),
         type: 'cta-form',
         order: 4,
         data: { headline: 'Download Brochure' },
-      },
-      {
-        blockId: id('chat', 'launch'),
-        type: 'chat-widget',
-        order: 5,
-        data: { 
-          welcomeMessage: 'Ask me anything about this new launch, payment plans, or availability.',
-          agentName: 'Launch Specialist',
-          companyName: 'Entrestate',
-          collectLeads: true
-        },
       },
     ],
     canonicalListings: [],
     brochureUrl: '',
     seo: { title: 'Project Launch', description: 'Launch funnel', keywords: [] },
-    ...templateTimestamp(),
+    ...baseTimestamp(),
   },
   advisory: {
     id: '',
     title: 'Advisory Blueprint',
+    slug: 'advisory-blueprint',
     blocks: [
-      HERO_BLOCK('Private Advisory', 'Services, proof, booking CTA', 'advisory'),
+      HERO_BLOCK('Private Advisory', 'Services, proof, booking CTA'),
       {
-        blockId: id('services', 'advisory'),
+        blockId: id('services'),
         type: 'split-content',
         order: 1,
         data: { headline: 'Advisory Services' },
       },
       {
-        blockId: id('proof', 'advisory'),
+        blockId: id('proof'),
         type: 'testimonial',
         order: 2,
         data: { headline: 'Client Testimonials' },
       },
       {
-        blockId: id('newsletter', 'advisory'),
+        blockId: id('newsletter'),
         type: 'newsletter',
         order: 3,
         data: { headline: 'Join Investor Briefing' },
-      },
-      {
-        blockId: id('chat', 'advisory'),
-        type: 'chat-widget',
-        order: 4,
-        data: { 
-          welcomeMessage: 'Hi! How can I assist with your investment strategy today?',
-          agentName: 'Investment Advisor',
-          companyName: 'Entrestate',
-          collectLeads: true
-        },
       },
     ],
     canonicalListings: [],
     brochureUrl: '',
     seo: { title: 'Advisory Site', description: 'Private advisory landing page', keywords: [] },
-    ...templateTimestamp(),
+    ...baseTimestamp(),
   },
 };
 
@@ -153,11 +123,11 @@ export function getBlueprintTemplate(id: string): SitePage | null {
   return {
     ...template,
     id: '',
-    createdAt: '2024-01-01T00:00:00.000Z',
-    updatedAt: '2024-01-01T00:00:00.000Z',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
     blocks: template.blocks.map((block, index) => ({
       ...block,
-      blockId: `${block.type}-template-${index}`,
+      blockId: `${block.type}-${Date.now()}-${index}`,
       order: index,
     })),
   };

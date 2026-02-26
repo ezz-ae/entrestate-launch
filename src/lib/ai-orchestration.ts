@@ -32,6 +32,7 @@ export const generateSiteFromAgentResponse = (agentData: any): SiteTemplate => {
         pages: [{
             id: 'home',
             title: 'Home',
+            slug: 'home',
             blocks: blocks,
             canonicalListings: [],
             brochureUrl: "",

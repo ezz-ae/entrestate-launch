@@ -6,22 +6,24 @@ import { EntrestateLogo } from '@/components/icons';
 import { ArrowUpRight, Instagram, Linkedin, Mail, MapPin, ShieldCheck, Users, Zap } from 'lucide-react';
 
 const PLATFORM_LINKS = [
-  { href: '/instagram-assistant', label: 'Instagram Assistant' },
-  { href: '/google-ads', label: 'Google Ads' },
-  { href: '/audience-network', label: 'Buyer Audience' },
-  { href: '/discover', label: 'Market Feed' },
+  { href: '/discover', label: 'Market Inventory' },
+  { href: '/site-builder-landing', label: 'Site Builder' },
+  { href: '/google-ads-public', label: 'Google Ads' },
+  { href: '/instagram-assistant-public', label: 'Instagram Assistant' },
+  { href: '/lead-pipeline-overview', label: 'Lead Pipeline' },
 ];
 
 const COMPANY_LINKS = [
   { href: '/start', label: 'Get Started' },
   { href: '/dashboard', label: 'Dashboard' },
-  { href: '/blog', label: 'Insights' },
+  { href: '/system', label: 'Smart System' },
+  { href: '/articles', label: 'Articles' },
 ];
 
 const SUPPORT_LINKS = [
   { href: '/support', label: 'Support Center' },
   { href: '/docs', label: 'Guides' },
-  { href: '/status', label: 'System Status' },
+  { href: '/market-updates', label: 'Market Updates' },
 ];
 
 const TRUST_ITEMS = [

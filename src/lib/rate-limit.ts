@@ -10,11 +10,8 @@ const buckets = new Map<string, Bucket>();
 const limiterCache = new Map<string, Ratelimit>();
 
 const RATE_LIMIT_DISABLED = process.env.RATE_LIMIT_DISABLED === 'true';
-
-// Sanitize environment variables to remove trailing comments (common in .env.local)
-const sanitizeEnv = (val?: string) => val?.split('#')[0].trim().replace(/^["']|["']$/g, '');
-const UPSTASH_REDIS_REST_URL = sanitizeEnv(process.env.UPSTASH_REDIS_REST_URL);
-const UPSTASH_REDIS_REST_TOKEN = sanitizeEnv(process.env.UPSTASH_REDIS_REST_TOKEN);
+const UPSTASH_REDIS_REST_URL = process.env.UPSTASH_REDIS_REST_URL;
+const UPSTASH_REDIS_REST_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
 
 const redis =
   UPSTASH_REDIS_REST_URL && UPSTASH_REDIS_REST_TOKEN

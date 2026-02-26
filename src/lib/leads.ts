@@ -22,15 +22,8 @@ export interface LeadPayload {
 }
 
 export async function captureLead(payload: LeadPayload) {
-  const { siteId, metadata, ...rest } = payload;
-
   const body = {
-    ...rest,
-    siteId,
-    metadata: {
-      ...(metadata || {}),
-      siteId: siteId || metadata?.siteId,
-    },
+    ...payload,
     honeypot: payload.honeypot || '',
   };
   const res = await fetch('/api/leads', {

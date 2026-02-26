@@ -114,9 +114,8 @@ const getRefinerMeta = (site: SitePage): RefinerMeta => {
   };
 };
 
-const parseRefinerDate = (value: SitePage['lastRefinedAt']): Date | null => {
+const parseRefinerDate = (value: string | undefined): Date | null => {
   if (!value) return null;
-  if (value instanceof Date) return value;
   if (typeof value === 'string') {
     const parsed = new Date(value);
     return Number.isNaN(parsed.getTime()) ? null : parsed;

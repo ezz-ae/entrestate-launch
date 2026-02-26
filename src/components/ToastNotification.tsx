@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import './mobile-styles.css';
 
 interface ToastNotificationProps {
   message: string;
