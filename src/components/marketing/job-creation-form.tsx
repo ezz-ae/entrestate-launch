@@ -2,10 +2,8 @@
 
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { useJobPolling } from '@/hooks/use-job-polling';
-import { useFirebaseAuth } from '@/components/firebase-auth-provider';
+import { useAuth } from '@/lib/AuthContext';
 import { FIREBASE_AUTH_DISABLED } from '@/lib/firebase/client';
 
 type JobType = 'WRITE_COPY' | 'DESIGN_IMAGE' | 'CREATE_CAMPAIGN';
@@ -24,11 +22,6 @@ export interface JobCreationFormProps {
   isEmbedded?: boolean;
 }
 
-const jobSchema = z.object({
-  type: z.enum(['WRITE_COPY', 'DESIGN_IMAGE', 'CREATE_CAMPAIGN']),
-  prompt: z.string().min(10, 'Prompt must be at least 10 characters long'),
-});
-
 export function JobCreationForm({ 
   defaultType = 'WRITE_COPY', 
   initialPrompt = '', 
@@ -38,13 +31,12 @@ export function JobCreationForm({
   isEmbedded = false
 }: JobCreationFormProps) {
   const [jobId, setJobId] = useState<string | null>(null);
-  const form = useForm({
-    resolver: zodResolver(jobSchema),
-  });
-  const { user } = useFirebaseAuth();
+  const { user } = useAuth();
   const loading = false;
   
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = form;
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
+    defaultValues: { type: defaultType, prompt: initialPrompt }
+  });
 
   // 1. Poll for status once we have a jobId
   // This assumes your polling API is at /api/jobs/[id]
