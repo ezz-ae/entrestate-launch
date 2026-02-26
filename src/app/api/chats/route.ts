@@ -1,9 +1,9 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminDb } from '@/server/firebase-admin';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { ALL_ROLES } from '@/lib/server/roles';
+import { listInstagramConversations } from '@/server/repositories';
 
 export async function GET(req: NextRequest) {
   try {
@@ -11,15 +11,13 @@ export async function GET(req: NextRequest) {
     // In a real scenario, you might want to filter by agentId associated with the user's tenant.
     await requireRole(req, ALL_ROLES); 
 
-    const db = getAdminDb();
-    const chatsRef = db.collection('instagram_conversations');
-    
-    // Order by most recently updated conversations
-    const snapshot = await chatsRef.orderBy('updatedAt', 'desc').limit(20).get();
-
-    const conversations = snapshot.docs.map((doc: any) => ({
-      id: doc.id,
-      ...doc.data(),
+    const rows = await listInstagramConversations(20);
+    const conversations = rows.map((row) => ({
+      id: row.id,
+      senderId: row.senderId,
+      messages: row.messages,
+      paused: row.paused,
+      updatedAt: row.updatedAt.toISOString(),
     }));
 
     return NextResponse.json(conversations);

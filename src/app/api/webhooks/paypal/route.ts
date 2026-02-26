@@ -12,6 +12,9 @@ import {
   logBillingEvent,
   resolveBillingSku,
 } from '@/lib/server/billing';
+import { parsePaypalWebhook } from '@/lib/server/commerce/payments/paypal';
+import { finalizePaidOrder } from '@/lib/server/commerce/finalize';
+import { prisma } from '@/server/db';
 
 const PAYPAL_WEBHOOK_ID = process.env.PAYPAL_WEBHOOK_ID;
 
@@ -112,6 +115,35 @@ export async function POST(req: NextRequest) {
   if (!verifyResponse.ok || verifyData?.verification_status !== 'SUCCESS') {
     logger.logError('PayPal signature invalid', 400);
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
+  }
+
+  // Deployment commerce webhook path (Neon)
+  const payment = parsePaypalWebhook(event);
+  if (payment.orderId && payment.providerRef) {
+    const existingOrder = await prisma.order.findUnique({ where: { id: payment.orderId } });
+    if (existingOrder) {
+      try {
+        const finalized = await finalizePaidOrder({
+          provider: payment.provider,
+          providerRef: payment.providerRef,
+          orderId: payment.orderId,
+          isPaid: payment.isPaid,
+          status: payment.status,
+          amountMinor: payment.amountMinor,
+          currency: payment.currency,
+          raw: payment.raw,
+        });
+        logger.logSuccess(200, {
+          outcome: 'deployment_order_processed',
+          orderId: payment.orderId,
+          duplicate: (finalized as any)?.duplicate ?? false,
+        });
+        return NextResponse.json({ received: true, deploymentOrder: true });
+      } catch (error) {
+        logger.logError(error, 500, { outcome: 'deployment_order_failed' });
+        return NextResponse.json({ error: 'Failed to process deployment payment' }, { status: 500 });
+      }
+    }
   }
 
   const tenantId = resolveTenantId(event);

@@ -3,12 +3,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import './mobile-styles.css';
-import { getDbSafe } from '@/lib/firebase/client';
-import { collection, query, orderBy, onSnapshot, DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
 import ForgivingInput from './ForgivingInput';
-import { supabase } from '@/lib/supabase/client';
-import { useAuth } from '@/lib/AuthContext';
-import * as tus from 'tus-js-client';
+import { useAuth } from '@/hooks/useAuth';
 
 export interface Message {
   role: 'user' | 'assistant';
@@ -26,7 +22,7 @@ export interface InstagramConversation {
 
 interface ChatAgentDashboardProps {
   onBack: () => void;
-  onUpdateKnowledge: (data: any) => Promise<{ success: boolean; errors?: Record<string, string[]> }>;
+  onUpdateKnowledge?: (data: any) => Promise<{ success: boolean; errors?: Record<string, string[]> }>;
   onViewChat: (chat: InstagramConversation) => void;
   onShowQR: () => void;
   onTestSimulator: () => void;
@@ -44,7 +40,6 @@ const ChatAgentDashboard: React.FC<ChatAgentDashboardProps> = ({
   const { user } = useAuth();
   const searchParams = useSearchParams();
   const [agentState, setAgentState] = useState<'draft' | 'configured' | 'active' | 'paused' | 'archived'>('draft');
-  const [pausedChats, setPausedChats] = useState<string[]>([]); // Changed to string for senderId
   const [conversations, setConversations] = useState<InstagramConversation[]>([]);
   const [dmsHandled, setDmsHandled] = useState(0);
   const [meetingsBooked, setMeetingsBooked] = useState(0);
@@ -84,120 +79,108 @@ const ChatAgentDashboard: React.FC<ChatAgentDashboardProps> = ({
   const [formErrors, setFormErrors] = useState<Record<string, string[]>>({});
 
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.uid) return;
 
     const updateLocalState = (data: any) => {
       if (!data) return;
       setAgentName(data.name || 'Sarah');
-      setCompanyName(data.company_name || 'Elite Properties');
+      setCompanyName(data.companyName || data.company_name || 'Elite Properties');
       setCommunicationStyle(data.style || 'professional');
       setCompanyDetails(data.profile?.details || '');
-      setExclusiveListing(data.listings?.[0] || '');
+      setExclusiveListing(Array.isArray(data.listings) ? data.listings[0] : '');
       setContactDetails(data.contact?.info || '');
-      setTextData(data.system_prompt || '');
-      setExistingFileUrls(data.file_urls || []);
+      setTextData(data.systemPrompt || data.system_prompt || '');
+      setExistingFileUrls(data.fileUrls || data.file_urls || []);
       setAgentState(data.state || 'draft');
     };
 
     const fetchAgentData = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        supabase.realtime.setAuth(session.access_token);
-      }
-
-      const { data, error } = await supabase
-        .from('chat_agents')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
-      if (error && error.code !== 'PGRST116') {
+      try {
+        const response = await fetch('/api/chat-agent/profile');
+        const payload = await response.json();
+        if (!response.ok || !payload?.ok) {
+          console.error('Error fetching agent data:', payload?.error || response.statusText);
+          return;
+        }
+        if (payload?.data?.agent) {
+          updateLocalState(payload.data.agent);
+        }
+        if (Array.isArray(payload?.data?.versions)) {
+          setVersions(payload.data.versions);
+        }
+      } catch (error) {
         console.error('Error fetching agent data:', error);
-        return;
       }
-
-      if (data) {
-        updateLocalState(data);
-      }
-
-      // Fetch versions
-      const { data: versionData } = await supabase
-        .from('agent_versions')
-        .select('*')
-        .eq('agent_id', data?.id)
-        .order('version', { ascending: false });
-      if (versionData) setVersions(versionData);
     };
 
     fetchAgentData();
-
-    // Subscribe to real-time changes using Broadcast (via DB Trigger)
-    // This is more scalable than postgres_changes for high-traffic apps
-    const channel = supabase
-      .channel(`agent:${user.id}`, { config: { private: true } })
-      .on(
-        'broadcast',
-        { event: 'INSERT' },
-        ({ payload }) => {
-          updateLocalState(payload);
-        }
-      )
-      .on(
-        'broadcast',
-        { event: 'UPDATE' },
-        ({ payload }) => {
-          updateLocalState(payload);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user?.id]);
+    const interval = setInterval(fetchAgentData, 15000);
+    return () => clearInterval(interval);
+  }, [user?.uid]);
 
   useEffect(() => {
-    const firestore = getDbSafe();
-    if (!firestore) {
-      console.error("Firestore DB is not initialized.");
-      return;
-    }
+    let mounted = true;
+    const fetchConversations = async () => {
+      try {
+        const response = await fetch('/api/chat-agent/conversations?limit=50');
+        const payload = await response.json();
+        if (!mounted) return;
+        if (!response.ok || !payload?.ok) {
+          console.error('Failed to load conversations:', payload?.error || response.statusText);
+          return;
+        }
+        const fetchedConversations: InstagramConversation[] = (payload.data?.items || []).map((item: any) => ({
+          id: item.id,
+          senderId: item.senderId,
+          updatedAt: new Date(item.updatedAt),
+          messages: Array.isArray(item.messages)
+            ? item.messages.map((msg: any) => ({
+                role: msg.role,
+                text: msg.text,
+                timestamp: new Date(msg.timestamp),
+              }))
+            : [],
+        }));
+        setConversations(fetchedConversations);
 
-    const q = query(collection(firestore, 'instagram_conversations'), orderBy('updatedAt', 'desc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const fetchedConversations: InstagramConversation[] = snapshot.docs.map((doc: QueryDocumentSnapshot<DocumentData>) => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          senderId: data.senderId,
-          updatedAt: data.updatedAt.toDate(), // Convert Firestore Timestamp to Date
-          messages: data.messages.map((msg: any) => ({
-            role: msg.role,
-            text: msg.text,
-            timestamp: msg.timestamp.toDate(), // Convert Firestore Timestamp to Date
-          })),
-        };
-      });
-      setConversations(fetchedConversations);
+        let totalDMs = 0;
+        fetchedConversations.forEach((conv) => {
+          totalDMs += conv.messages.length;
+        });
+        setDmsHandled(totalDMs);
+        setMeetingsBooked(Math.floor(totalDMs / 10));
+      } catch (error) {
+        console.error('Failed to load conversations:', error);
+      }
+    };
 
-      // Update stats (simple count for now)
-      let totalDMs = 0;
-      fetchedConversations.forEach(conv => {
-        totalDMs += conv.messages.length;
-      });
-      setDmsHandled(totalDMs);
-      // Placeholder for meetings booked - needs real logic
-      setMeetingsBooked(Math.floor(totalDMs / 10)); // Example: 1 meeting per 10 DMs
-    });
-
-    return () => unsubscribe();
+    fetchConversations();
+    const interval = setInterval(fetchConversations, 15000);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
   }, []);
 
-  const toggleTakeover = (senderId: string) => { // Changed to senderId
-    if (pausedChats.includes(senderId)) {
-      setPausedChats(pausedChats.filter(id => id !== senderId));
-    } else {
-      setPausedChats([...pausedChats, senderId]);
+  const toggleTakeover = async (senderId: string, shouldPause: boolean) => {
+    try {
+      const response = await fetch(`/api/chat-agent/${shouldPause ? 'pause' : 'unpause'}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ senderId }),
+      });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        console.error('Failed to toggle takeover:', payload?.error || response.statusText);
+        return;
+      }
+      setConversations((prev) =>
+        prev.map((conv) =>
+          conv.senderId === senderId ? { ...conv, paused: shouldPause } : conv
+        )
+      );
+    } catch (error) {
+      console.error('Failed to toggle takeover:', error);
     }
   };
 
@@ -212,46 +195,25 @@ const ChatAgentDashboard: React.FC<ChatAgentDashboardProps> = ({
     try {
       const uploadedUrls: string[] = [];
       
-      // Multi-part Resumable Upload using TUS
       let completedFiles = 0;
       for (const file of files) {
-        const fileName = `${Date.now()}-${file.name}`;
-        const filePath = `${user?.id}/${fileName}`;
-        
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        await new Promise((resolve, reject) => {
-          const upload = new tus.Upload(file, {
-            endpoint: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/upload/resumable`,
-            retryDelays: [0, 3000, 5000, 10000, 20000],
-            headers: {
-              authorization: `Bearer ${session?.access_token}`,
-              'x-upsert': 'true',
-            },
-            metadata: {
-              bucketName: 'agent-knowledge',
-              objectName: filePath,
-              contentType: file.type,
-            },
-            chunkSize: 6 * 1024 * 1024, // 6MB chunks
-            onError: (error) => reject(error),
-            onProgress: (bytesUploaded, bytesTotal) => {
-              const fileProgress = (bytesUploaded / bytesTotal) * 100;
-              const totalProgress = ((completedFiles * 100) + fileProgress) / files.length;
-              setUploadProgress(Math.round(totalProgress));
-            },
-            onSuccess: () => {
-              const { data: { publicUrl } } = supabase.storage.from('agent-knowledge').getPublicUrl(filePath);
-              uploadedUrls.push(publicUrl);
-              completedFiles++;
-              resolve(null);
-            },
-          });
-          upload.start();
+        const formData = new FormData();
+        formData.append('file', file);
+        const response = await fetch('/api/chat-agent/upload', {
+          method: 'POST',
+          body: formData,
         });
+        const payload = await response.json();
+        if (!response.ok || !payload?.ok) {
+          throw new Error(payload?.error?.message || 'Upload failed');
+        }
+        uploadedUrls.push(payload.data.url);
+        completedFiles += 1;
+        const totalProgress = (completedFiles / files.length) * 100;
+        setUploadProgress(Math.round(totalProgress));
       }
 
-      const result = await onUpdateKnowledge({
+      const updatePayload = {
         agentName,
         companyName,
         communicationStyle,
@@ -260,8 +222,23 @@ const ChatAgentDashboard: React.FC<ChatAgentDashboardProps> = ({
         contactDetails,
         textData,
         state: agentState === 'paused' ? 'paused' : 'active',
-        fileUrls: [...existingFileUrls, ...uploadedUrls]
-      });
+        fileUrls: [...existingFileUrls, ...uploadedUrls],
+      };
+
+      const result = onUpdateKnowledge
+        ? await onUpdateKnowledge(updatePayload)
+        : await (async () => {
+            const response = await fetch('/api/chat-agent/profile', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(updatePayload),
+            });
+            const payload = await response.json();
+            if (!response.ok || !payload?.ok) {
+              return { success: false, errors: payload?.error?.details };
+            }
+            return { success: true };
+          })();
 
       if (result.success) {
         alert('Settings saved successfully!');
@@ -464,7 +441,9 @@ const ChatAgentDashboard: React.FC<ChatAgentDashboardProps> = ({
                   {versions.map((v) => (
                     <div key={v.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', padding: '8px', backgroundColor: 'var(--bg-primary)', borderRadius: '8px' }}>
                       <span style={{ fontWeight: '700' }}>v{v.version}</span>
-                      <span style={{ opacity: 0.6 }}>{new Date(v.created_at).toLocaleDateString()}</span>
+                      <span style={{ opacity: 0.6 }}>
+                        {new Date(v.createdAt || v.created_at).toLocaleDateString()}
+                      </span>
                     </div>
                   ))}
                 </div>

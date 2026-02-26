@@ -5,3 +5,5 @@ export * from './uploads';
 export * from './agents';
 export * from './orders';
 export * from './inventory';
+export * from './chat-conversations';
+export * from './chat-agents';

@@ -10,15 +10,26 @@ datasource db {
 model Tenant {
   id        String    @id @default(cuid())
   name      String
+  email     String?
+  phone     String?
   createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   users          User[]
+  userTenants    UserTenant[]
   projects       Project[]
   leads          Lead[]
   campaigns      Campaign[]
   uploads        Upload[]
   agentTraining  AgentTraining[]
   orders         Order[]
+  products       Product[]
+  payments       Payment[]
+  entitlements   Entitlement[]
+  deployments    Deployment[]
+  editRequests   EditRequest[]
+  jobs           Job[]
+  chatAgents     ChatAgent[]
 }
 
 model User {
@@ -30,6 +41,22 @@ model User {
   createdAt    DateTime @default(now())
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  memberships UserTenant[]
+  chatAgents ChatAgent[]
+  loginTokens LoginToken[]
+}
+
+model UserTenant {
+  id        String   @id @default(cuid())
+  userId    String
+  tenantId  String
+  role      String   @default("member")
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tenantId])
 }
 
 model Project {
@@ -63,6 +90,8 @@ model Lead {
   id        String   @id @default(cuid())
   tenantId  String
   projectId String?
+  orderId   String?
+  deploymentId String?
   name      String?
   phone     String?
   email     String?
@@ -74,6 +103,8 @@ model Lead {
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  order Order? @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  deployment Deployment? @relation(fields: [deploymentId], references: [id], onDelete: SetNull)
 }
 
 model Campaign {
@@ -130,11 +161,217 @@ model Order {
   id        String   @id @default(cuid())
   tenantId  String
   projectId String?
-  status    String?
+  productId String?
+  status    String   @default("pending_payment")
   amount    Decimal?
+  currency  String?  @default("AED")
+  customerEmail String?
+  customerPhone String?
+  metaJson  Json?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  payments Payment[]
+  entitlements Entitlement[]
+  deployment Deployment?
+  edits EditRequest[]
+  jobs Job[]
+  leads Lead[]
+}
+
+model Product {
+  id            String   @id @default(cuid())
+  tenantId      String?
+  slug          String   @unique
+  title         String
+  description   String
+  currency      String   @default("AED")
+  price         Int
+  fulfillmentSlaHours Int @default(24)
+  fulfillmentType String
+  includesJson  Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  tenant       Tenant? @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  orders       Order[]
+  deployments  Deployment[]
+  entitlements Entitlement[]
+}
+
+model Payment {
+  id          String   @id @default(cuid())
+  tenantId    String
+  orderId     String
+  provider    String
+  providerRef String
+  status      String
+  amount      Decimal?
+  currency    String?  @default("AED")
+  rawWebhook  Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  order  Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerRef])
+}
+
+model Entitlement {
+  id        String   @id @default(cuid())
+  tenantId  String
+  orderId   String?
+  productId String?
+  key       String
+  valueJson Json?
+  createdAt DateTime @default(now())
+
+  tenant  Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  order   Order? @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, key])
+}
+
+model Deployment {
+  id          String   @id @default(cuid())
+  tenantId    String
+  productId   String
+  orderId     String   @unique
+  status      String   @default("created")
+  previewUrl  String?
+  liveUrl     String?
+  templateRef String?
+  brandKitJson Json?
+  intakeJson  Json?
+  siteDocJson Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  edits EditRequest[]
+  jobs Job[]
+  leads Lead[]
+}
+
+model EditRequest {
+  id            String   @id @default(cuid())
+  tenantId      String
+  orderId       String
+  deploymentId  String
+  status        String   @default("drafting")
+  rawText       String?
+  compiledTasks Json?
+  inputsJson    Json?
+  submittedAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  deployment Deployment @relation(fields: [deploymentId], references: [id], onDelete: Cascade)
+}
+
+model Job {
+  id           String   @id @default(cuid())
+  tenantId     String
+  orderId      String?
+  deploymentId String?
+  type         String
+  status       String   @default("queued")
+  attempts     Int      @default(0)
+  maxAttempts  Int      @default(3)
+  payload      Json?
+  result       Json?
+  error        String?
+  lockedAt     DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  order Order? @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  deployment Deployment? @relation(fields: [deploymentId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+}
+
+model ChatAgent {
+  id           String   @id @default(cuid())
+  tenantId     String?
+  userId       String
+  name         String
+  companyName  String?
+  style        String?
+  systemPrompt String?
+  profile      Json?
+  listings     Json?
+  tools        Json?
+  contact      Json?
+  constraints  Json?
+  fileUrls     String[] @default([])
+  state        String   @default("draft")
+  version      Int      @default(1)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages AgentMessage[]
+  versions AgentVersion[]
+
+  @@unique([userId, name])
+}
+
+model AgentMessage {
+  id        String   @id @default(cuid())
+  agentId   String
+  role      String
+  content   Json
+  createdAt DateTime @default(now())
+
+  agent ChatAgent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@index([agentId, createdAt])
+}
+
+model AgentVersion {
+  id           String   @id @default(cuid())
+  agentId      String
+  version      Int
+  systemPrompt String?
+  profile      Json?
+  listings     Json?
+  constraints  Json?
+  createdAt    DateTime @default(now())
+
+  agent ChatAgent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+}
+
+model LoginToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model InstagramConversation {
+  id        String   @id @default(cuid())
+  senderId  String
+  messages  Json?
+  paused    Boolean  @default(false)
+  pausedAt  DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([senderId])
+  @@index([updatedAt])
 }

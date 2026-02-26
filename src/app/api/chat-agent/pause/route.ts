@@ -1,20 +1,8 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest } from 'next/server';
-import { FieldValue } from 'firebase-admin/firestore';
-import { getAdminDb } from '@/server/firebase-admin';
 import { createRequestId, errorResponse, jsonWithRequestId } from '@/lib/server/request-id';
-
-async function findConversationBySenderId(senderId: string) {
-  const db = getAdminDb();
-  const snapshot = await db
-    .collection('instagram_conversations')
-    .where('senderId', '==', senderId)
-    .orderBy('updatedAt', 'desc')
-    .limit(1)
-    .get();
-  return snapshot.docs[0] ?? null;
-}
+import { getInstagramConversationBySenderId, setInstagramConversationPaused } from '@/server/repositories';
 
 export async function POST(request: NextRequest) {
   const requestId = createRequestId();
@@ -30,8 +18,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const doc = await findConversationBySenderId(senderId);
-    if (!doc) {
+    const record = await getInstagramConversationBySenderId(senderId);
+    if (!record) {
       return jsonWithRequestId(
         requestId,
         { ok: false, error: { message: 'Conversation not found', scope }, requestId },
@@ -39,7 +27,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await doc.ref.update({ paused: true, pausedAt: FieldValue.serverTimestamp() });
+    await setInstagramConversationPaused(senderId, true);
 
     return jsonWithRequestId(requestId, {
       ok: true,

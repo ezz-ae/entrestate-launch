@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import './mobile-styles.css';
-import { getDbSafe } from '@/lib/firebase/client';
-import { collection, query, orderBy, onSnapshot, DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
 
 export interface Message {
   role: 'user' | 'assistant';
@@ -14,6 +12,7 @@ export interface InstagramConversation {
   senderId: string;
   updatedAt: Date;
   messages: Message[];
+  paused?: boolean;
   // Add other fields as needed, e.g., agentId, status
 }
 
@@ -35,53 +34,74 @@ const ChatAgentDashboard: React.FC<ChatAgentDashboardProps> = ({
   onNavigateTo,
 }) => {
   const [isActive, setIsActive] = useState(true);
-  const [pausedChats, setPausedChats] = useState<string[]>([]); // Changed to string for senderId
   const [conversations, setConversations] = useState<InstagramConversation[]>([]);
   const [dmsHandled, setDmsHandled] = useState(0);
   const [meetingsBooked, setMeetingsBooked] = useState(0);
 
   useEffect(() => {
-    const firestore = getDbSafe();
-    if (!firestore) {
-      console.error("Firestore DB is not initialized.");
-      return;
-    }
+    let mounted = true;
+    const fetchConversations = async () => {
+      try {
+        const response = await fetch('/api/chat-agent/conversations?limit=50');
+        const payload = await response.json();
+        if (!mounted) return;
+        if (!response.ok || !payload?.ok) {
+          console.error('Failed to load conversations:', payload?.error || response.statusText);
+          return;
+        }
+        const fetchedConversations: InstagramConversation[] = (payload.data?.items || []).map((item: any) => ({
+          id: item.id,
+          senderId: item.senderId,
+          updatedAt: new Date(item.updatedAt),
+          messages: Array.isArray(item.messages)
+            ? item.messages.map((msg: any) => ({
+                role: msg.role,
+                text: msg.text,
+                timestamp: new Date(msg.timestamp),
+              }))
+            : [],
+          paused: Boolean(item.paused),
+        }));
+        setConversations(fetchedConversations);
 
-    const q = query(collection(firestore, 'instagram_conversations'), orderBy('updatedAt', 'desc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const fetchedConversations: InstagramConversation[] = snapshot.docs.map((doc: QueryDocumentSnapshot<DocumentData>) => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          senderId: data.senderId,
-          updatedAt: data.updatedAt.toDate(), // Convert Firestore Timestamp to Date
-          messages: data.messages.map((msg: any) => ({
-            role: msg.role,
-            text: msg.text,
-            timestamp: msg.timestamp.toDate(), // Convert Firestore Timestamp to Date
-          })),
-        };
-      });
-      setConversations(fetchedConversations);
+        let totalDMs = 0;
+        fetchedConversations.forEach((conv) => {
+          totalDMs += conv.messages.length;
+        });
+        setDmsHandled(totalDMs);
+        setMeetingsBooked(Math.floor(totalDMs / 10));
+      } catch (error) {
+        console.error('Failed to load conversations:', error);
+      }
+    };
 
-      // Update stats (simple count for now)
-      let totalDMs = 0;
-      fetchedConversations.forEach(conv => {
-        totalDMs += conv.messages.length;
-      });
-      setDmsHandled(totalDMs);
-      // Placeholder for meetings booked - needs real logic
-      setMeetingsBooked(Math.floor(totalDMs / 10)); // Example: 1 meeting per 10 DMs
-    });
-
-    return () => unsubscribe();
+    fetchConversations();
+    const interval = setInterval(fetchConversations, 15000);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
   }, []);
 
-  const toggleTakeover = (senderId: string) => { // Changed to senderId
-    if (pausedChats.includes(senderId)) {
-      setPausedChats(pausedChats.filter(id => id !== senderId));
-    } else {
-      setPausedChats([...pausedChats, senderId]);
+  const toggleTakeover = async (senderId: string, shouldPause: boolean) => {
+    try {
+      const response = await fetch(`/api/chat-agent/${shouldPause ? 'pause' : 'unpause'}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ senderId }),
+      });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        console.error('Failed to toggle takeover:', payload?.error || response.statusText);
+        return;
+      }
+      setConversations((prev) =>
+        prev.map((conv) =>
+          conv.senderId === senderId ? { ...conv, paused: shouldPause } : conv
+        )
+      );
+    } catch (error) {
+      console.error('Failed to toggle takeover:', error);
     }
   };
 
@@ -156,7 +176,7 @@ const ChatAgentDashboard: React.FC<ChatAgentDashboardProps> = ({
       <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '12px', color: 'var(--text-primary)' }}>Live Activity</h3>
       <div className="live-feed-container">
         {conversations.map(conv => {
-          const isPaused = pausedChats.includes(conv.id); // Check by conversation ID
+          const isPaused = Boolean(conv.paused);
           const lastMessage = conv.messages[conv.messages.length - 1];
           const aiReply = conv.messages.findLast(msg => msg.role === 'assistant');
           return (
@@ -181,7 +201,13 @@ const ChatAgentDashboard: React.FC<ChatAgentDashboardProps> = ({
               {!isPaused && aiReply && (
                 <div style={{ marginTop: '8px', fontSize: '11px', color: 'var(--primary-color)', fontWeight: '600' }}>{aiReply.text}</div>
               )}
-              <button className="takeover-btn" onClick={(e) => { e.stopPropagation(); toggleTakeover(conv.id); }}>
+              <button
+                className="takeover-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleTakeover(conv.senderId, !isPaused);
+                }}
+              >
                 {isPaused ? '▶️ Resume Assisted Replies' : '✋ Reply Manually'}
               </button>
             </div>

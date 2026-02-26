@@ -1,9 +1,8 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminDb } from '@/server/firebase-admin'; // Import Firebase Admin
-import { FieldValue } from 'firebase-admin/firestore'; // Import FieldValue for arrayUnion
 import { createRequestId, jsonWithRequestId } from '@/lib/server/request-id';
+import { appendInstagramMessage } from '@/server/repositories';
 
 const VERIFY_TOKEN = process.env.INSTAGRAM_VERIFY_TOKEN || 'your-very-secret-token';
 const INSTAGRAM_ACCESS_TOKEN = process.env.INSTAGRAM_ACCESS_TOKEN;
@@ -30,8 +29,6 @@ export async function POST(req: NextRequest) {
     console.log('Instagram webhook received:', JSON.stringify(body, null, 2));
 
     if (body.object === 'instagram' && body.entry) {
-      const db = getAdminDb(); // Get Firestore instance
-
       for (const entry of body.entry) {
         if (entry.changes) {
           for (const change of entry.changes) {
@@ -44,18 +41,11 @@ export async function POST(req: NextRequest) {
               if (senderId && messageText) {
                 console.log(`Received message from ${senderId}: ${messageText}`);
 
-                // Save user message to Firestore
-                const conversationRef = db.collection('instagram_conversations').doc(senderId);
-                await conversationRef.set({
-                  senderId: senderId,
-                  updatedAt: FieldValue.serverTimestamp(),
-                  messages: FieldValue.arrayUnion({
-                    role: 'user',
-                    text: messageText,
-                    timestamp: timestamp,
-                  }),
-                  // Potentially add other conversation metadata here (e.g., agentId, status)
-                }, { merge: true });
+                await appendInstagramMessage(senderId, {
+                  role: 'user',
+                  text: messageText,
+                  timestamp: timestamp.toISOString(),
+                });
 
                 const baseUrl = new URL(req.url).origin;
                 const chatResponse = await fetch(`${baseUrl}/api/agent/demo`, {
@@ -77,14 +67,10 @@ export async function POST(req: NextRequest) {
                     'Thanks for your message. Share your budget, preferred area, and timeline, and we will follow up.';
                   console.log('Chat API response:', aiReply);
 
-                  // Save AI reply to Firestore
-                  await conversationRef.update({
-                    updatedAt: FieldValue.serverTimestamp(),
-                    messages: FieldValue.arrayUnion({
-                      role: 'assistant',
-                      text: aiReply,
-                      timestamp: new Date(),
-                    }),
+                  await appendInstagramMessage(senderId, {
+                    role: 'assistant',
+                    text: aiReply,
+                    timestamp: new Date().toISOString(),
                   });
 
                   // Send AI reply back to Instagram

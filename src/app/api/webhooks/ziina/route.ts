@@ -7,6 +7,8 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { enforceRateLimit, getRequestIp } from '@/lib/server/rateLimit';
 import { createApiLogger } from '@/lib/logger';
 import { BILLING_SKUS, logBillingEvent, resolveBillingSku } from '@/lib/server/billing';
+import { parseZiinaWebhook } from '@/lib/server/commerce/payments/ziina';
+import { finalizePaidOrder } from '@/lib/server/commerce/finalize';
 
 const ZIINA_WEBHOOK_SECRET = process.env.ZIINA_WEBHOOK_SECRET;
 
@@ -65,6 +67,33 @@ export async function POST(req: NextRequest) {
     event = JSON.parse(rawBody);
   } catch {
     return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
+  }
+
+  // Deployment commerce webhook path (Neon)
+  const payment = parseZiinaWebhook(event);
+  if (payment.orderId && payment.providerRef) {
+    try {
+      const finalized = await finalizePaidOrder({
+        provider: payment.provider,
+        providerRef: payment.providerRef,
+        orderId: payment.orderId,
+        isPaid: payment.isPaid,
+        status: payment.status,
+        amountMinor: payment.amountMinor,
+        currency: payment.currency,
+        raw: payment.raw,
+      });
+
+      logger.logSuccess(200, {
+        outcome: 'deployment_order_processed',
+        orderId: payment.orderId,
+        duplicate: (finalized as any)?.duplicate ?? false,
+      });
+      return NextResponse.json({ received: true, deploymentOrder: true });
+    } catch (error) {
+      logger.logError(error, 500, { outcome: 'deployment_order_failed' });
+      return NextResponse.json({ error: 'Failed to process deployment payment' }, { status: 500 });
+    }
   }
 
   const tenantId = resolveTenantId(event);
