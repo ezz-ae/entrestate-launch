@@ -2,8 +2,8 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { FieldValue } from 'firebase-admin/firestore';
-import { getAdminDb } from '@/server/firebase-admin';
+import { prisma } from '@/server/db';
+import { USE_NEON } from '@/lib/server/env';
 import { requireRole, UnauthorizedError, ForbiddenError } from '@/server/auth';
 import { CAP } from '@/lib/capabilities';
 import { ADMIN_ROLES } from '@/lib/server/roles';
@@ -18,15 +18,22 @@ export async function GET(req: NextRequest) {
   try {
     const { tenantId } = await requireRole(req, ADMIN_ROLES);
 
-    const db = getAdminDb();
-    const docSnap = await db
-      .collection('tenants')
-      .doc(tenantId)
-      .collection('settings')
-      .doc('leads')
-      .get();
+    let settings: Record<string, any> | null = null;
+    if (USE_NEON) {
+      settings = await prisma.leadSetting.findUnique({
+        where: { tenantId },
+      });
+    } else {
+      const db = (await import('@/server/firebase-admin')).getAdminDb();
+      const docSnap = await db
+        .collection('tenants')
+        .doc(tenantId)
+        .collection('settings')
+        .doc('leads')
+        .get();
 
-    const settings = docSnap.exists ? docSnap.data() : null;
+      settings = docSnap.exists ? docSnap.data() : null;
+    }
     return NextResponse.json({
       settings,
       hubspotAvailable: CAP.hubspot,
@@ -48,21 +55,39 @@ export async function POST(req: NextRequest) {
     const payload = payloadSchema.parse(await req.json());
     const { tenantId } = await requireRole(req, ADMIN_ROLES);
 
-    const db = getAdminDb();
-    await db
-      .collection('tenants')
-      .doc(tenantId)
-      .collection('settings')
-      .doc('leads')
-      .set(
-        {
+    if (USE_NEON) {
+      await prisma.leadSetting.upsert({
+        where: { tenantId },
+        update: {
           notificationEmail: payload.notificationEmail || null,
           crmWebhookUrl: payload.crmWebhookUrl || null,
           crmProvider: payload.crmProvider || null,
-          updatedAt: FieldValue.serverTimestamp(),
         },
-        { merge: true }
-      );
+        create: {
+          tenantId,
+          notificationEmail: payload.notificationEmail || null,
+          crmWebhookUrl: payload.crmWebhookUrl || null,
+          crmProvider: payload.crmProvider || null,
+        },
+      });
+    } else {
+      const { FieldValue } = await import('firebase-admin/firestore');
+      const db = (await import('@/server/firebase-admin')).getAdminDb();
+      await db
+        .collection('tenants')
+        .doc(tenantId)
+        .collection('settings')
+        .doc('leads')
+        .set(
+          {
+            notificationEmail: payload.notificationEmail || null,
+            crmWebhookUrl: payload.crmWebhookUrl || null,
+            crmProvider: payload.crmProvider || null,
+            updatedAt: FieldValue.serverTimestamp(),
+          },
+          { merge: true }
+        );
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

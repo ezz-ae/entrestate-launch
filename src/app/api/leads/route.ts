@@ -283,7 +283,11 @@ export async function POST(req: NextRequest) {
 
     // Optional notifications + CRM webhook
     let settings: Record<string, any> | null = null;
-    if (!USE_NEON) {
+    if (USE_NEON) {
+      settings = await prisma.leadSetting.findUnique({
+        where: { tenantId },
+      });
+    } else {
       const { getAdminDb } = await import('@/server/firebase-admin');
       const db = getAdminDb();
       const settingsSnap = await db
