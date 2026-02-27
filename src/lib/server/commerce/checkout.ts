@@ -4,6 +4,8 @@ import { getCatalogItem, listCatalogItems } from '@/lib/server/commerce/products
 import { createZiinaCheckout } from '@/lib/server/commerce/payments/ziina';
 import { createPaypalCheckout } from '@/lib/server/commerce/payments/paypal';
 import { finalizePaidOrder } from '@/lib/server/commerce/finalize';
+import { getAppUrl } from '@/lib/app-url';
+import { generateWorkspaceToken } from '@/lib/server/workspace-access';
 
 type CheckoutProvider = 'ziina' | 'paypal' | 'dev';
 
@@ -74,6 +76,7 @@ export async function createCheckout(input: CreateCheckoutInput) {
     }));
 
   const amount = new Prisma.Decimal(product.price);
+  const { token: workspaceToken, tokenHash } = generateWorkspaceToken();
   const order = await prisma.order.create({
     data: {
       tenantId: tenant.id,
@@ -87,10 +90,20 @@ export async function createCheckout(input: CreateCheckoutInput) {
         productSlug: product.slug,
         customerName: input.customerName || null,
         brokerageName: input.brokerageName || null,
+        workspaceTokenHash: tokenHash,
       } as Prisma.InputJsonValue,
     },
     include: { product: true },
   });
+
+  const appUrl = getAppUrl();
+  const returnUrl = (() => {
+    const base = input.returnUrl
+      ? new URL(input.returnUrl, appUrl)
+      : new URL(`/success/${order.id}`, appUrl);
+    base.searchParams.set('t', workspaceToken);
+    return base.toString();
+  })();
 
   const provider = input.provider || 'ziina';
 
@@ -101,7 +114,7 @@ export async function createCheckout(input: CreateCheckoutInput) {
       amountAed: product.price,
       title: product.title,
       productSlug: product.slug,
-      returnUrl: input.returnUrl,
+      returnUrl,
     });
 
     if (session?.providerRef) {
@@ -146,8 +159,10 @@ export async function createCheckout(input: CreateCheckoutInput) {
       order,
       tenant,
       provider: session?.checkoutUrl ? ('ziina' as const) : ('dev' as const),
-      checkoutUrl: session?.checkoutUrl || `/success/${order.id}`,
+      checkoutUrl: session?.checkoutUrl || returnUrl,
       providerRef: session?.providerRef,
+      successUrl: returnUrl,
+      workspaceToken,
     };
   }
 
@@ -158,7 +173,7 @@ export async function createCheckout(input: CreateCheckoutInput) {
       amountAed: product.price,
       title: product.title,
       productSlug: product.slug,
-      returnUrl: input.returnUrl,
+      returnUrl,
       cancelUrl: input.cancelUrl,
     });
 
@@ -204,8 +219,10 @@ export async function createCheckout(input: CreateCheckoutInput) {
       order,
       tenant,
       provider: session?.checkoutUrl ? ('paypal' as const) : ('dev' as const),
-      checkoutUrl: session?.checkoutUrl || `/success/${order.id}`,
+      checkoutUrl: session?.checkoutUrl || returnUrl,
       providerRef: session?.providerRef,
+      successUrl: returnUrl,
+      workspaceToken,
     };
   }
 
@@ -224,7 +241,9 @@ export async function createCheckout(input: CreateCheckoutInput) {
     order,
     tenant,
     provider: 'dev' as const,
-    checkoutUrl: `/success/${order.id}`,
+    checkoutUrl: returnUrl,
     providerRef: null,
+    successUrl: returnUrl,
+    workspaceToken,
   };
 }

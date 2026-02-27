@@ -11,7 +11,6 @@ const EXTENSIONS = [".ts", ".tsx", ".js", ".jsx", ".mjs"];
 
 // Priority groups to keep at the top
 const PRIORITY_GROUPS = [
-  { name: "FIREBASE & CLIENT CONFIG", prefix: "FIREBASE_" },
   { name: "AUTHENTICATION", prefix: "AUTH_" },
   { name: "DATABASE", prefix: "DATABASE_" },
   { name: "INFRASTRUCTURE", prefix: "VERCEL_" },

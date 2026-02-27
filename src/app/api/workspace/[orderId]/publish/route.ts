@@ -4,11 +4,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/server/db';
 import { enqueueJob } from '@/lib/server/jobs/queue';
 import { requireOrderEntitlement } from '@/lib/server/entitlements/guard';
+import { requireWorkspaceAccess } from '@/lib/server/workspace-access';
 
 type Context = { params: Promise<{ orderId: string }> };
 
 export async function POST(req: NextRequest, ctx: Context) {
   const { orderId } = await ctx.params;
+  const accessDenied = await requireWorkspaceAccess(req, orderId);
+  if (accessDenied) return accessDenied;
   const baseDenied = await requireOrderEntitlement(orderId, 'workspace.publish');
   if (baseDenied) return baseDenied;
 

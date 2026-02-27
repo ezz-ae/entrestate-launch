@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
       orderId: checkout.order.id,
       checkoutUrl: checkout.checkoutUrl,
       workspaceUrl: `/w/${checkout.order.id}`,
-      successUrl: `/success/${checkout.order.id}`,
+      successUrl: checkout.successUrl || `/success/${checkout.order.id}`,
       provider: checkout.provider,
       status: checkout.order.status,
     });

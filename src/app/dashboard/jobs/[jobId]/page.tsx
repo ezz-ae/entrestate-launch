@@ -2,10 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { getDbSafe } from '@/lib/firebase/client';
 import { Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAuth } from '@/hooks/useAuth';
 
 
 export default function JobDetailsPage() {
@@ -18,28 +17,41 @@ export default function JobDetailsPage() {
   }
   const [job, setJob] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
-    if (!jobId) return;
-    const firestore = getDbSafe();
-    if (!firestore) {
-      setJob(null);
-      setLoading(false);
-      return;
-    }
-
-    const jobRef = doc(firestore, 'jobs', jobId as string);
-    const unsubscribe = onSnapshot(jobRef, (doc) => {
-      if (doc.exists()) {
-        setJob({ id: doc.id, ...doc.data() });
-      } else {
-        setJob(null);
+    if (!jobId || !user) return;
+    let active = true;
+    const load = async () => {
+      try {
+        const res = await fetch('/api/jobs/client', { cache: 'no-store' });
+        if (!res.ok) {
+          if (active) {
+            setJob(null);
+            setLoading(false);
+          }
+          return;
+        }
+        const payload = await res.json();
+        const match = (payload.jobs || []).find((item: any) => item.id === jobId) || null;
+        if (active) {
+          setJob(match);
+          setLoading(false);
+        }
+      } catch (error) {
+        if (active) {
+          setJob(null);
+          setLoading(false);
+        }
       }
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [jobId]);
+    };
+    load();
+    const interval = setInterval(load, 5000);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, [jobId, user]);
 
   if (loading) {
     return (

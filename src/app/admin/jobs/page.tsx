@@ -9,7 +9,6 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { RefreshCw, Play, Terminal, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { FIREBASE_AUTH_DISABLED } from '@/lib/firebase/client';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -43,17 +42,6 @@ export default function JobsDashboard() {
       </div>
     );
   }
-
-    if (FIREBASE_AUTH_DISABLED) {
-        return (
-            <main className="min-h-screen bg-black text-white p-8 font-sans">
-                <div className="max-w-3xl mx-auto text-center">
-                    <h1 className="text-2xl font-bold">Auth disabled</h1>
-                    <p className="text-zinc-400 mt-4">Firebase auth is currently disabled for this environment. Job monitoring requires sign-in. Re-enable auth to use this page.</p>
-                </div>
-            </main>
-        );
-    }
 
   if (!user) {
     return (

@@ -32,7 +32,6 @@ export async function GET(req: NextRequest) {
       paypal: Boolean(process.env.PAYPAL_WEBHOOK_ID),
       ziina: Boolean(process.env.ZIINA_WEBHOOK_SECRET),
     },
-    firestore: 'disabled',
     neon: 'disconnected',
   };
 

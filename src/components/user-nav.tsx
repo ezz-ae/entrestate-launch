@@ -18,7 +18,6 @@ import {
 import { ClientOnly } from "@/components/client-only";
 import { LoginDialog } from "./auth/login-dialog";
 import { useAuth } from "@/hooks/useAuth";
-import { FIREBASE_AUTH_DISABLED } from "@/lib/firebase/client";
 
 export function UserNav() {
   const { user, logOut } = useAuth();
@@ -35,26 +34,16 @@ export function UserNav() {
   if (!user) {
     return (
         <ClientOnly>
-            {FIREBASE_AUTH_DISABLED ? (
+            <>
               <Button
                 variant="ghost"
                 className="h-10 px-4 rounded-full border border-white/10 text-xs font-bold uppercase tracking-widest"
-                disabled
+                onClick={() => setIsLoginOpen(true)}
               >
-                Guest
+                Log In
               </Button>
-            ) : (
-              <>
-                <Button
-                  variant="ghost"
-                  className="h-10 px-4 rounded-full border border-white/10 text-xs font-bold uppercase tracking-widest"
-                  onClick={() => setIsLoginOpen(true)}
-                >
-                  Log In
-                </Button>
-                <LoginDialog isOpen={isLoginOpen} onOpenChange={setIsLoginOpen} />
-              </>
-            )}
+              <LoginDialog isOpen={isLoginOpen} onOpenChange={setIsLoginOpen} />
+            </>
         </ClientOnly>
     )
   }

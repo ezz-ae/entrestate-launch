@@ -1,13 +1,6 @@
 import assert from 'node:assert/strict';
 
 const envKeysToBackup = [
-  'NEXT_PUBLIC_ENABLE_FIREBASE_AUTH',
-  'NEXT_PUBLIC_FIREBASE_API_KEY',
-  'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN',
-  'NEXT_PUBLIC_FIREBASE_PROJECT_ID',
-  'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET',
-  'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID',
-  'NEXT_PUBLIC_FIREBASE_APP_ID',
   'NEXT_PUBLIC_SUPABASE_URL',
   'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY',
   'NEXT_PUBLIC_SUPABASE_ANON_KEY',
@@ -35,23 +28,6 @@ async function runChecks() {
     for (const key of envKeysToClear) {
       delete process.env[key];
     }
-
-    const { FIREBASE_AUTH_DISABLED, getAuthSafe, getDbSafe } = await import('../../src/lib/firebase/client');
-    assert.strictEqual(
-      FIREBASE_AUTH_DISABLED,
-      true,
-      'Firebase auth should be flagged disabled when config is missing.'
-    );
-    assert.strictEqual(
-      getAuthSafe(),
-      null,
-      'getAuthSafe should return null when auth is disabled.'
-    );
-    assert.strictEqual(
-      getDbSafe(),
-      null,
-      'getDbSafe should return null when Firebase app is unavailable.'
-    );
 
     const { createMockSupabaseClient } = await import('../../src/lib/server');
     const mock = createMockSupabaseClient({ shouldLog: true });

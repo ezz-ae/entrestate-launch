@@ -3,16 +3,6 @@ import { envBool } from '@/lib/env';
 
 const serverEnvSchema = z.object({
   NODE_ENV: z.string().optional(),
-  FIREBASE_ADMIN_CREDENTIALS: z.string().optional(),
-  FIREBASE_ADMIN_PROJECT_ID: z.string().optional(),
-  FIREBASE_ADMIN_CLIENT_EMAIL: z.string().optional(),
-  FIREBASE_ADMIN_PRIVATE_KEY: z.string().optional(),
-  FIREBASE_PROJECT_ID: z.string().optional(),
-  FIREBASE_CLIENT_EMAIL: z.string().optional(),
-  FIREBASE_PRIVATE_KEY: z.string().optional(),
-  project_id: z.string().optional(),
-  client_email: z.string().optional(),
-  private_key: z.string().optional(),
   GEMINI_API_KEY: z.string().optional(),
   RESEND_API_KEY: z.string().optional(),
   FROM_EMAIL: z.string().optional(),
@@ -28,13 +18,13 @@ const serverEnvSchema = z.object({
   CRON_SECRET: z.string().optional(),
   RATE_LIMIT_DISABLED: z.string().optional(),
   USE_STATIC_INVENTORY: z.string().optional(),
-  ENABLE_FIREBASE_AUTH: z.string().optional(),
   ENABLE_PAYMENTS: z.string().optional().default('false'),
   ENABLE_GOOGLE_ADS: z.string().optional().default('false'),
   ENABLE_SMS: z.string().optional().default('false'),
   ENABLE_EMAIL: z.string().optional().default('false'),
   ENABLE_SUPABASE: z.string().optional().default('false'),
   ENABLE_CRON: z.string().optional().default('false'),
+  DEV_FEATURES_ENABLED: z.string().optional(),
   META_ACCESS_TOKEN: z.string().optional(),
   DATABASE_URL: z.string().optional(),
   NEXTAUTH_URL: z.string().optional(),
@@ -51,26 +41,7 @@ function validateServerEnv(rawEnv: NodeJS.ProcessEnv) {
     throw new Error(`Invalid server env: ${parsed.error.message}`);
   }
 
-  const env = parsed.data;
-  const isProductionLike =
-    rawEnv.NODE_ENV === 'production' ||
-    rawEnv.VERCEL_ENV === 'production' ||
-    rawEnv.VERCEL_ENV === 'preview';
-  const useNeon = envBool('USE_NEON', false);
-  const hasAdminJson = Boolean(env.FIREBASE_ADMIN_CREDENTIALS);
-  const hasAdminSplit = Boolean(
-    (env.FIREBASE_ADMIN_PROJECT_ID || env.FIREBASE_PROJECT_ID || env.project_id) &&
-      (env.FIREBASE_ADMIN_CLIENT_EMAIL || env.FIREBASE_CLIENT_EMAIL || env.client_email) &&
-      (env.FIREBASE_ADMIN_PRIVATE_KEY || env.FIREBASE_PRIVATE_KEY || env.private_key)
-  );
-
-  if (isProductionLike && !useNeon && !hasAdminJson && !hasAdminSplit) {
-    throw new Error(
-      'Missing Firebase admin credentials. Set FIREBASE_ADMIN_CREDENTIALS or FIREBASE_ADMIN_PROJECT_ID/FIREBASE_ADMIN_CLIENT_EMAIL/FIREBASE_ADMIN_PRIVATE_KEY.'
-    );
-  }
-
-  return env;
+  return parsed.data;
 }
 
 export const SERVER_ENV = validateServerEnv(process.env);
@@ -83,12 +54,11 @@ export const IS_SMS_ENABLED =
   SERVER_ENV.ENABLE_SMS === 'true' || Boolean(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN);
 export const IS_EMAIL_ENABLED = SERVER_ENV.ENABLE_EMAIL === 'true' || Boolean(process.env.RESEND_API_KEY);
 
-export const FIREBASE_AUTH_ENABLED = envBool(
-  'ENABLE_FIREBASE_AUTH',
-  process.env.NODE_ENV === 'production'
-);
-
 export const USE_NEON = envBool('USE_NEON', false);
+export const DEV_FEATURES_ENABLED = envBool(
+  'DEV_FEATURES_ENABLED',
+  process.env.NODE_ENV !== 'production',
+);
 export const NEXTAUTH_SECRET = SERVER_ENV.NEXTAUTH_SECRET || '';
 export const NEXTAUTH_URL = SERVER_ENV.NEXTAUTH_URL || '';
 export const DATABASE_URL = SERVER_ENV.DATABASE_URL || '';

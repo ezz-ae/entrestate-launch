@@ -33,7 +33,6 @@ export async function GET(req: NextRequest) {
     status: 'healthy',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
-    firebase: 'disabled',
     neon: 'disconnected',
     env_check: {
       gemini: !!process.env.GEMINI_API_KEY,

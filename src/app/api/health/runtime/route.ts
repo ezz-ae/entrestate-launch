@@ -1,7 +1,6 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest } from 'next/server';
-import { envBool } from '@/lib/env';
 import { logError } from '@/lib/server/log';
 import {
   createRequestId,
@@ -17,32 +16,6 @@ export async function GET(req: NextRequest) {
     jsonWithRequestId(requestId, body, init);
 
   try {
-    const hasFirebaseAdminCreds =
-      Boolean(process.env.FIREBASE_ADMIN_CREDENTIALS) ||
-      Boolean(
-        (process.env.FIREBASE_ADMIN_PROJECT_ID ||
-          process.env.FIREBASE_PROJECT_ID ||
-          process.env.project_id) &&
-          (process.env.FIREBASE_ADMIN_CLIENT_EMAIL ||
-            process.env.FIREBASE_CLIENT_EMAIL ||
-            process.env.client_email) &&
-          (process.env.FIREBASE_ADMIN_PRIVATE_KEY ||
-            process.env.FIREBASE_PRIVATE_KEY ||
-            process.env.private_key)
-      );
-
-    const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY?.trim() || '';
-    const apiKeyLooksValid = /^AIza[0-9A-Za-z_-]{35}$/.test(apiKey);
-    const hasFirebasePublicConfigReady =
-      apiKeyLooksValid &&
-      Boolean(
-        process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN &&
-          process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID &&
-          process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET &&
-          process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID &&
-          process.env.NEXT_PUBLIC_FIREBASE_APP_ID
-      );
-
     const hasSupabasePublic =
       Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL) &&
       Boolean(
@@ -51,16 +24,6 @@ export async function GET(req: NextRequest) {
       );
 
     const hasAppUrl = Boolean(process.env.NEXT_PUBLIC_APP_URL?.trim());
-
-    const firebaseAuthEnabledPublic = envBool(
-      'NEXT_PUBLIC_ENABLE_FIREBASE_AUTH',
-      process.env.NODE_ENV === 'production'
-    );
-
-    const firebaseAuthEnabledServer = envBool(
-      'ENABLE_FIREBASE_AUTH',
-      process.env.NODE_ENV === 'production'
-    );
 
     const hasGemini = Boolean(process.env.GEMINI_API_KEY?.trim());
     const hasResend = Boolean(process.env.RESEND_API_KEY?.trim() && process.env.FROM_EMAIL?.trim());
@@ -83,11 +46,6 @@ export async function GET(req: NextRequest) {
     const missing: string[] = [];
     const warnings: string[] = [];
     const reasons: Record<string, string> = {};
-
-    if (!hasFirebaseAdminCreds) {
-      missing.push('FIREBASE_ADMIN_CREDENTIALS or FIREBASE_ADMIN_* keys');
-      reasons.hasFirebaseAdminCreds = 'Firebase admin credentials are missing.';
-    }
 
     if (!hasGemini) {
       missing.push('GEMINI_API_KEY');
@@ -119,12 +77,8 @@ export async function GET(req: NextRequest) {
     return respond({
       ok,
       flags: {
-        hasFirebaseAdminCreds,
-        hasFirebasePublicConfigReady,
         hasSupabasePublic,
         hasAppUrl,
-        firebaseAuthEnabledServer,
-        firebaseAuthEnabledPublic,
         hasGemini,
         hasResend,
         hasTwilio,

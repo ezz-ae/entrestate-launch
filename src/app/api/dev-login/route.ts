@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
-import { FIREBASE_AUTH_ENABLED } from '@/lib/server/env';
+import { DEV_FEATURES_ENABLED } from '@/lib/server/env';
 
 type Body = {
   user?: string;
@@ -11,7 +11,7 @@ type Body = {
 
 export async function POST(req: Request) {
   try {
-    const enableDev = !FIREBASE_AUTH_ENABLED || process.env.NODE_ENV !== 'production';
+    const enableDev = DEV_FEATURES_ENABLED;
     if (!enableDev) {
       return NextResponse.json({ error: 'Dev login disabled' }, { status: 403 });
     }

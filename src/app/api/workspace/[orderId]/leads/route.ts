@@ -6,6 +6,7 @@ import { requireOrderEntitlement } from '@/lib/server/entitlements/guard';
 import { listLeadsForOrder } from '@/lib/server/leads/list';
 import { captureLead } from '@/lib/server/leads/capture';
 import { exportLeadsCsv } from '@/lib/server/leads/export';
+import { requireWorkspaceAccess } from '@/lib/server/workspace-access';
 
 type Context = { params: Promise<{ orderId: string }> };
 
@@ -15,6 +16,8 @@ async function findOrder(orderId: string) {
 
 export async function GET(req: NextRequest, ctx: Context) {
   const { orderId } = await ctx.params;
+  const accessDenied = await requireWorkspaceAccess(req, orderId);
+  if (accessDenied) return accessDenied;
   const denied = await requireOrderEntitlement(orderId, 'lead.capture');
   if (denied) return denied;
 
@@ -37,6 +40,8 @@ export async function GET(req: NextRequest, ctx: Context) {
 
 export async function POST(req: NextRequest, ctx: Context) {
   const { orderId } = await ctx.params;
+  const accessDenied = await requireWorkspaceAccess(req, orderId);
+  if (accessDenied) return accessDenied;
   const denied = await requireOrderEntitlement(orderId, 'lead.capture');
   if (denied) return denied;
 

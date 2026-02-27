@@ -28,7 +28,6 @@ import { UserNav } from "@/components/user-nav";
 import { EntrestateLogo } from "@/components/icons";
 import { MobileBottomNav } from "@/components/mobile-app/mobile-bottom-nav";
 import { useAuth } from '@/hooks/useAuth'; // Import useAuth
-import { FIREBASE_AUTH_DISABLED } from '@/lib/firebase/client';
 import { 
   Dialog, 
   DialogContent, 
@@ -57,7 +56,7 @@ const secondaryNavItems = [
 export default function DashboardLayoutClient({ children }: { children: React.ReactNode }) {
     const { user, loading } = useAuth(); // Use useAuth hook
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false); // State for login modal
-    const authRequired = !FIREBASE_AUTH_DISABLED;
+    const authRequired = true;
 
     // Check authentication status and show modal if not logged in
     React.useEffect(() => {

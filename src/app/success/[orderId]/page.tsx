@@ -1,14 +1,17 @@
 import Link from 'next/link';
 import { prisma } from '@/server/db';
+import { WorkspaceTokenBootstrap } from '@/components/workspace/WorkspaceTokenBootstrap';
 
-type Props = { params: Promise<{ orderId: string }> };
+type Props = { params: Promise<{ orderId: string }>; searchParams?: { t?: string } };
 
-export default async function SuccessPage({ params }: Props) {
+export default async function SuccessPage({ params, searchParams }: Props) {
   const { orderId } = await params;
+  const token = searchParams?.t?.trim() || '';
   const order = await prisma.order.findUnique({ where: { id: orderId }, include: { product: true } });
 
   return (
     <main className="min-h-screen bg-slate-50">
+      <WorkspaceTokenBootstrap orderId={orderId} token={token} />
       <section className="mx-auto max-w-2xl px-6 py-16">
         <div className="rounded-2xl border border-slate-200 bg-white p-8">
           <p className="text-sm uppercase tracking-wide text-emerald-600">Order received</p>

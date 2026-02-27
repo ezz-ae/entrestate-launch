@@ -33,29 +33,8 @@ function requireIfEnabled(flag: string, keys: string[], note?: string) {
   }
 }
 
-const coreClientKeys = [
-  'NEXT_PUBLIC_APP_URL',
-  'NEXT_PUBLIC_FIREBASE_API_KEY',
-  'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN',
-  'NEXT_PUBLIC_FIREBASE_PROJECT_ID',
-  'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET',
-  'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID',
-  'NEXT_PUBLIC_FIREBASE_APP_ID',
-];
+const coreClientKeys = ['NEXT_PUBLIC_APP_URL'];
 coreClientKeys.forEach(requireKey);
-
-requireKey('ENABLE_FIREBASE_AUTH');
-
-const adminJson = Boolean(process.env.FIREBASE_ADMIN_CREDENTIALS?.trim());
-if (!adminJson) {
-  requireKey('FIREBASE_ADMIN_PROJECT_ID');
-  requireKey('FIREBASE_ADMIN_CLIENT_EMAIL');
-  requireKey('FIREBASE_ADMIN_PRIVATE_KEY');
-} else {
-  optionalKey('FIREBASE_ADMIN_PROJECT_ID', 'only needed when you cannot provide FIREBASE_ADMIN_CREDENTIALS');
-  optionalKey('FIREBASE_ADMIN_CLIENT_EMAIL', 'only needed when you cannot provide FIREBASE_ADMIN_CREDENTIALS');
-  optionalKey('FIREBASE_ADMIN_PRIVATE_KEY', 'only needed when you cannot provide FIREBASE_ADMIN_CREDENTIALS');
-}
 
 if (shortBool('ENABLE_CRON')) {
   requireKey('CRON_SECRET');

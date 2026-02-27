@@ -13,7 +13,7 @@ import {
   PlanLimitError,
   planLimitErrorResponse,
 } from '@/lib/server/billing';
-import { FIREBASE_AUTH_ENABLED, IS_EMAIL_ENABLED } from '@/lib/server/env';
+import { DEV_FEATURES_ENABLED, IS_EMAIL_ENABLED } from '@/lib/server/env';
 import { resolveEntitlementsForTenant } from '@/lib/server/entitlements';
 import { logError } from '@/lib/server/log';
 import {
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
   const respond = (body: unknown, init?: ResponseInit) =>
     jsonWithRequestId(requestId, body, init);
   // Allow simulated sends in dev when email provider isn't configured.
-  const enableDev = !FIREBASE_AUTH_ENABLED || process.env.NODE_ENV !== 'production';
+  const enableDev = DEV_FEATURES_ENABLED;
   if (!IS_EMAIL_ENABLED && !enableDev) {
     return respond(
       { ok: false, error: 'Email is not enabled.', requestId },

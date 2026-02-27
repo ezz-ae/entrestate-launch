@@ -11,7 +11,7 @@ import {
   PlanLimitError,
   planLimitErrorResponse,
 } from '@/lib/server/billing';
-import { FIREBASE_AUTH_ENABLED, IS_SMS_ENABLED } from '@/lib/server/env';
+import { DEV_FEATURES_ENABLED, IS_SMS_ENABLED } from '@/lib/server/env';
 import { resolveEntitlementsForTenant } from '@/lib/server/entitlements';
 import { logError } from '@/lib/server/log';
 import {
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
   const respond = (body: unknown, init?: ResponseInit) =>
     jsonWithRequestId(requestId, body, init);
 
-  const enableDev = !FIREBASE_AUTH_ENABLED || process.env.NODE_ENV !== 'production';
+  const enableDev = DEV_FEATURES_ENABLED;
   if (!IS_SMS_ENABLED && !enableDev) {
     return respond(
       { ok: false, error: 'SMS is not enabled.', requestId },

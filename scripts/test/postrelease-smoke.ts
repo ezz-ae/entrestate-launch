@@ -1,5 +1,3 @@
-import { envBool } from '@/lib/env';
-
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL?.trim() || 'http://localhost:3000';
 const AUTH_TOKEN = process.env.SMOKE_TEST_TOKEN?.trim();
 
@@ -38,35 +36,8 @@ async function run() {
 
   const envPayload = envResult.payload;
   const runtimePayload = runtimeResult.payload;
-  const publicFlags = envPayload?.flags;
-  const hasPublicFlag =
-    typeof publicFlags?.publicFirebaseAuthEnabled === 'boolean';
-  const enableFirebaseAuth = hasPublicFlag
-    ? publicFlags!.publicFirebaseAuthEnabled
-    : envBool('NEXT_PUBLIC_ENABLE_FIREBASE_AUTH', false);
-
-  if (runtimeAvailable && runtimePayload) {
-    const runtimeFlags = runtimePayload.flags || {};
-    if (enableFirebaseAuth) {
-      if (!runtimeFlags.hasFirebasePublicConfigReady) {
-        failures.push('Firebase auth is enabled but runtime health reports public config not ready.');
-      }
-      if (!runtimeFlags.firebaseAuthEnabledPublic) {
-        failures.push('Firebase auth is enabled but runtime health reports firebaseAuthEnabledPublic=false.');
-      }
-    } else if (runtimeFlags.firebaseAuthEnabledPublic) {
-      failures.push('Firebase auth is disabled but runtime health reports firebaseAuthEnabledPublic=true.');
-    }
-  }
-
-  if (envPayload?.flags) {
-    const { publicFirebaseAuthEnabled, firebasePublicConfigReady } = envPayload.flags;
-    if (publicFirebaseAuthEnabled && !firebasePublicConfigReady) {
-      failures.push('Env health reports firebasePublicConfigReady=false while auth is enabled.');
-    }
-    if (!publicFirebaseAuthEnabled && enableFirebaseAuth) {
-      failures.push('Env health reports publicFirebaseAuthEnabled=false while env expect true.');
-    }
+  if (runtimeAvailable && !runtimePayload?.flags) {
+    failures.push('Runtime health response missing flags payload.');
   }
 
   if (!AUTH_TOKEN) {

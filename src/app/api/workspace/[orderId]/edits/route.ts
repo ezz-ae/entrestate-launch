@@ -6,11 +6,14 @@ import { compileEditRequest } from '@/lib/server/edits/compiler';
 import { enqueueJob } from '@/lib/server/jobs/queue';
 import { requireOrderEntitlement } from '@/lib/server/entitlements/guard';
 import { Prisma } from '@prisma/client';
+import { requireWorkspaceAccess } from '@/lib/server/workspace-access';
 
 type Context = { params: Promise<{ orderId: string }> };
 
 export async function POST(req: NextRequest, ctx: Context) {
   const { orderId } = await ctx.params;
+  const accessDenied = await requireWorkspaceAccess(req, orderId);
+  if (accessDenied) return accessDenied;
   const denied = await requireOrderEntitlement(orderId, 'workspace.edits');
   if (denied) return denied;
 

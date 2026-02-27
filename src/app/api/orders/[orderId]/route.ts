@@ -1,8 +1,9 @@
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/server/db';
 import { resolveWorkspaceEntitlements } from '@/lib/server/entitlements/resolve';
+import { requireWorkspaceAccess } from '@/lib/server/workspace-access';
 
 type Context = { params: Promise<{ orderId: string }> };
 
@@ -15,8 +16,10 @@ function nextAction(status: string) {
   return 'complete_build';
 }
 
-export async function GET(_: Request, ctx: Context) {
+export async function GET(req: NextRequest, ctx: Context) {
   const { orderId } = await ctx.params;
+  const accessDenied = await requireWorkspaceAccess(req, orderId);
+  if (accessDenied) return accessDenied;
 
   const order = await prisma.order.findUnique({
     where: { id: orderId },
