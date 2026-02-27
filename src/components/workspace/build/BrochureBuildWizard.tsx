@@ -83,11 +83,11 @@ export function BrochureBuildWizard({ orderId }: { orderId: string }) {
   }
 
   return (
-    <div className="grid gap-3">
+    <div className="grid gap-4">
       <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
         Upload a brochure if you have one. If not, fill the essentials below and we can still build a preview.
       </div>
-      <div className="grid gap-2">
+      <div className="grid gap-2 rounded-lg border border-slate-200 bg-white p-3">
         <label className="text-xs font-semibold text-slate-700">Brochure PDF (optional)</label>
         <input
           type="file"
@@ -99,30 +99,36 @@ export function BrochureBuildWizard({ orderId }: { orderId: string }) {
         />
         {uploadStatus ? <p className="text-xs text-slate-600">{uploadStatus}</p> : null}
       </div>
-      <input className="rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="Brochure link (optional)" value={state.brochureUrl} onChange={(event) => setState({ ...state, brochureUrl: event.target.value })} />
-      <input className="rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="Project name" value={state.projectName} onChange={(event) => setState({ ...state, projectName: event.target.value })} />
-      <input className="rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="Location" value={state.location} onChange={(event) => setState({ ...state, location: event.target.value })} />
-      <select className="rounded-lg border border-slate-300 px-3 py-2 text-sm" value={state.goal} onChange={(event) => setState({ ...state, goal: event.target.value })}>
-        <option value="investor">Investor</option>
-        <option value="end-user">End user</option>
-        <option value="luxury">Luxury</option>
-      </select>
-      <select className="rounded-lg border border-slate-300 px-3 py-2 text-sm" value={state.language} onChange={(event) => setState({ ...state, language: event.target.value })}>
-        <option value="en">English</option>
-        <option value="ar">Arabic</option>
-        <option value="bilingual">Bilingual</option>
-      </select>
-      <input className="rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="WhatsApp" value={state.whatsapp} onChange={(event) => setState({ ...state, whatsapp: event.target.value })} />
-      <input className="rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="Contact email" value={state.email} onChange={(event) => setState({ ...state, email: event.target.value })} />
-      <textarea className="min-h-28 rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="Highlights (one per line)" value={state.highlights} onChange={(event) => setState({ ...state, highlights: event.target.value })} />
-      <label className="flex items-center gap-2 text-xs text-slate-600">
-        <input
-          type="checkbox"
-          checked={state.skipBrochure}
-          onChange={(event) => setState({ ...state, skipBrochure: event.target.checked })}
-        />
-        Proceed without brochure extraction
-      </label>
+      <div className="grid gap-3 rounded-lg border border-slate-200 bg-white p-3">
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Project basics</p>
+        <input className="rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="Brochure link (optional)" value={state.brochureUrl} onChange={(event) => setState({ ...state, brochureUrl: event.target.value })} />
+        <input className="rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="Project name" value={state.projectName} onChange={(event) => setState({ ...state, projectName: event.target.value })} />
+        <input className="rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="Location" value={state.location} onChange={(event) => setState({ ...state, location: event.target.value })} />
+        <select className="rounded-lg border border-slate-300 px-3 py-2 text-sm" value={state.goal} onChange={(event) => setState({ ...state, goal: event.target.value })}>
+          <option value="investor">Investor</option>
+          <option value="end-user">End user</option>
+          <option value="luxury">Luxury</option>
+        </select>
+        <select className="rounded-lg border border-slate-300 px-3 py-2 text-sm" value={state.language} onChange={(event) => setState({ ...state, language: event.target.value })}>
+          <option value="en">English</option>
+          <option value="ar">Arabic</option>
+          <option value="bilingual">Bilingual</option>
+        </select>
+      </div>
+      <div className="grid gap-3 rounded-lg border border-slate-200 bg-white p-3">
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Contact + highlights</p>
+        <input className="rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="WhatsApp" value={state.whatsapp} onChange={(event) => setState({ ...state, whatsapp: event.target.value })} />
+        <input className="rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="Contact email" value={state.email} onChange={(event) => setState({ ...state, email: event.target.value })} />
+        <textarea className="min-h-28 rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="Highlights (one per line)" value={state.highlights} onChange={(event) => setState({ ...state, highlights: event.target.value })} />
+        <label className="flex items-center gap-2 text-xs text-slate-600">
+          <input
+            type="checkbox"
+            checked={state.skipBrochure}
+            onChange={(event) => setState({ ...state, skipBrochure: event.target.checked })}
+          />
+          Proceed without brochure extraction
+        </label>
+      </div>
       <div className="flex flex-wrap gap-2">
         <button onClick={() => save(false)} className="rounded-lg border border-slate-300 px-4 py-2 text-sm">Save draft</button>
         <button onClick={() => save(true)} className="rounded-lg bg-slate-900 px-4 py-2 text-sm text-white">Save and build preview</button>

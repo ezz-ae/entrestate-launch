@@ -73,7 +73,7 @@ export function OpsOrderActions({
     'We are ready to build your preview. Please confirm: (1) preferred WhatsApp number, (2) final headline, (3) logo URL or file, (4) any must-have sections.';
 
   return (
-    <div className="space-y-6">
+    <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
       <div className="rounded-xl border border-slate-200 bg-white p-4">
         <h3 className="text-sm font-semibold text-slate-800">Ops checklist</h3>
         <div className="mt-3 grid gap-2 text-sm text-slate-600">
@@ -106,7 +106,7 @@ export function OpsOrderActions({
         </div>
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-2">
+      <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-2 lg:col-span-2">
         <h3 className="text-sm font-semibold text-slate-800">Case study note</h3>
         <textarea
           className="min-h-24 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"

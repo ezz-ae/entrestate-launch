@@ -38,11 +38,22 @@ export function PreviewActions({ orderId, previewUrl }: { orderId: string; previ
 
   return (
     <div className="space-y-4">
-      <button onClick={requestPreview} className="rounded-lg border border-slate-300 px-4 py-2 text-sm">
-        Build preview now
-      </button>
+      <div className="flex flex-wrap items-center gap-2">
+        <button onClick={requestPreview} className="rounded-lg border border-slate-300 px-4 py-2 text-sm">
+          Build preview now
+        </button>
+        {previewUrl ? (
+          <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+            Preview ready
+          </span>
+        ) : (
+          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">
+            Awaiting preview
+          </span>
+        )}
+      </div>
 
-      <div className="rounded-lg border border-slate-200 p-3">
+      <div className="rounded-lg border border-slate-200 bg-white p-3">
         <p className="text-sm font-medium text-slate-800">QA checklist</p>
         <div className="mt-2 space-y-2 text-sm text-slate-600">
           {CHECKLIST_ITEMS.map((item) => (

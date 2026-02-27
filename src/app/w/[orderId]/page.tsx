@@ -94,19 +94,25 @@ export default async function WorkspaceHomePage({ params }: Props) {
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
-        {action.disabled ? (
-          <span className="inline-flex rounded-lg bg-slate-200 px-4 py-2 text-sm font-medium text-slate-600">
-            {action.label}
-          </span>
-        ) : (
-          <Link href={action.href} className="inline-flex rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white">
-            {action.label}
+      <div className="rounded-xl border border-slate-200 bg-white p-4">
+        <h3 className="text-sm font-semibold text-slate-800">Next action</h3>
+        <p className="mt-1 text-sm text-slate-600">
+          We’ll guide you step-by-step. You can always come back and edit later.
+        </p>
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          {action.disabled ? (
+            <span className="inline-flex rounded-lg bg-slate-200 px-4 py-2 text-sm font-medium text-slate-600">
+              {action.label}
+            </span>
+          ) : (
+            <Link href={action.href} className="inline-flex rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white">
+              {action.label}
+            </Link>
+          )}
+          <Link href={`/w/${orderId}/support`} className="inline-flex rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700">
+            Need help?
           </Link>
-        )}
-        <Link href={`/w/${orderId}/support`} className="inline-flex rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700">
-          Need help?
-        </Link>
+        </div>
       </div>
     </div>
   );

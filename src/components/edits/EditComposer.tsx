@@ -164,58 +164,64 @@ export function EditComposer({ orderId }: { orderId: string }) {
   }
 
   return (
-    <div className="space-y-4">
-      <textarea
-        className="min-h-32 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-        placeholder="Describe your changes. Example: Change logo and update hero headline."
-        value={rawText}
-        onChange={(event) => setRawText(event.target.value)}
-      />
-      <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={generateTasks}
-          className="rounded-lg border border-slate-300 px-4 py-2 text-sm"
-        >
-          Generate task cards
-        </button>
-        <button
-          type="button"
-          onClick={submit}
-          disabled={!canSubmit || submitting}
-          className={`rounded-lg px-4 py-2 text-sm font-medium ${
-            !canSubmit || submitting ? 'bg-slate-200 text-slate-500' : 'bg-slate-900 text-white'
-          }`}
-        >
-          Submit edit batch
-        </button>
-      </div>
-      {tasks.length ? (
-        <div className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
-          <p className="text-sm font-medium text-slate-700">Structured tasks</p>
-          {tasks.map((task) => (
-            <div key={task.key} className="rounded-lg border border-slate-200 bg-white p-3">
-              <p className="text-sm font-semibold text-slate-800">{task.label}</p>
-              <div className="mt-2 grid gap-2">
-                {task.fields.map((field) => (
-                  <input
-                    key={field.id}
-                    className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                    placeholder={field.placeholder || field.label}
-                    value={inputs[field.id] || ''}
-                    onChange={(event) =>
-                      setInputs((prev) => ({ ...prev, [field.id]: event.target.value }))
-                    }
-                  />
-                ))}
-              </div>
-            </div>
-          ))}
+    <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+      <div className="space-y-4">
+        <div className="rounded-lg border border-slate-200 bg-white p-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Request</p>
+          <textarea
+            className="mt-2 min-h-32 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            placeholder="Describe your changes. Example: Change logo and update hero headline."
+            value={rawText}
+            onChange={(event) => setRawText(event.target.value)}
+          />
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={generateTasks}
+              className="rounded-lg border border-slate-300 px-4 py-2 text-sm"
+            >
+              Generate task cards
+            </button>
+            <button
+              type="button"
+              onClick={submit}
+              disabled={!canSubmit || submitting}
+              className={`rounded-lg px-4 py-2 text-sm font-medium ${
+                !canSubmit || submitting ? 'bg-slate-200 text-slate-500' : 'bg-slate-900 text-white'
+              }`}
+            >
+              Submit edit batch
+            </button>
+          </div>
+          {result ? <p className="mt-2 text-sm text-slate-600">{result}</p> : null}
         </div>
-      ) : null}
-      {result ? <p className="text-sm text-slate-600">{result}</p> : null}
 
-      <div className="rounded-lg border border-slate-200 p-3">
+        {tasks.length ? (
+          <div className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+            <p className="text-sm font-medium text-slate-700">Structured tasks</p>
+            {tasks.map((task) => (
+              <div key={task.key} className="rounded-lg border border-slate-200 bg-white p-3">
+                <p className="text-sm font-semibold text-slate-800">{task.label}</p>
+                <div className="mt-2 grid gap-2">
+                  {task.fields.map((field) => (
+                    <input
+                      key={field.id}
+                      className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                      placeholder={field.placeholder || field.label}
+                      value={inputs[field.id] || ''}
+                      onChange={(event) =>
+                        setInputs((prev) => ({ ...prev, [field.id]: event.target.value }))
+                      }
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : null}
+      </div>
+
+      <div className="rounded-lg border border-slate-200 bg-white p-3">
         <p className="text-sm font-medium text-slate-700">Edit history</p>
         {loadingHistory ? (
           <p className="text-sm text-slate-500">Loading history…</p>
