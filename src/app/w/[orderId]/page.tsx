@@ -4,12 +4,43 @@ import { getWorkspaceData } from '@/lib/server/workspace';
 
 type Props = { params: Promise<{ orderId: string }> };
 
-function nextActionHref(orderId: string, status: string) {
-  if (status === 'pending_payment') return `/success/${orderId}`;
-  if (status === 'paid' || status === 'provisioning' || status === 'in_build') return `/w/${orderId}/build`;
-  if (status === 'ready_for_review') return `/w/${orderId}/preview`;
-  if (status === 'published') return `/w/${orderId}/publish`;
-  return `/w/${orderId}/preview`;
+const STEPS = ['Payment', 'Inputs', 'Preview', 'Publish', 'Delivery'] as const;
+
+function hasIntake(intake: unknown) {
+  if (!intake || typeof intake !== 'object' || Array.isArray(intake)) return false;
+  return Object.keys(intake as Record<string, unknown>).length > 0;
+}
+
+function buildProgress(status: string, intakeReady: boolean, previewUrl?: string | null, liveUrl?: string | null) {
+  const paymentDone = status !== 'pending_payment';
+  const inputsDone = intakeReady;
+  const previewDone = Boolean(previewUrl) || ['ready_for_review', 'published', 'delivered'].includes(status);
+  const publishDone = Boolean(liveUrl) || ['published', 'delivered'].includes(status);
+  const deliveryDone = status === 'delivered';
+
+  const flags = [paymentDone, inputsDone, previewDone, publishDone, deliveryDone];
+  const currentIndex = Math.max(0, flags.findIndex((flag) => !flag));
+
+  return STEPS.map((label, index) => ({
+    label,
+    state: flags[index] ? 'done' : index === currentIndex ? 'current' : 'upcoming',
+  }));
+}
+
+function resolveNextAction(orderId: string, status: string, intakeReady: boolean, previewUrl?: string | null, liveUrl?: string | null) {
+  if (!intakeReady) {
+    return { label: 'Complete Setup', href: `/w/${orderId}/build`, disabled: false };
+  }
+  if (!previewUrl && status !== 'ready_for_review' && status !== 'published' && status !== 'delivered') {
+    return { label: 'Building Preview…', href: '', disabled: true };
+  }
+  if (previewUrl && status !== 'published' && status !== 'delivered') {
+    return { label: 'Review Preview', href: `/w/${orderId}/preview`, disabled: false };
+  }
+  if (!liveUrl && (status === 'ready_for_review' || status === 'published')) {
+    return { label: 'Publish', href: `/w/${orderId}/publish`, disabled: false };
+  }
+  return { label: 'Share + Add-ons', href: `/w/${orderId}/publish`, disabled: false };
 }
 
 export default async function WorkspaceHomePage({ params }: Props) {
@@ -18,27 +49,65 @@ export default async function WorkspaceHomePage({ params }: Props) {
 
   if (!data) notFound();
 
-  const actionHref = nextActionHref(orderId, data.order.status);
+  const intakeReady = hasIntake(data.order.deployment?.intakeJson);
+  const previewUrl = data.order.deployment?.previewUrl || null;
+  const liveUrl = data.order.deployment?.liveUrl || null;
+  const progress = buildProgress(data.order.status, intakeReady, previewUrl, liveUrl);
+  const action = resolveNextAction(orderId, data.order.status, intakeReady, previewUrl, liveUrl);
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h2 className="text-2xl font-semibold text-slate-900">Order status</h2>
-        <p className="mt-2 text-sm text-slate-600">
-          Tenant: {data.order.tenant.name} | Order: <span className="font-mono">{data.order.id}</span>
-        </p>
-      </div>
-
+    <div className="space-y-6">
       <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-        <p className="text-sm text-slate-700">Current status: <strong>{data.order.status}</strong></p>
-        <p className="mt-1 text-sm text-slate-600">
-          Preview: {data.order.deployment?.previewUrl || 'pending'} | Live: {data.order.deployment?.liveUrl || 'pending'}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-2xl font-semibold text-slate-900">{data.order.product?.title || 'Deployment'}</h2>
+            <p className="mt-1 text-sm text-slate-600">
+              Order <span className="font-mono">{data.order.id}</span> · SLA {data.order.product?.fulfillmentSlaHours || 24}h
+            </p>
+          </div>
+          <span className="rounded-full bg-slate-200 px-3 py-1 text-xs font-semibold uppercase text-slate-700">
+            {data.order.status}
+          </span>
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-slate-200 bg-white p-4">
+        <h3 className="text-sm font-semibold text-slate-800">Progress</h3>
+        <div className="mt-3 grid gap-2 md:grid-cols-5">
+          {progress.map((step) => (
+            <div
+              key={step.label}
+              className={`rounded-lg border px-3 py-3 text-xs font-semibold uppercase tracking-wide ${
+                step.state === 'done'
+                  ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                  : step.state === 'current'
+                  ? 'border-slate-300 bg-slate-50 text-slate-900'
+                  : 'border-slate-200 bg-white text-slate-400'
+              }`}
+            >
+              {step.label}
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-sm text-slate-600">
+          Preview: {previewUrl || 'pending'} · Live: {liveUrl || 'pending'}
         </p>
       </div>
 
-      <Link href={actionHref} className="inline-flex rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white">
-        Continue
-      </Link>
+      <div className="flex flex-wrap items-center gap-3">
+        {action.disabled ? (
+          <span className="inline-flex rounded-lg bg-slate-200 px-4 py-2 text-sm font-medium text-slate-600">
+            {action.label}
+          </span>
+        ) : (
+          <Link href={action.href} className="inline-flex rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white">
+            {action.label}
+          </Link>
+        )}
+        <Link href={`/w/${orderId}/support`} className="inline-flex rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700">
+          Need help?
+        </Link>
+      </div>
     </div>
   );
 }

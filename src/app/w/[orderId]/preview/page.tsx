@@ -14,7 +14,7 @@ export default async function WorkspacePreviewPage({ params }: Props) {
   return (
     <div className="space-y-6">
       <PreviewPanel previewUrl={data.order.deployment?.previewUrl} />
-      <PreviewActions orderId={orderId} />
+      <PreviewActions orderId={orderId} previewUrl={data.order.deployment?.previewUrl} />
     </div>
   );
 }

@@ -19,6 +19,7 @@ export function OrdersTable({ rows }: { rows: Row[] }) {
             <th className="px-3 py-2">Amount</th>
             <th className="px-3 py-2">Customer</th>
             <th className="px-3 py-2">Created</th>
+            <th className="px-3 py-2">Ops</th>
           </tr>
         </thead>
         <tbody>
@@ -30,6 +31,11 @@ export function OrdersTable({ rows }: { rows: Row[] }) {
               <td className="px-3 py-2">{row.amount}</td>
               <td className="px-3 py-2">{row.customerEmail}</td>
               <td className="px-3 py-2">{row.createdAt}</td>
+              <td className="px-3 py-2">
+                <a href={`/ops/orders/${row.id}`} className="text-xs text-slate-700 underline">
+                  Manage
+                </a>
+              </td>
             </tr>
           ))}
         </tbody>

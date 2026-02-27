@@ -56,3 +56,28 @@ export async function POST(req: NextRequest, ctx: Context) {
 
   return NextResponse.json({ ok: true, editRequestId: edit.id, jobId: job.id, compiled });
 }
+
+export async function GET(req: NextRequest, ctx: Context) {
+  const { orderId } = await ctx.params;
+  const accessDenied = await requireWorkspaceAccess(req, orderId);
+  if (accessDenied) return accessDenied;
+  const denied = await requireOrderEntitlement(orderId, 'workspace.edits');
+  if (denied) return denied;
+
+  const edits = await prisma.editRequest.findMany({
+    where: { orderId },
+    orderBy: { createdAt: 'desc' },
+    take: 25,
+  });
+
+  return NextResponse.json({
+    ok: true,
+    edits: edits.map((edit) => ({
+      id: edit.id,
+      status: edit.status,
+      rawText: edit.rawText,
+      createdAt: edit.createdAt,
+      submittedAt: edit.submittedAt,
+    })),
+  });
+}
