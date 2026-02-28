@@ -22,20 +22,20 @@ const SiteBuilderLandingPage = () => {
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#40c9c6]/10 border border-[#40c9c6]/20 text-[#40c9c6] text-[10px] font-bold uppercase tracking-widest mb-6">
               Site Builder Layer
             </div>
-            <h1 className="text-4xl md:text-6xl font-bold leading-[1.1] text-white mb-6">
-                Turn inventory into <br/><span className="text-zinc-500">marketing assets.</span>
+            <h1 className="mb-6 text-4xl font-bold leading-[1.1] text-foreground md:text-6xl">
+                Turn inventory into <br/><span className="text-muted-foreground">marketing assets.</span>
             </h1>
-            <p className="text-lg text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-                Upload a brochure or pick a project from live inventory. We extract the data and build a high-conversion landing page in seconds.
+            <p className="mx-auto max-w-2xl text-lg leading-relaxed text-muted-foreground">
+                Upload a brochure or pick a project from your listings. We organize the details and prepare a page you can share quickly.
             </p>
           </div>
 
-          <div className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-[2.5rem] overflow-hidden shadow-2xl">
+          <div className="overflow-hidden rounded-[2.5rem] border border-border bg-card/70 shadow-2xl backdrop-blur-sm">
             {/* Tabs */}
-            <div className="flex border-b border-white/10">
+            <div className="flex border-b border-border">
               <button 
                 onClick={() => setActiveTab('brochure')}
-                className={`flex-1 py-6 text-sm font-bold uppercase tracking-widest transition-all ${activeTab === 'brochure' ? 'bg-white/5 text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
+                className={`flex-1 py-6 text-sm font-bold uppercase tracking-widest transition-all ${activeTab === 'brochure' ? 'bg-muted/50 text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
               >
                 <div className="flex items-center justify-center gap-2">
                   <Upload className="h-4 w-4" />
@@ -44,7 +44,7 @@ const SiteBuilderLandingPage = () => {
               </button>
               <button 
                 onClick={() => setActiveTab('inventory')}
-                className={`flex-1 py-6 text-sm font-bold uppercase tracking-widest transition-all ${activeTab === 'inventory' ? 'bg-white/5 text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
+                className={`flex-1 py-6 text-sm font-bold uppercase tracking-widest transition-all ${activeTab === 'inventory' ? 'bg-muted/50 text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
               >
                 <div className="flex items-center justify-center gap-2">
                   <Building className="h-4 w-4" />
@@ -61,14 +61,14 @@ const SiteBuilderLandingPage = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="flex flex-col items-center justify-center py-12 border-2 border-dashed border-white/10 rounded-3xl hover:bg-white/5 transition-colors cursor-pointer group"
+                    className="group flex cursor-pointer flex-col items-center justify-center rounded-3xl border-2 border-dashed border-border py-12 transition-colors hover:bg-muted/40"
                   >
                     <div className="w-16 h-16 bg-blue-600/20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                       <FileText className="h-8 w-8 text-blue-500" />
                     </div>
-                    <h3 className="text-xl font-bold text-white mb-2">Drop your PDF brochure here</h3>
-                    <p className="text-zinc-500 text-sm mb-8">The system extracts unit types, pricing, and features.</p>
-                    <Button className="bg-white text-black font-bold px-8 h-12 rounded-xl">
+                    <h3 className="mb-2 text-xl font-bold text-foreground">Drop your PDF brochure here</h3>
+                    <p className="mb-8 text-sm text-muted-foreground">We pull unit types, pricing, and key features from your file.</p>
+                    <Button className="h-12 rounded-xl bg-primary px-8 font-bold text-primary-foreground">
                       Select File
                     </Button>
                   </motion.div>
@@ -81,11 +81,11 @@ const SiteBuilderLandingPage = () => {
                     className="space-y-6"
                   >
                     <div className="relative">
-                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-500" />
+                      <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
                       <input 
                         type="text" 
                         placeholder="Search 3,500+ UAE projects..." 
-                        className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white focus:outline-none focus:border-[#40c9c6]/50 transition-colors"
+                        className="w-full rounded-2xl border border-border bg-background py-4 pl-12 pr-4 text-foreground transition-colors focus:border-[#40c9c6]/50 focus:outline-none"
                       />
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -93,10 +93,10 @@ const SiteBuilderLandingPage = () => {
                         <button
                           key={project}
                           onClick={() => setSelectedProject(project)}
-                          className={`p-6 rounded-2xl border text-left transition-all ${selectedProject === project ? 'bg-[#40c9c6]/10 border-[#40c9c6]/50 ring-1 ring-[#40c9c6]/50' : 'bg-white/5 border-white/10 hover:border-white/20'}`}
+                          className={`rounded-2xl border p-6 text-left transition-all ${selectedProject === project ? 'border-[#40c9c6]/50 bg-[#40c9c6]/10 ring-1 ring-[#40c9c6]/50' : 'border-border bg-background hover:border-foreground/20'}`}
                         >
-                          <h4 className="font-bold text-white mb-1">{project}</h4>
-                          <p className="text-xs text-zinc-500">Dubai Marina</p>
+                          <h4 className="mb-1 font-bold text-foreground">{project}</h4>
+                          <p className="text-xs text-muted-foreground">Dubai Marina</p>
                         </button>
                       ))}
                     </div>
@@ -115,8 +115,8 @@ const SiteBuilderLandingPage = () => {
           </div>
 
           <div className="mt-12 text-center">
-            <p className="text-zinc-500 text-sm">
-              Don't have a file? <Link href="/builder?type=landing-page" className="text-white underline font-medium">Start from a blank template</Link> or <button className="text-white underline font-medium">describe your idea</button>.
+            <p className="text-sm text-muted-foreground">
+              Don't have a file? <Link href="/builder?type=landing-page" className="font-medium text-foreground underline">Start from a blank template</Link> or <button className="font-medium text-foreground underline">describe your idea</button>.
             </p>
           </div>
         </div>

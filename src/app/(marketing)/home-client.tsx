@@ -21,12 +21,12 @@ function LandingPage({ initialProjects }: { initialProjects: ProjectData[] }) {
 
       <section className="py-8 border-y border-white/5 bg-zinc-950 flex items-center justify-center overflow-hidden">
          <div className="flex gap-16 animate-marquee whitespace-nowrap">
-            <TickerItem label="Smart Listings" status="Ready" />
+            <TickerItem label="Featured Listings" status="Ready" />
             <TickerItem label="Market Feed" status="Pilot" />
             <TickerItem label="Social Ads" status="Connected" />
             <TickerItem label="Photo Enhancer" status="Active" />
             <TickerItem label="DIFC Focus" status="Live" />
-            <TickerItem label="Smart Listings" status="Ready" />
+            <TickerItem label="Featured Listings" status="Ready" />
             <TickerItem label="Market Feed" status="Pilot" />
             <TickerItem label="Social Ads" status="Connected" />
          </div>

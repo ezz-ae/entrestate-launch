@@ -8,44 +8,44 @@ import { cn } from '@/lib/utils';
 const STEPS = [
   {
     id: 'inventory',
-    title: 'Inventory Ingestion',
+    title: 'Listing Intake',
     icon: Database,
-    description: 'Real-time sync with your property database. We normalize and enrich every listing automatically.',
+    description: 'Bring your listings into one place with clean details, photos, and pricing.',
     details: [
-      'Auto-tagging features',
-      'Price normalization',
-      'Image optimization'
+      'Feature tags',
+      'Price updates',
+      'Photo checks'
     ]
   },
   {
     id: 'intelligence',
-    title: 'AI Processing',
+    title: 'Buyer Fit',
     icon: Bot,
-    description: 'Our Intent Engine analyzes listings to find the perfect buyer persona and selling angles.',
+    description: 'Match each listing with the right buyer profile, message, and area focus.',
     details: [
-      'Persona generation',
-      'Copywriting',
-      'Targeting strategy'
+      'Buyer profiles',
+      'Message angles',
+      'Area focus'
     ]
   },
   {
     id: 'execution',
-    title: 'Multi-Channel Launch',
+    title: 'Campaign Launch',
     icon: Send,
-    description: 'Campaigns are deployed instantly across Google, Meta, and Email/SMS channels.',
+    description: 'Launch campaigns across Google, Meta, email, and SMS in one clear flow.',
     details: [
       'Ad creation',
-      'Landing page gen',
-      'Automated outreach'
+      'Landing page setup',
+      'Follow-up steps'
     ]
   },
   {
     id: 'revenue',
-    title: 'Revenue & ROI',
+    title: 'Sales Results',
     icon: DollarSign,
-    description: 'Leads are captured, qualified, and routed. You see real-time ROI, not just vanity metrics.',
+    description: 'Track inquiries, deals, and commissions so your team sees what is working.',
     details: [
-      'Lead scoring',
+      'Lead priority',
       'CRM sync',
       'Commission tracking'
     ]

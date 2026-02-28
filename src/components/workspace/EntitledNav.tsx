@@ -26,11 +26,11 @@ export function EntitledNav({
   ].filter((item) => !item.key || map[item.key]?.allowed !== false);
 
   return (
-    <nav className="rounded-2xl border border-slate-200 bg-white p-3">
+    <nav className="rounded-2xl border border-border bg-card p-3">
       <ul className="flex flex-wrap gap-2">
         {links.map((item) => (
           <li key={item.href}>
-            <Link href={item.href} className="inline-flex rounded-md px-3 py-2 text-sm text-slate-700 hover:bg-slate-100">
+            <Link href={item.href} className="inline-flex rounded-md px-3 py-2 text-sm text-card-foreground hover:bg-muted">
               {item.label}
             </Link>
           </li>

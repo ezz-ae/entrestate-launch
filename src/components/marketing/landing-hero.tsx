@@ -91,7 +91,7 @@ export function LandingHero() {
             </h1>
             
             <p className="text-base sm:text-lg md:text-2xl text-zinc-400 max-w-2xl mx-auto font-light leading-relaxed">
-                Upload any project brochure, convert it into a professional landing page that generate leads
+                Upload any project brochure and turn it into a professional landing page that captures leads
             </p>
         </motion.div>
 

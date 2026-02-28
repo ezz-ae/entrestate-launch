@@ -21,7 +21,7 @@ export function ExecutionPreview() {
             <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-green-400 opacity-75"></span>
             <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500"></span>
           </div>
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Live Pipeline Simulation</span>
+          <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Live Sales Preview</span>
         </div>
         <span className="text-xs text-slate-400">Dubai Hills Estate</span>
       </div>
@@ -50,7 +50,7 @@ export function ExecutionPreview() {
         {/* Processing Stage */}
         <div className="relative rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900/50">
           <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white px-2 text-xs font-medium text-slate-500 dark:bg-slate-900">
-            AI Operator Processing
+            Lead review in progress
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-slate-500">Qualification Rate</span>

@@ -19,15 +19,18 @@ export default async function WorkspacePublishPage({ params }: Props) {
     <div className="space-y-6">
       <PublishStatus liveUrl={data.order.deployment?.liveUrl} />
       {data.order.deployment?.liveUrl ? (
-        <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-          <h3 className="text-sm font-semibold text-slate-800">Delivery summary</h3>
-          <p className="mt-2 text-sm text-slate-600">
-            Live URL: <a className="text-slate-900 underline" href={data.order.deployment.liveUrl}>{data.order.deployment.liveUrl}</a>
+        <div className="rounded-lg border border-border bg-muted/40 p-4">
+          <h3 className="text-sm font-semibold text-foreground">Delivery summary</h3>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Live URL:{' '}
+            <a className="text-foreground underline" href={data.order.deployment.liveUrl}>
+              {data.order.deployment.liveUrl}
+            </a>
           </p>
-          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-600">
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
             <li>Includes: build setup, preview QA, publish to managed subdomain.</li>
             <li>Need edits? Use the Edits tab to submit a structured batch.</li>
-            <li>Optional add-ons: custom domain, extra landing pages, WhatsApp automation.</li>
+            <li>Optional add-ons: custom domain, extra landing pages, WhatsApp setup help.</li>
           </ul>
         </div>
       ) : null}

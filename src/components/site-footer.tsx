@@ -16,7 +16,7 @@ const PLATFORM_LINKS = [
 const COMPANY_LINKS = [
   { href: '/start', label: 'Get Started' },
   { href: '/dashboard', label: 'Dashboard' },
-  { href: '/system', label: 'Smart System' },
+  { href: '/system', label: 'Team Workspace' },
   { href: '/articles', label: 'Articles' },
 ];
 

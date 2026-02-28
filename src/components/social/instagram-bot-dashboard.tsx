@@ -29,8 +29,8 @@ export function InstagramBotDashboard() {
             <CardHeader className="px-0 pt-0">
                 <div className="flex justify-between items-center">
                     <div>
-                        <CardTitle className="text-2xl">Instagram Growth Agent</CardTitle>
-                        <CardDescription>Automate engagement, DM responses, and lead qualification.</CardDescription>
+                        <CardTitle className="text-2xl">Instagram Follow-up Assistant</CardTitle>
+                        <CardDescription>Manage replies, direct messages, and lead follow-up from one view.</CardDescription>
                     </div>
                     <div className="flex items-center gap-2">
                         <span className={cn("text-sm font-medium", isActive ? "text-green-500" : "text-zinc-500")}>
@@ -51,7 +51,7 @@ export function InstagramBotDashboard() {
                 <Tabs defaultValue="activity" className="w-full">
                     <TabsList className="grid w-full grid-cols-3 mb-6 bg-muted/50 p-1">
                         <TabsTrigger value="activity">Live Activity</TabsTrigger>
-                        <TabsTrigger value="automation">Automation Rules</TabsTrigger>
+                        <TabsTrigger value="automation">Reply Rules</TabsTrigger>
                         <TabsTrigger value="targeting">Targeting</TabsTrigger>
                     </TabsList>
 
@@ -84,7 +84,7 @@ export function InstagramBotDashboard() {
                                  <div className="space-y-1">
                                      <h4 className="font-medium flex items-center gap-2">
                                          <MessageSquare className="h-4 w-4 text-blue-500" />
-                                         Auto-DM on "Price" Comment
+                                         Auto DM on "Price" Comment
                                      </h4>
                                      <p className="text-xs text-zinc-500">Send pricing details when user comments 'price' or 'cost'.</p>
                                  </div>
@@ -103,7 +103,7 @@ export function InstagramBotDashboard() {
                              </div>
 
                              <div className="p-4 border rounded-xl bg-card space-y-3">
-                                 <Label>Open AI Response Prompt</Label>
+                                 <Label>Reply Prompt</Label>
                                  <Textarea 
                                     placeholder="You are a helpful real estate assistant. If someone asks about availability, ask for their preferred budget..." 
                                     className="min-h-[100px] text-sm"

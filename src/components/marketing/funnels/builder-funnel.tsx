@@ -15,7 +15,7 @@ const BuilderFunnel = () => {
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">in Minutes</span>
           </h1>
           <p className="text-xl text-gray-500 mb-8 max-w-2xl mx-auto">
-            Drag, drop, and sell. Connect your domain, pull inventory from our database, and start running ads today.
+            Drag, drop, and launch. Connect your domain, add listings, and start campaigns today.
           </p>
           <div className="flex justify-center gap-4">
             <button className="bg-gray-900 text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-gray-800 transition-all shadow-lg hover:shadow-xl">
@@ -33,9 +33,9 @@ const BuilderFunnel = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
             { icon: Database, title: "Choose Project", desc: "Select 'Emaar Beachfront' and we auto-fill images & copy." },
-            { icon: UploadIcon, title: "Upload Brochure", desc: "AI extracts floor plans and pricing from your PDF." },
+            { icon: UploadIcon, title: "Upload Brochure", desc: "We pull floor plans and pricing from your PDF." },
             { icon: Layout, title: "Use Template", desc: "Pick from 50+ high-converting real estate layouts." },
-            { icon: Zap, title: "AI Generator", desc: "Type 'Luxury villa in Palm Jumeirah' and watch it build." }
+            { icon: Zap, title: "Quick Start", desc: "Type 'Luxury villa in Palm Jumeirah' and start with a ready draft." }
           ].map((item, i) => (
             <div key={i} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:border-blue-500 transition-colors cursor-pointer group">
               <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center mb-4 group-hover:bg-blue-600 group-hover:text-white transition-colors">

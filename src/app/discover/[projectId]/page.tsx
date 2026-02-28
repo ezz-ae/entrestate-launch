@@ -260,7 +260,7 @@ const ProjectDetailPage: NextPage = () => {
                 <Card className="bg-white text-black rounded-2xl p-6 sm:p-8 sticky top-6">
                     <h3 className="text-xl sm:text-2xl font-black mb-3">Launch Pack</h3>
                     <p className="text-sm text-zinc-600 mb-6">
-                      Generate a listing page, follow-up message, and share link in minutes.
+                      Create a listing page, follow-up message, and share link in minutes.
                     </p>
                     <Button asChild className="w-full h-12 rounded-full bg-black text-white font-bold">
                       <a href={launchPackHref} className="inline-flex items-center justify-center gap-2">
@@ -271,7 +271,7 @@ const ProjectDetailPage: NextPage = () => {
                 <Card className="bg-zinc-900 border-white/10 rounded-2xl p-6 sm:p-8 space-y-4">
                     <h3 className="text-lg font-bold">Killer Actions</h3>
                     <p className="text-xs text-zinc-400">
-                      Generate assets for this project with one click.
+                      Create project assets with one click.
                     </p>
                     {!user && (
                       <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-100">

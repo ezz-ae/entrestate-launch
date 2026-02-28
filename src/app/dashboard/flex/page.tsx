@@ -161,7 +161,7 @@ X5W+6K9X8VjWkX2X5W+6K9X8VjWkX2X5W+6K9X8VjWkX2X5W+6K9X8VjWkX2X5W+
             <Card className="bg-blue-600 border-none text-white rounded-[3rem] p-10 space-y-6 relative overflow-hidden group">
                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
                 <h4 className="text-xl font-black uppercase leading-tight relative z-10">Dubai Production <br/>Region</h4>
-                <p className="text-blue-100 text-sm font-medium relative z-10 leading-relaxed">System ready to go live on entrestate.com</p>
+                <p className="text-blue-100 text-sm font-medium relative z-10 leading-relaxed">Workspace ready to go live on entrestate.com</p>
                 <Button className="w-full h-14 rounded-[1.5rem] bg-white text-blue-600 font-black text-sm uppercase tracking-widest shadow-2xl relative z-10">
                     Go Live
                 </Button>

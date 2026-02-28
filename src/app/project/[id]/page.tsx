@@ -84,7 +84,7 @@ const ProjectProfilePublicPage = ({ params }: { params: { id: string } }) => {
                     href={`/builder?project=${project.id}`}
                     className="inline-flex items-center rounded-xl bg-[#7aa5ff] px-8 py-4 text-base uppercase tracking-[0.2em] font-semibold text-[#0a0f1c]"
                 >
-                    Generate Landing Page
+                    Create Landing Page
                 </Link>
             </div>
         </div>

@@ -23,8 +23,8 @@ export const metadata: Metadata = {
 const DEFAULT_POSTS: BlogPost[] = [
   {
     id: 'uae-market-2025',
-    title: 'UAE Real Estate 2025: The Rise of AI Agents',
-    excerpt: 'How artificial intelligence is turning local brokerages into global investment engines.',
+    title: 'UAE Real Estate 2025: What Serious Buyers Want',
+    excerpt: 'How buyer behavior is changing and what top brokerages are doing to win more quality inquiries.',
     author: 'Sarah Jenkins',
     date: 'Oct 12, 2025',
     category: 'Intelligence',
@@ -33,8 +33,8 @@ const DEFAULT_POSTS: BlogPost[] = [
   },
   {
     id: 'brochure-to-conversion',
-    title: 'Turning PDF Brochures into High-Yield Portals',
-    excerpt: 'The science behind our automated architect engine and why it works for investors.',
+    title: 'Turning PDF Brochures into Better Listing Pages',
+    excerpt: 'A practical guide to turning brochures into clear, conversion-focused property pages.',
     author: 'David Chen',
     date: 'Oct 08, 2025',
     category: 'Productivity',
@@ -66,14 +66,14 @@ export default async function BlogPage() {
         <div className="flex flex-col md:flex-row justify-between items-end mb-24 border-b border-white/5 pb-16 gap-12">
             <div className="max-w-3xl space-y-6">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-500 text-[10px] font-bold uppercase tracking-widest">
-                    <Sparkles className="h-3 w-3" /> Intelligence Blog
+                    <Sparkles className="h-3 w-3" /> Market Blog
                 </div>
                 <h1 className="text-6xl md:text-8xl font-bold tracking-tighter leading-none">
                     Market <br/>
-                    <span className="text-zinc-600">Intelligence.</span>
+                    <span className="text-zinc-600">Updates.</span>
                 </h1>
                 <p className="text-2xl text-zinc-400 font-light leading-relaxed">
-                    Strategies, product updates, and data-driven insights from the Entrestate engineering and marketing teams.
+                    Strategies, product updates, and field-tested insights for brokers and real estate teams.
                 </p>
             </div>
             <div className="flex gap-4">
@@ -102,7 +102,7 @@ export default async function BlogPage() {
             </div>
             <div className="max-w-2xl relative z-10 space-y-4">
                 <h2 className="text-5xl md:text-7xl font-black tracking-tighter leading-none">Join the Intelligence.</h2>
-                <p className="text-xl text-blue-100 font-medium">Get UAE market trends and AI strategy guides delivered weekly.</p>
+                <p className="text-xl text-blue-100 font-medium">Get UAE market trends and practical sales playbooks delivered weekly.</p>
             </div>
             <div className="w-full md:w-auto relative z-10 flex flex-col sm:flex-row gap-3">
                 <input 

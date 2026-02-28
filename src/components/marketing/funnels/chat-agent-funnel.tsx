@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { MessageSquare, CheckCircle, Smartphone, Globe, Shield, ArrowRight, X, Zap, Filter, Link as LinkIcon, QrCode, Lock, Play, ScanEye, FileText } from 'lucide-react';
+import { MessageSquare, CheckCircle, Smartphone, Globe, ArrowRight, X, Zap, Filter, Link as LinkIcon, QrCode, Lock, Play, ScanEye, FileText } from 'lucide-react';
 
 const ChatAgentFunnel = () => {
-  const [demoOpen, setDemoOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-white font-sans text-gray-900">
@@ -17,20 +17,20 @@ const ChatAgentFunnel = () => {
           <div className="space-y-8">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-sm font-medium backdrop-blur-sm">
               <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-              Live AI Sales Agent
+              Live Property Assistant
             </div>
             <h1 className="text-5xl lg:text-7xl font-bold leading-tight tracking-tight">
               Your 24/7 Real Estate <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-emerald-400">Sales Partner</span>
             </h1>
             <p className="text-xl text-gray-400 max-w-lg leading-relaxed">
-              Automate conversations, qualify buyers, and book viewings instantly. Works on Instagram, WhatsApp, and your Website—powered by real-time market inventory.
+              Reply to buyers quickly, qualify serious inquiries, and book viewings. Works on Instagram, WhatsApp, and your website.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
               <button className="bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 transition-all shadow-lg shadow-indigo-900/50 hover:scale-105">
-                Start Your AI Agent <ArrowRight size={20} />
+                Start Your Assistant <ArrowRight size={20} />
               </button>
-              <button onClick={() => setDemoOpen(true)} className="bg-white/5 hover:bg-white/10 text-white border border-white/10 px-8 py-4 rounded-2xl font-bold text-lg backdrop-blur-sm transition-all flex items-center justify-center gap-2">
-                <Play size={18} fill="currentColor" /> See Demo
+              <button onClick={() => setPreviewOpen(true)} className="bg-white/5 hover:bg-white/10 text-white border border-white/10 px-8 py-4 rounded-2xl font-bold text-lg backdrop-blur-sm transition-all flex items-center justify-center gap-2">
+                <Play size={18} fill="currentColor" /> See Preview
               </button>
             </div>
             <p className="text-sm text-gray-500">46 AED/month • No setup fees • Cancel anytime</p>
@@ -43,7 +43,7 @@ const ChatAgentFunnel = () => {
                 <div className="bg-gray-50 h-[600px] w-full flex flex-col">
                    {/* Chat Header */}
                    <div className="bg-white p-4 pt-12 border-b flex items-center gap-3 shadow-sm z-10">
-                      <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold">AI</div>
+                      <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold">EA</div>
                       <div>
                          <p className="font-bold text-sm text-gray-900">Sarah (Agent)</p>
                          <p className="text-xs text-green-600 flex items-center gap-1">● Online</p>
@@ -87,7 +87,7 @@ const ChatAgentFunnel = () => {
               { icon: LinkIcon, title: "Connect", text: "Link your Instagram or paste the widget on your site in one click." },
               { icon: MessageSquare, title: "Engage", text: "The agent greets every visitor instantly, in their native language." },
               { icon: Filter, title: "Qualify", text: "It asks the right questions: Budget, Location, Timeline, and Intent." },
-              { icon: CheckCircle, title: "Close", text: "Qualified leads are saved to your pipeline. You just step in to close." }
+              { icon: CheckCircle, title: "Close", text: "Qualified leads are saved in your lead list. You step in when buyers are ready." }
            ].map((step, i) => (
               <div key={i} className="relative group">
                  <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-300">
@@ -106,7 +106,7 @@ const ChatAgentFunnel = () => {
          <div className="max-w-5xl mx-auto">
             <div className="text-center mb-16">
                <h2 className="text-3xl font-bold text-gray-900 mb-4">Not Just Another Chatbot</h2>
-               <p className="text-gray-500">Why top brokers choose Entrestate over generic AI.</p>
+               <p className="text-gray-500">Why top brokers choose Entrestate over generic chat tools.</p>
             </div>
             <div className="grid md:grid-cols-2 gap-8">
                {/* Generic Bot */}
@@ -140,7 +140,7 @@ const ChatAgentFunnel = () => {
             <div>
                <h2 className="text-3xl font-bold text-gray-900 mb-6">Stop Wasting Time on "Hi"</h2>
                <p className="text-lg text-gray-600 mb-8 leading-relaxed">
-                  Your time is expensive. Let the AI Agent filter out the window shoppers. It validates contact details and gauges seriousness before you ever lift a finger.
+                  Your time is valuable. Let the assistant filter casual browsers and pass you serious buyers with clear contact details.
                </p>
                <div className="bg-indigo-50 p-6 rounded-2xl border border-indigo-100">
                   <p className="text-indigo-900 font-medium flex items-center gap-2">
@@ -171,7 +171,7 @@ const ChatAgentFunnel = () => {
                <DeploymentCard icon={Smartphone} title="Instagram DM" tag="Popular" desc="Auto-reply to DMs instantly. Never leave a lead on 'Read'." />
                <DeploymentCard icon={Globe} title="Website Widget" tag="Web" desc="A floating chat bubble for your personal brand website." />
                <DeploymentCard icon={LinkIcon} title="Direct Link" tag="Social" desc="agent.entrestate.com/you. Perfect for your bio." />
-               <DeploymentCard icon={QrCode} title="QR Code" tag="Offline" desc="Print on flyers. Scans open a direct chat with your AI." />
+               <DeploymentCard icon={QrCode} title="QR Code" tag="Offline" desc="Print on flyers. Scans open a direct property chat." />
             </div>
          </div>
       </section>
@@ -189,7 +189,7 @@ const ChatAgentFunnel = () => {
               <span className="text-gray-400">/month</span>
             </div>
             <ul className="space-y-4 text-left mb-10 pl-4">
-              {['Your Personal AI Agent', 'Access to 3,750+ Projects', 'Unlimited Conversations', 'Instagram & Web Integration', 'Lead Qualification & Export', '24/7 Support'].map((item) => (
+              {['Your Personal Property Assistant', 'Access to 3,750+ Projects', 'Unlimited Conversations', 'Instagram & Web Integration', 'Lead Qualification & Export', '24/7 Support'].map((item) => (
                 <li key={item} className="flex items-center gap-3">
                   <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center shrink-0">
                      <CheckCircle className="text-green-600 w-4 h-4" />
@@ -219,12 +219,12 @@ const ChatAgentFunnel = () => {
                <div className="p-6 bg-white rounded-2xl shadow-sm">
                   <div className="w-12 h-12 bg-orange-50 text-orange-600 rounded-xl flex items-center justify-center mx-auto mb-4"><Lock size={24} /></div>
                   <h3 className="font-bold mb-2">Take Over</h3>
-                  <p className="text-sm text-gray-500">Jump into a chat whenever you want. The AI pauses immediately.</p>
+                  <p className="text-sm text-gray-500">Jump into a chat whenever you want. The assistant pauses immediately.</p>
                </div>
                <div className="p-6 bg-white rounded-2xl shadow-sm">
                   <div className="w-12 h-12 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4"><FileText size={24} /></div>
                   <h3 className="font-bold mb-2">Custom Knowledge</h3>
-                  <p className="text-sm text-gray-500">Upload your own PDFs or exclusive listings for the AI to prioritize.</p>
+                  <p className="text-sm text-gray-500">Upload your own PDFs or exclusive listings so responses match your inventory.</p>
                </div>
             </div>
          </div>
@@ -235,27 +235,27 @@ const ChatAgentFunnel = () => {
          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
          <div className="relative z-10 max-w-4xl mx-auto">
             <h2 className="text-4xl md:text-5xl font-bold mb-6">Never Miss a Commission Again.</h2>
-            <p className="text-xl text-indigo-200 mb-10 max-w-2xl mx-auto">Your competitors are sleeping. Your AI agent isn't. Capture every lead, day or night.</p>
+            <p className="text-xl text-indigo-200 mb-10 max-w-2xl mx-auto">Capture every lead, day or night, with fast and clear replies for buyers.</p>
             <button className="bg-white text-indigo-900 px-10 py-5 rounded-2xl font-bold text-xl hover:bg-indigo-50 transition-all shadow-2xl hover:scale-105">
-               Start Your AI Agent Now
+               Start Your Assistant Now
             </button>
             <p className="text-sm text-indigo-300 mt-6">Setup takes less than 2 minutes.</p>
          </div>
       </section>
 
-      {/* Demo Modal */}
-      {demoOpen && (
+      {/* Preview Modal */}
+      {previewOpen && (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
           <div className="bg-white w-full max-w-2xl rounded-2xl overflow-hidden flex flex-col max-h-[80vh] shadow-2xl animate-in zoom-in-95 duration-200">
             <div className="p-4 border-b flex justify-between items-center bg-gray-50">
-              <h3 className="font-bold text-gray-900">Live Demo Simulator</h3>
-              <button onClick={() => setDemoOpen(false)} className="p-2 hover:bg-gray-200 rounded-full"><X size={20} /></button>
+              <h3 className="font-bold text-gray-900">Live Chat Preview</h3>
+              <button onClick={() => setPreviewOpen(false)} className="p-2 hover:bg-gray-200 rounded-full"><X size={20} /></button>
             </div>
             <div className="flex-1 p-6 overflow-y-auto space-y-4 bg-gray-100">
               <div className="flex gap-3">
-                <div className="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-md">AI</div>
+                <div className="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-md">EA</div>
                 <div className="bg-white p-4 rounded-2xl rounded-tl-none shadow-sm max-w-[80%] text-sm text-gray-800">
-                  Hello! I'm your demo agent. Ask me about "Dubai Hills" or "Payment Plans".
+                  Hello! I can help with price ranges, payment plans, and available projects.
                 </div>
               </div>
             </div>

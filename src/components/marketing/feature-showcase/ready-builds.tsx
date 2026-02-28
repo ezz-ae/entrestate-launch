@@ -82,7 +82,7 @@ export function ReadyBuilds() {
                             </Badge>
                             {bp.isNew && (
                                 <div className="px-3 py-1 rounded-full bg-blue-600 text-[9px] font-black uppercase tracking-widest text-white">
-                                    Smart
+                                    New
                                 </div>
                             )}
                         </div>
@@ -121,7 +121,7 @@ export function ReadyBuilds() {
             <FeatureCard 
                 icon={Zap} 
                 title="Quick Draft" 
-                desc="Generate a draft page in minutes from any brochure." 
+                desc="Prepare a draft page in minutes from any brochure." 
             />
             <FeatureCard 
                 icon={ShieldCheck} 

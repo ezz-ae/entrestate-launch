@@ -8,18 +8,18 @@ const BioLinkPage = () => {
   const features = [
     {
       icon: <MessageSquare className="w-8 h-8 text-[#ff9ad5]" />,
-      title: 'Instant, AI-Powered Conversations',
-      description: "Don't just send followers to a static page. Engage them in a real-time conversation with your AI-powered ChatAgent."
+      title: 'Instant Buyer Conversations',
+      description: "Don’t send followers to a static page. Start a real-time chat that answers project questions right away."
     },
     {
       icon: <Users className="w-8 h-8 text-[#ff9ad5]" />,
-      title: 'Automatic Lead Qualification',
-      description: "Your ChatAgent will ask qualifying questions and identify the most promising leads, saving them to your 'leads' collection."
+      title: 'Lead Qualification',
+      description: "The assistant asks key questions and highlights serious buyers so your team can follow up faster."
     },
     {
       icon: <Zap className="w-8 h-8 text-[#ff9ad5]" />,
       title: 'Works 24/7',
-      description: 'Your ChatAgent is always on, ready to engage with your followers and capture leads, even when you\'re sleeping.'
+      description: 'Your assistant stays active day and night so new inquiries are answered even outside office hours.'
     },
     {
       icon: <Link2 className="w-8 h-8 text-[#ff9ad5]" />,
@@ -32,7 +32,7 @@ const BioLinkPage = () => {
     {
       step: 1,
       title: 'Create Your Bio Link',
-      description: 'Generate a unique bio link in your Entrestate dashboard.'
+      description: 'Create a unique bio link in your Entrestate dashboard.'
     },
     {
       step: 2,
@@ -42,7 +42,7 @@ const BioLinkPage = () => {
     {
       step: 3,
       title: 'Engage and Convert',
-      description: 'Watch as your followers start engaging with your ChatAgent, and new leads flow into your pipeline.'
+      description: 'Watch followers start chatting and turn into qualified leads for your team.'
     },
   ];
 
@@ -52,12 +52,12 @@ const BioLinkPage = () => {
       <section className="relative overflow-hidden bg-[#0a0f1c] text-white">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,154,213,0.15),_transparent_50%)]" />
         <div className="relative mx-auto max-w-5xl px-6 py-24 text-center">
-          <p className="text-sm font-semibold uppercase tracking-widest text-[#ff9ad5]">Smart ChatAgent for Instagram</p>
+          <p className="text-sm font-semibold uppercase tracking-widest text-[#ff9ad5]">Instagram Assistant for Brokers</p>
           <h1 className="mt-4 text-4xl md:text-6xl font-[var(--font-display)] leading-tight">
-            The Smartest Link in Your Bio
+            The Most Useful Link in Your Bio
           </h1>
           <p className="mt-6 text-lg text-zinc-300 max-w-3xl mx-auto">
-            Turn your Instagram bio into a lead-generating machine. Our smart bio link connects your followers to an AI-powered ChatAgent that works 24/7 to answer questions, qualify leads, and grow your business.
+            Turn your Instagram bio into a lead source. Your bio link opens a property chat that answers questions, qualifies buyers, and captures leads.
           </p>
           <div className="mt-10">
             <Link href="/instagram-assistant">
@@ -75,7 +75,7 @@ const BioLinkPage = () => {
           <div className="text-center">
             <h2 className="text-4xl font-[var(--font-display)] text-white">More Than Just a Link</h2>
             <p className="mt-4 text-lg text-zinc-400 max-w-2xl mx-auto">
-              It's a complete lead generation funnel, right in your Instagram bio.
+              It is a complete lead capture flow, right inside your Instagram bio.
             </p>
           </div>
           <div className="mt-16 grid md:grid-cols-2 gap-8">
@@ -118,7 +118,7 @@ const BioLinkPage = () => {
         <div className="mx-auto max-w-4xl px-6 text-center">
           <h2 className="text-4xl font-[var(--font-display)] text-white">Ready to Supercharge Your Instagram?</h2>
           <p className="mt-4 text-lg text-zinc-400 max-w-2xl mx-auto">
-            Create your smart bio link today and start turning followers into leads.
+            Create your bio link today and start turning followers into leads.
           </p>
           <div className="mt-8">
             <Link href="/instagram-assistant">

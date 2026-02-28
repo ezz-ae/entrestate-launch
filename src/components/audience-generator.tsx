@@ -15,10 +15,10 @@ export function AudienceGenerator() {
       const result = await generateLookalikeAudience();
       if (result.success) {
         setStatus('success');
-        setMessage(result.message || 'Audience generated.');
+        setMessage(result.message || 'Audience list is ready.');
       } else {
         setStatus('error');
-        setMessage(result.message || 'Failed to generate audience.');
+        setMessage(result.message || 'Could not prepare audience list.');
       }
     } catch (error) {
       setStatus('error');
@@ -30,14 +30,14 @@ export function AudienceGenerator() {
     <div className="p-6 rounded-2xl bg-gradient-to-br from-purple-900/20 to-black border border-purple-500/20 h-full flex flex-col">
       <div className="flex items-center gap-3 mb-4 text-purple-400">
           <Target className="h-6 w-6" />
-          <h3 className="font-bold">Smart Audience</h3>
+          <h3 className="font-bold">Audience Match</h3>
       </div>
       
       <div className="flex-1">
         {status === 'success' ? (
           <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-4 mb-4 animate-in fade-in">
             <div className="flex items-center gap-2 text-purple-400 font-bold mb-1">
-              <CheckCircle2 className="h-4 w-4" /> Generated
+              <CheckCircle2 className="h-4 w-4" /> Ready
             </div>
             <p className="text-xs text-zinc-300">{message}</p>
           </div>
@@ -49,7 +49,7 @@ export function AudienceGenerator() {
             <p className="text-xs text-zinc-300">{message}</p>
           </div>
         ) : (
-          <p className="text-sm text-zinc-400 mb-6">Generate lookalike audiences from your lead pool for Facebook & Google Ads.</p>
+          <p className="text-sm text-zinc-400 mb-6">Build similar audiences from your lead list for Facebook and Google Ads.</p>
         )}
       </div>
 
@@ -59,11 +59,11 @@ export function AudienceGenerator() {
         className="w-full bg-purple-600/20 text-purple-400 hover:bg-purple-600/30 border border-purple-500/50"
       >
         {status === 'loading' ? (
-          <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing Data...</>
+          <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Preparing Audience...</>
         ) : status === 'success' ? (
           "Audience Ready"
         ) : (
-          "Generate Lookalike"
+          "Build Similar Audience"
         )}
       </Button>
     </div>

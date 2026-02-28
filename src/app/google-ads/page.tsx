@@ -14,7 +14,7 @@ export default function GoogleAdsPage() {
           </div>
           <div className="max-w-3xl space-y-5">
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight leading-[1.05]">
-              Launch high-intent search campaigns without the ad ops chaos.
+              Launch buyer-focused search campaigns without the usual complexity.
             </h1>
             <p className="text-zinc-400 text-base sm:text-lg">
               We build the keywords, ads, and tracking for you. You stay in control of budget and approvals.

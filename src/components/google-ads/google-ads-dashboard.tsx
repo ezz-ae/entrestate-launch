@@ -247,7 +247,7 @@ export function GoogleAdsDashboard() {
         descriptions: planPayload.descriptions || [],
         expectations: planPayload.expectations,
       });
-      toast({ title: 'AI plan ready', description: 'Review the keywords and ad copy below.' });
+      toast({ title: 'Plan ready', description: 'Review the keywords and ad copy below.' });
     } catch (error: any) {
       toast({
         title: 'Plan failed',
@@ -262,7 +262,7 @@ export function GoogleAdsDashboard() {
   const handleLaunch = async () => {
     if (!validateInputs()) return;
     if (!plan) {
-      toast({ title: 'Generate the AI plan first', variant: 'destructive' });
+      toast({ title: 'Prepare the plan first', variant: 'destructive' });
       return;
     }
 
@@ -324,8 +324,8 @@ export function GoogleAdsDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <Card className="lg:col-span-2 bg-zinc-950 border-white/5 rounded-[2.5rem]">
           <CardHeader>
-            <CardTitle>AI Campaign Builder</CardTitle>
-            <CardDescription>Smart keywords, ad copy, and expected results in minutes.</CardDescription>
+            <CardTitle>Campaign Planner</CardTitle>
+            <CardDescription>Keyword ideas, ad copy, and expected results in minutes.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -410,7 +410,7 @@ export function GoogleAdsDashboard() {
                 disabled={planLoading}
               >
                 {planLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                Generate AI Plan
+                Prepare Campaign Plan
               </Button>
               <Button
                 className="h-12 rounded-full bg-white text-black font-bold px-8"
@@ -424,7 +424,7 @@ export function GoogleAdsDashboard() {
 
             {plan && (
               <div className="rounded-2xl border border-white/10 bg-black/40 p-4 text-sm text-zinc-400">
-                AI plan ready with {plan.keywords.length} keywords, {plan.headlines.length} headlines, and{' '}
+                Plan ready with {plan.keywords.length} keywords, {plan.headlines.length} headlines, and{' '}
                 {plan.descriptions.length} descriptions.
               </div>
             )}

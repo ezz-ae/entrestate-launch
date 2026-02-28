@@ -19,7 +19,7 @@ export function FinalCTA() {
           </h2>
           <div className="flex flex-col md:flex-row items-center justify-center gap-4 sm:gap-6">
              <CTAButton label="Start Building Now" buttonId="final-launch" context={{ page: 'landing', service: 'builder' }} />
-             <CTAButton label="Request a Demo" buttonId="final-demo" variant="outline" context={{ page: 'landing', service: 'sales' }} />
+             <CTAButton label="Request a Walkthrough" buttonId="final-demo" variant="outline" context={{ page: 'landing', service: 'sales' }} />
           </div>
           <p className="mt-10 sm:mt-16 text-zinc-500 font-mono text-[10px] sm:text-sm uppercase tracking-[0.4em]">
             THE FUTURE OF REAL ESTATE DEVELOPMENT

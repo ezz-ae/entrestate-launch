@@ -43,7 +43,7 @@ export function SeoShowcase() {
                             </h5>
                             <div className="font-sans pl-2">
                                 <div className="text-sm text-[#202124] flex items-center gap-1 mb-1">
-                                    <span className="text-muted-foreground text-xs">entresite.ai › dubai-hills</span>
+                                    <span className="text-muted-foreground text-xs">entrestate.com › dubai-hills</span>
                                 </div>
                                 <div className="text-lg text-[#1a0dab] font-medium truncate hover:underline cursor-pointer">
                                     Luxury Villas for Sale | Dubai Hills Estate

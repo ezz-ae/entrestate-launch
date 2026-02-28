@@ -15,8 +15,8 @@ const RESOURCES = {
     { id: 'p3', type: 'project', name: 'Downtown Loft', icon: Building, color: 'bg-indigo-500' },
   ],
   operators: [
-    { id: 'o1', type: 'operator', name: 'Sarah (Qualifier)', icon: Bot, color: 'bg-emerald-500' },
-    { id: 'o2', type: 'operator', name: 'Mike (Closer)', icon: Bot, color: 'bg-orange-500' },
+    { id: 'o1', type: 'operator', name: 'Sarah (Lead Desk)', icon: Bot, color: 'bg-emerald-500' },
+    { id: 'o2', type: 'operator', name: 'Mike (Sales Desk)', icon: Bot, color: 'bg-orange-500' },
   ]
 };
 
@@ -77,7 +77,7 @@ export function PipelineBuilder() {
           </div>
 
           <div>
-            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-500">AI Operators</h3>
+            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-500">Sales Team</h3>
             <div className="space-y-3">
               {RESOURCES.operators.map(item => (
                 <DraggableItem key={item.id} id={item.id} type="operator" className="w-full">
@@ -150,7 +150,7 @@ export function PipelineBuilder() {
                         <slots.operator.icon className={`h-8 w-8 ${slots.operator.color.replace('bg-', 'text-')}`} />
                       </div>
                       <h4 className="font-bold text-slate-900 dark:text-white">{slots.operator.name}</h4>
-                      <span className="text-xs text-slate-500">Sales Operator</span>
+                    <span className="text-xs text-slate-500">Sales Team Member</span>
                     </div>
                   </div>
                 ) : (
@@ -182,7 +182,7 @@ export function PipelineBuilder() {
                   </>
                 ) : (
                   <>
-                    <Play className="h-4 w-4" /> Run Stack
+                    <Play className="h-4 w-4" /> Run Preview
                   </>
                 )}
               </button>

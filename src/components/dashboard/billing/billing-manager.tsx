@@ -28,13 +28,13 @@ const PLAN_CARDS = [
   },
   {
     id: 'agency_os',
-    name: 'Agency OS',
+    name: 'Agency Plan',
     price: 'From 2,499 AED / month',
   },
 ];
 
 const USAGE_ITEMS = [
-  { key: 'ai_conversations', label: 'AI conversations', cadence: 'Monthly' },
+  { key: 'ai_conversations', label: 'Assistant chats', cadence: 'Monthly' },
   { key: 'leads', label: 'Leads stored', cadence: 'Total' },
   { key: 'landing_pages', label: 'Landing pages', cadence: 'Total' },
   { key: 'campaigns', label: 'Campaigns', cadence: 'Monthly' },
@@ -45,7 +45,7 @@ const USAGE_ITEMS = [
 
 const UPGRADE_MESSAGES: Record<string, string> = {
   leads: "You're getting leads. Upgrade to keep them flowing.",
-  ai_conversations: 'Your AI agent is working. Increase conversations to keep it live.',
+  ai_conversations: 'Your assistant is active. Increase chat capacity to keep it running smoothly.',
   landing_pages: 'Your pages are converting. Unlock more launches.',
   campaigns: 'Campaigns are active. Upgrade to launch more.',
   email_sends: 'Email is working. Upgrade to keep it sending.',

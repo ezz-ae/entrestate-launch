@@ -47,7 +47,7 @@ export function ImageGenTool() {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Imagen 3 Studio</h2>
-          <p className="text-muted-foreground">Architectural-grade property renders powered by Vertex AI.</p>
+          <p className="text-muted-foreground">Create property visuals from a short description.</p>
         </div>
         <div className="flex gap-2">
            <Badge variant="outline" className="bg-orange-500/10 text-orange-600 border-orange-500/20">
@@ -64,7 +64,7 @@ export function ImageGenTool() {
         <div className="space-y-8">
            <Card className="border-white/5 bg-zinc-900/50 backdrop-blur-xl">
               <CardHeader>
-                 <CardTitle className="text-sm uppercase tracking-[0.2em] text-zinc-500">Visual Architect</CardTitle>
+                 <CardTitle className="text-sm uppercase tracking-[0.2em] text-zinc-500">Visual Studio</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                  <div className="space-y-2">
@@ -100,14 +100,14 @@ export function ImageGenTool() {
                     {isGenerating ? (
                        <> <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Materializing... </>
                     ) : (
-                       <> <Sparkles className="mr-2 h-5 w-5" /> Generate Render </>
+                       <> <Sparkles className="mr-2 h-5 w-5" /> Create Visual </>
                     )}
                  </Button>
               </CardContent>
            </Card>
 
            <div className="space-y-4">
-              <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest px-1">Generation Tips</h4>
+              <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest px-1">Writing Tips</h4>
               <div className="grid grid-cols-1 gap-3">
                  <TipItem text="Mention specific lighting like 'Golden Hour' or 'Blue Hour'." />
                  <TipItem text="Use architectural styles: 'Modernist', 'Brutalist', or 'Art Deco'." />
@@ -142,7 +142,7 @@ export function ImageGenTool() {
                        <Button size="icon" variant="secondary" className="rounded-full h-12 w-12" onClick={handleGenerate}><RefreshCcw className="h-5 w-5" /></Button>
                     </div>
                     <div className="absolute bottom-6 left-6 right-6 p-4 bg-black/60 backdrop-blur-md rounded-2xl border border-white/10">
-                       <p className="text-[10px] text-zinc-400 font-bold uppercase mb-1">Generated Output</p>
+                       <p className="text-[10px] text-zinc-400 font-bold uppercase mb-1">Preview Output</p>
                        <p className="text-xs text-white line-clamp-1">{prompt}</p>
                     </div>
                  </motion.div>
@@ -152,8 +152,8 @@ export function ImageGenTool() {
                        <ImageIcon className="h-10 w-10 text-zinc-700" />
                     </div>
                     <div className="space-y-2">
-                       <h3 className="text-xl font-bold text-zinc-300">No Image Generated</h3>
-                       <p className="text-sm text-zinc-500 max-w-xs mx-auto">Enter a prompt on the left to start generating high-end property renders.</p>
+                       <h3 className="text-xl font-bold text-zinc-300">No Image Yet</h3>
+                       <p className="text-sm text-zinc-500 max-w-xs mx-auto">Enter a short description on the left to create a property visual.</p>
                     </div>
                  </div>
               )}

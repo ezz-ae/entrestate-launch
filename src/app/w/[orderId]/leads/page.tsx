@@ -9,8 +9,11 @@ export default async function WorkspaceLeadsPage({ params }: Props) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold text-slate-900">Leads</h2>
-        <Link href={`/api/workspace/${orderId}/leads?format=csv`} className="rounded border border-slate-300 px-3 py-2 text-sm">
+        <h2 className="text-2xl font-semibold text-foreground">Leads</h2>
+        <Link
+          href={`/api/workspace/${orderId}/leads?format=csv`}
+          className="rounded border border-border bg-background px-3 py-2 text-sm text-foreground hover:bg-muted"
+        >
           Export CSV
         </Link>
       </div>

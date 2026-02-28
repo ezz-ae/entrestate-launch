@@ -1,13 +1,13 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Instagram Assistant Demo | Entrestate',
+  title: 'Instagram Assistant Preview | Entrestate',
   description: 'See how the assistant qualifies leads and captures contact details.',
   alternates: {
     canonical: '/instagram-assistant/demo',
   },
   openGraph: {
-    title: 'Instagram Assistant Demo | Entrestate',
+    title: 'Instagram Assistant Preview | Entrestate',
     description: 'See how the assistant qualifies leads and captures contact details.',
     url: '/instagram-assistant/demo',
   },

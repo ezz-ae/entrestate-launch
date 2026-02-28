@@ -163,7 +163,7 @@ export function EmailCampaignDashboard() {
       if (data.data?.subject) setSubject(data.data.subject);
       if (data.data?.body) setMessage(data.data.body);
 
-      toast({ title: 'AI draft ready', description: 'Review and edit before sending.' });
+      toast({ title: 'Draft ready', description: 'Review and edit before sending.' });
     } catch (error: any) {
       toast({
         title: 'Generation failed',
@@ -217,8 +217,8 @@ export function EmailCampaignDashboard() {
               <div className="rounded-2xl border border-white/10 bg-black/40 p-4 space-y-3">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-widest text-zinc-500">AI Draft</p>
-                    <p className="text-sm text-zinc-400">Give the topic and let AI write the email.</p>
+                    <p className="text-xs font-bold uppercase tracking-widest text-zinc-500">Quick Draft</p>
+                    <p className="text-sm text-zinc-400">Add a topic and we prepare a draft email for you.</p>
                   </div>
                   <Button
                     onClick={handleGenerate}
@@ -226,7 +226,7 @@ export function EmailCampaignDashboard() {
                     disabled={aiLoading}
                   >
                     {aiLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
-                    Generate Draft
+                    Prepare Draft
                   </Button>
                 </div>
                 <Input

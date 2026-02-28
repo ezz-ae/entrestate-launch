@@ -37,7 +37,7 @@ export function BuilderShowcase() {
                     <div className="w-3 h-3 rounded-full bg-green-400/80" />
                     <div className="ml-4 flex-1 flex justify-center">
                         <div className="bg-muted/50 h-6 w-32 sm:w-64 rounded-md flex items-center justify-center text-[10px] text-muted-foreground">
-                            entresite.ai/builder
+                            entrestate.com/builder
                         </div>
                     </div>
                 </div>

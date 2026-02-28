@@ -71,7 +71,7 @@ const getRefinerMeta = (site: SitePage): RefinerMeta => {
     return {
       badgeLabel: 'Draft Ready',
       badgeClassName: 'bg-amber-500/15 text-amber-200 border border-amber-300/40',
-      description: 'Review the Refiner AI polish and apply it to go live.',
+      description: 'Review the latest polish and apply it to go live.',
       timeLabel: lastRefinedDate ? `Draft saved ${timeDistance}` : 'Awaiting review',
       ctaLabel: 'Review Draft',
       ctaHref: reviewHref,
@@ -106,9 +106,9 @@ const getRefinerMeta = (site: SitePage): RefinerMeta => {
   return {
     badgeLabel: 'Refiner Available',
     badgeClassName: 'bg-white/5 text-zinc-200 border border-white/10',
-    description: 'Run Refiner AI to tighten copy, spacing, and conversions before you launch.',
+    description: 'Run a polish pass to tighten copy, spacing, and conversions before launch.',
     timeLabel: 'Never refined',
-    ctaLabel: 'Run Refiner AI',
+    ctaLabel: 'Run Polish Pass',
     ctaHref: baseHref,
     ctaClassName: ''
   };
@@ -207,7 +207,7 @@ export default function SitesDashboardPage() {
     }
 
     if (!newSitePrompt.trim()) {
-        window.alert("Please provide a description or upload a PDF to generate a site.");
+        window.alert("Please provide a description or upload a PDF to create a site.");
         return;
     }
 
@@ -348,10 +348,10 @@ export default function SitesDashboardPage() {
                 <DialogHeader className="p-4">
                     <DialogTitle className="text-3xl font-bold flex items-center gap-3">
                         <Sparkles className="h-8 w-8 text-blue-500" />
-                        AI Site Architect
+                        Site Planner
                     </DialogTitle>
                     <DialogDescription className="text-zinc-500 text-lg font-light mt-2">
-                        Give our AI a project brief. We'll handle the sitemap, content, and data integration.
+                        Share a short project brief. We will prepare the page structure and content.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="px-4">
@@ -426,7 +426,7 @@ export default function SitesDashboardPage() {
             </div>
                 <DialogFooter className="p-4 pt-0">
                     <Button type="submit" className="w-full h-14 text-lg font-bold bg-blue-600 hover:bg-blue-700 rounded-2xl" onClick={handleCreateSite}>
-                        Generate Landing Page
+                        Create Landing Page
                     </Button>
                 </DialogFooter>
             </DialogContent>
@@ -478,10 +478,10 @@ export default function SitesDashboardPage() {
               </div>
               <div className="space-y-1">
                   <h3 className="text-xl font-bold text-white">No Projects Found</h3>
-                  <p className="text-zinc-500 max-w-sm">You haven't built any sites yet. Use the AI Architect to create your first high-converting landing page.</p>
+                  <p className="text-zinc-500 max-w-sm">You have not built any sites yet. Use the Site Planner to create your first landing page.</p>
               </div>
               <Button variant="outline" className="rounded-full border-white/10" onClick={() => setIsModalOpen(true)}>
-                  Launch AI Architect
+                  Open Site Planner
               </Button>
           </div>
       ) : (

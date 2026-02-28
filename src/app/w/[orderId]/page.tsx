@@ -57,59 +57,62 @@ export default async function WorkspaceHomePage({ params }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+      <div className="rounded-xl border border-border bg-muted/40 p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-2xl font-semibold text-slate-900">{data.order.product?.title || 'Deployment'}</h2>
-            <p className="mt-1 text-sm text-slate-600">
+            <h2 className="text-2xl font-semibold text-foreground">{data.order.product?.title || 'Deployment'}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
               Order <span className="font-mono">{data.order.id}</span> · SLA {data.order.product?.fulfillmentSlaHours || 24}h
             </p>
           </div>
-          <span className="rounded-full bg-slate-200 px-3 py-1 text-xs font-semibold uppercase text-slate-700">
+          <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold uppercase text-muted-foreground">
             {data.order.status}
           </span>
         </div>
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white p-4">
-        <h3 className="text-sm font-semibold text-slate-800">Progress</h3>
+      <div className="rounded-xl border border-border bg-card p-4">
+        <h3 className="text-sm font-semibold text-card-foreground">Progress</h3>
         <div className="mt-3 grid gap-2 md:grid-cols-5">
           {progress.map((step) => (
             <div
               key={step.label}
               className={`rounded-lg border px-3 py-3 text-xs font-semibold uppercase tracking-wide ${
                 step.state === 'done'
-                  ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                  ? 'border-emerald-300/40 bg-emerald-500/10 text-emerald-600'
                   : step.state === 'current'
-                  ? 'border-slate-300 bg-slate-50 text-slate-900'
-                  : 'border-slate-200 bg-white text-slate-400'
+                  ? 'border-border bg-muted/50 text-foreground'
+                  : 'border-border bg-card text-muted-foreground'
               }`}
             >
               {step.label}
             </div>
           ))}
         </div>
-        <p className="mt-3 text-sm text-slate-600">
+        <p className="mt-3 text-sm text-muted-foreground">
           Preview: {previewUrl || 'pending'} · Live: {liveUrl || 'pending'}
         </p>
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white p-4">
-        <h3 className="text-sm font-semibold text-slate-800">Next action</h3>
-        <p className="mt-1 text-sm text-slate-600">
+      <div className="rounded-xl border border-border bg-card p-4">
+        <h3 className="text-sm font-semibold text-card-foreground">Next action</h3>
+        <p className="mt-1 text-sm text-muted-foreground">
           We’ll guide you step-by-step. You can always come back and edit later.
         </p>
         <div className="mt-4 flex flex-wrap items-center gap-3">
           {action.disabled ? (
-            <span className="inline-flex rounded-lg bg-slate-200 px-4 py-2 text-sm font-medium text-slate-600">
+            <span className="inline-flex rounded-lg bg-muted px-4 py-2 text-sm font-medium text-muted-foreground">
               {action.label}
             </span>
           ) : (
-            <Link href={action.href} className="inline-flex rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white">
+            <Link href={action.href} className="inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">
               {action.label}
             </Link>
           )}
-          <Link href={`/w/${orderId}/support`} className="inline-flex rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700">
+          <Link
+            href={`/w/${orderId}/support`}
+            className="inline-flex rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
+          >
             Need help?
           </Link>
         </div>

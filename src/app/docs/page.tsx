@@ -5,14 +5,14 @@ const DocsPage = () => {
   return (
     <div className="min-h-screen bg-white text-gray-800 font-sans">
       <header className="bg-navy-700 text-white py-12 px-4 md:px-8 text-center">
-        <h1 className="text-4xl md:text-5xl font-bold mb-4">Entrestate Operating Guide</h1>
+        <h1 className="text-4xl md:text-5xl font-bold mb-4">Entrestate Help Guide</h1>
         <p className="text-lg md:text-xl opacity-80 max-w-2xl mx-auto">
-          Your comprehensive resource for mastering Entrestate and driving real estate success.
+          Simple guides to help your team launch pages, manage leads, and run campaigns.
         </p>
       </header>
 
       <main className="max-w-6xl mx-auto py-16 px-4 md:px-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-8">Documentation Sections</h2>
+        <h2 className="text-3xl font-bold text-gray-900 mb-8">Help Sections</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {/* Section: Getting Started */}
@@ -25,10 +25,10 @@ const DocsPage = () => {
             </ul>
           </div>
 
-          {/* Section: Digital Consultant */}
+          {/* Section: Property Assistant */}
           <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-300">
-            <h3 className="text-xl font-bold text-navy-700 mb-3">Digital Consultant</h3>
-            <p className="text-gray-700 mb-4">Activate and leverage your dedicated Digital Consultant for seamless client engagement.</p>
+            <h3 className="text-xl font-bold text-navy-700 mb-3">Property Assistant</h3>
+            <p className="text-gray-700 mb-4">Set up your assistant so buyers get fast replies and clear next steps.</p>
             <ul className="space-y-2 text-navy-600">
               <li><Link href="/docs/digital-consultant/activating-your-consultant" className="hover:underline">Activating Your Consultant</Link></li>
               <li><Link href="/docs/digital-consultant/teaching-your-consultant-listings" className="hover:underline">Teaching Your Consultant Listings</Link></li>
@@ -39,7 +39,7 @@ const DocsPage = () => {
           {/* Section: Site Builder */}
           <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-300">
             <h3 className="text-xl font-bold text-navy-700 mb-3">Site Builder</h3>
-            <p className="text-gray-700 mb-4">Build stunning, lead-generating property pages in minutes, with no technical skills.</p>
+            <p className="text-gray-700 mb-4">Build clean property pages quickly with easy editing tools.</p>
             <ul className="space-y-2 text-navy-600">
               <li><Link href="/docs/site-builder/creating-your-first-page" className="hover:underline">Creating Your First Page</Link></li>
               <li><Link href="/docs/site-builder/customizing-page-blocks" className="hover:underline">Customizing Page Blocks</Link></li>
@@ -49,8 +49,8 @@ const DocsPage = () => {
 
           {/* Section: Lead Pipeline */}
           <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-300">
-            <h3 className="text-xl font-bold text-navy-700 mb-3">Lead Pipeline</h3>
-            <p className="text-gray-700 mb-4">Understand, manage, and engage your leads effectively to maximize conversions.</p>
+            <h3 className="text-xl font-bold text-navy-700 mb-3">Lead Follow-up</h3>
+            <p className="text-gray-700 mb-4">Track each inquiry and follow up at the right time.</p>
             <ul className="space-y-2 text-navy-600">
               <li><Link href="/docs/lead-pipeline/understanding-your-leads" className="hover:underline">Understanding Your Leads</Link></li>
               <li><Link href="/docs/lead-pipeline/managing-follow-ups" className="hover:underline">Managing Follow-ups</Link></li>
@@ -71,7 +71,7 @@ const DocsPage = () => {
           {/* Section: Project Profiles */}
           <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-300">
             <h3 className="text-xl font-bold text-navy-700 mb-3">Project Profiles</h3>
-            <p className="text-gray-700 mb-4">Manage your property inventory and leverage built-in sales tools for each listing.</p>
+            <p className="text-gray-700 mb-4">Manage your property inventory and keep every listing ready to share.</p>
             <ul className="space-y-2 text-navy-600">
               <li><Link href="/docs/project-profiles/managing-project-details" className="hover:underline">Managing Project Details</Link></li>
               <li><Link href="/docs/project-profiles/generating-marketing-assets" className="hover:underline">Generating Marketing Assets</Link></li>

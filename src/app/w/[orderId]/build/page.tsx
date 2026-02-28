@@ -16,8 +16,8 @@ export default async function WorkspaceBuildPage({ params }: Props) {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-semibold text-slate-900">Build Intake</h2>
-      <p className="text-sm text-slate-600">
+      <h2 className="text-2xl font-semibold text-foreground">Build Intake</h2>
+      <p className="text-sm text-muted-foreground">
         Submit the required deployment inputs. Structured edits can be sent later in the edits tab.
       </p>
       {useBrochure ? <BrochureBuildWizard orderId={orderId} /> : <BioLinkBuildWizard orderId={orderId} />}

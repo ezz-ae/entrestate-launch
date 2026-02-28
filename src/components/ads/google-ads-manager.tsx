@@ -214,7 +214,7 @@ export function GoogleAdsManager({
             <CardTitle className="text-3xl font-bold tracking-tight text-white">Ad Launch Center</CardTitle>
             <CardDescription className="text-zinc-500 text-lg">We run Google Ads for {pageTitle}.</CardDescription>
           </div>
-          {adData && <Badge className="bg-blue-600/10 text-blue-500 border-blue-500/20 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest">Smart Strategy Active</Badge>}
+          {adData && <Badge className="bg-blue-600/10 text-blue-500 border-blue-500/20 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest">Strategy Active</Badge>}
         </div>
         <div className="mt-4 flex items-center gap-4">
           <span className="text-xs text-zinc-400">Wallet Balance:</span>
@@ -254,7 +254,7 @@ export function GoogleAdsManager({
                   </div>
                 </div>
                 <Button onClick={handleGenerate} className="w-full h-14 bg-white text-black hover:bg-zinc-200 font-bold rounded-2xl">
-                  <Sparkles className="h-5 w-5 mr-2" /> Generate Draft
+                  <Sparkles className="h-5 w-5 mr-2" /> Build Draft
                 </Button>
               </div>
             </div>

@@ -18,11 +18,11 @@ export function WorkspaceShell({
   children: ReactNode;
 }) {
   return (
-    <main className="min-h-screen bg-slate-50">
+    <main className="min-h-screen bg-background">
       <section className="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-8">
         <WorkspaceHeader title={title} status={status} slaHours={slaHours} />
         <EntitledNav orderId={orderId} entitlements={entitlements} />
-        <section className="rounded-2xl border border-slate-200 bg-white p-6">{children}</section>
+        <section className="rounded-2xl border border-border bg-card p-6">{children}</section>
       </section>
     </main>
   );

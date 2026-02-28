@@ -31,7 +31,7 @@ export function AdsShowcase({ ctaLabel = 'Start Setup', ctaHref = '/dashboard/go
                 >
                     <div className="flex items-center gap-2 mb-3">
                         <Badge variant="outline" className="text-[10px] text-zinc-400">Ad</Badge>
-                        <span className="text-xs text-zinc-500">https://luxury.emaar-beachfront.ai</span>
+                        <span className="text-xs text-zinc-500">https://luxury.emaar-beachfront.com</span>
                     </div>
                     <h4 className="text-xl font-bold text-blue-400 mb-2">Luxury Waterfront Apartments | Emaar Beachfront Launch</h4>
                     <p className="text-sm text-zinc-400">Secure your next home with flexible payment plans. Private beach access and waterfront views. Limited availability...</p>
@@ -75,7 +75,7 @@ export function AdsShowcase({ ctaLabel = 'Start Setup', ctaHref = '/dashboard/go
           {/* Right: Content */}
           <div className="order-1 lg:order-2 space-y-10">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-500 text-xs font-bold uppercase tracking-widest">
-               <Target className="h-3 w-3" /> Growth Engine
+               <Target className="h-3 w-3" /> Campaign Support
             </div>
             
             <h2 className="text-3xl sm:text-4xl md:text-6xl font-bold tracking-tighter leading-[1.1]">
@@ -88,7 +88,7 @@ export function AdsShowcase({ ctaLabel = 'Start Setup', ctaHref = '/dashboard/go
             </p>
 
             <div className="space-y-6">
-               <AdFeature title="Smart keywords" desc="Focus on search terms that match buyer intent." />
+               <AdFeature title="Keyword focus" desc="Focus on search terms that match buyer intent." />
                <AdFeature title="Budget control" desc="Keep spend aligned with your daily target." />
                <AdFeature title="Buyer matching" desc="Reach people similar to your current buyer list." />
             </div>
@@ -113,7 +113,7 @@ function AdFeature({ title, desc }: any) {
                 <Sparkles className="h-3 w-3 text-blue-500" />
             </div>
             <div>
-                <h4 className="font-bold text-white mb-1">{title}</h4>
+                <h4 className="mb-1 font-bold text-foreground">{title}</h4>
                 <p className="text-sm text-zinc-500 leading-relaxed">{desc}</p>
             </div>
         </div>

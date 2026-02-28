@@ -17,8 +17,8 @@ export function JobCreationModal({
   trigger,
   open,
   onOpenChange,
-  title = "Vertex Marketing Agent",
-  description = "Create a new task for the AI agent based on your selection.",
+  title = "Marketing Task",
+  description = "Create a new task based on your selection.",
   ...formProps
 }: JobCreationModalProps) {
   return (

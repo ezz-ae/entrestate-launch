@@ -14,12 +14,12 @@ export default async function DashboardPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Dashboard</h1>
-            <p className="text-zinc-400 mt-1">Manage your generated landing pages.</p>
+            <p className="text-zinc-400 mt-1">Manage your listing pages and updates.</p>
           </div>
           <div className="flex gap-3">
             <Link href="/dashboard/leads">
               <Button variant="outline" className="rounded-full font-bold border-zinc-700 hover:bg-zinc-800">
-                <Users className="mr-2 h-4 w-4" /> Leads Pipeline
+                <Users className="mr-2 h-4 w-4" /> Leads Board
               </Button>
             </Link>
             <Link href="/start">
@@ -75,7 +75,7 @@ export default async function DashboardPage() {
                 <FileText className="h-8 w-8 text-zinc-500" />
             </div>
             <h3 className="text-xl font-bold mb-2">No projects yet</h3>
-            <p className="text-zinc-400 mb-6 max-w-sm text-center">Upload a brochure to generate your first landing page.</p>
+            <p className="text-zinc-400 mb-6 max-w-sm text-center">Upload a brochure to create your first landing page.</p>
             <Link href="/start">
                 <Button className="rounded-full font-bold bg-white text-black hover:bg-zinc-200">
                     Create Project

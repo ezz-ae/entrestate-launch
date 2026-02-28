@@ -33,7 +33,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     { name: 'Web Address', href: '/dashboard/domain', icon: Globe },
     { name: 'Marketing', href: '/dashboard/marketing', icon: Megaphone },
     { name: 'Leads', href: '/dashboard/leads', icon: Users },
-    { name: 'AI Studio', href: '/dashboard/ai-tools', icon: Bot },
+    { name: 'Assistant Tools', href: '/dashboard/ai-tools', icon: Bot },
     { name: 'Media', href: '/dashboard/assets', icon: ImageIcon },
     { name: 'Brand', href: '/dashboard/brand', icon: Palette },
     { name: 'Team', href: '/dashboard/team', icon: Users },

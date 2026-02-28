@@ -59,7 +59,7 @@ export default function InstagramAssistantPage() {
                 variant="outline"
                 className="h-12 sm:h-14 md:h-16 w-full sm:w-auto rounded-full border-white/10 bg-white/5 text-white font-bold text-base sm:text-lg hover:bg-white/10"
               >
-                <Link href="/instagram-assistant/demo">See how it qualifies leads</Link>
+                <Link href="/instagram-assistant/demo">See a lead qualification preview</Link>
               </Button>
             </div>
           </motion.div>

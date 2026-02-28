@@ -12,13 +12,13 @@ const BrokeragePage = () => {
       visual: <div className="w-full h-full bg-gradient-to-br from-[#007CF0] to-[#00DFD8] rounded-lg" />
     },
     {
-      title: 'AI-Crafted Narratives',
-      description: 'Our Gemini-powered AI doesn\'t just write copy; it tells the story of your brokerage and your listings, engaging buyers on an emotional level.',
+      title: 'Clear Listing Story',
+      description: 'Present each listing with clear, persuasive copy that helps buyers understand value fast.',
       visual: <div className="w-full h-full bg-gradient-to-br from-[#7928CA] to-[#FF0080] rounded-lg" />
     },
     {
       title: 'Agent-Centric Design',
-      description: 'Empower your agents with beautiful, professional profiles that are automatically generated and updated from your agent data.',
+      description: 'Give your agents beautiful, professional profiles that stay updated with your latest details.',
       visual: <div className="w-full h-full bg-gradient-to-br from-[#FF4D4D] to-[#F9CB28] rounded-lg" />
     }
   ];
@@ -29,15 +29,15 @@ const BrokeragePage = () => {
       <section className="h-screen w-full relative flex items-center justify-center text-white text-center px-6 overflow-hidden bg-[#0a0f1c]">
         <div className="relative z-10">
           <h1 className="text-4xl md:text-7xl font-bold font-[var(--font-display)]">
-            The OS for Your Brokerage
+            One Website Hub for Your Brokerage
           </h1>
           <p className="mt-4 text-lg max-w-3xl mx-auto text-zinc-300">
-            An AI-powered, data-driven website that automates your marketing, syncs with your inventory, and works as the central hub for your entire operation.
+            A complete brokerage website that keeps listings, agent profiles, and lead capture in one place.
           </p>
           <div className="mt-8">
             <Link href="/builder?template=full-company">
               <Button size="lg" className="bg-[#007CF0] text-white hover:bg-[#007CF0]/90 rounded-full px-10 py-5 text-lg font-bold">
-                Build Your OS
+                Build Your Brokerage Site
               </Button>
             </Link>
           </div>
@@ -64,7 +64,7 @@ const BrokeragePage = () => {
       {/* How it Works Section */}
       <section className="py-24 bg-[#0d1425]">
         <div className="mx-auto max-w-7xl px-6 lg:px-8 text-center">
-          <h2 className="text-4xl font-bold font-[var(--font-display)] text-white">Get Your Smart Site in 3 Simple Steps</h2>
+          <h2 className="text-4xl font-bold font-[var(--font-display)] text-white">Get Your Site in 3 Simple Steps</h2>
           <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 text-white">
             <div className="p-8 border border-white/10 rounded-lg">
               <h3 className="text-2xl font-bold">1. Connect Your Data</h3>
@@ -72,7 +72,7 @@ const BrokeragePage = () => {
             </div>
             <div className="p-8 border border-white/10 rounded-lg">
               <h3 className="text-2xl font-bold">2. Choose a Template</h3>
-              <p className="mt-4 text-zinc-400">Select one of our professionally designed templates, or let our AI create a custom design for you.</p>
+              <p className="mt-4 text-zinc-400">Select one of our professionally designed templates that fits your brand style.</p>
             </div>
             <div className="p-8 border border-white/10 rounded-lg">
               <h3 className="text-2xl font-bold">3. Publish &amp; Go Live</h3>
@@ -153,4 +153,3 @@ const BrokeragePage = () => {
 };
 
 export default BrokeragePage;
-

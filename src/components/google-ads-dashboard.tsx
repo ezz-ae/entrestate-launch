@@ -316,7 +316,7 @@ export function GoogleAdsDashboard({ projects, readOnly = false }: { projects: P
             </select>
           )}
           <p className="text-xs text-zinc-500">
-            The AI will analyze this page to generate your ad copy and keywords automatically.
+            We analyze this page to prepare ad copy and keyword ideas automatically.
           </p>
           
           {!readOnly && (

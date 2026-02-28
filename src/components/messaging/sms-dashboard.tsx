@@ -158,7 +158,7 @@ export function SmsCampaignDashboard() {
 
       if (data.data?.message) setMessage(data.data.message);
 
-      toast({ title: 'AI draft ready', description: 'Review and edit before sending.' });
+      toast({ title: 'Draft ready', description: 'Review and edit before sending.' });
     } catch (error: any) {
       toast({
         title: 'Generation failed',
@@ -212,8 +212,8 @@ export function SmsCampaignDashboard() {
               <div className="rounded-2xl border border-white/10 bg-black/40 p-4 space-y-3">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-widest text-zinc-500">AI Draft</p>
-                    <p className="text-sm text-zinc-400">Give the topic and let AI write the SMS.</p>
+                    <p className="text-xs font-bold uppercase tracking-widest text-zinc-500">Quick Draft</p>
+                    <p className="text-sm text-zinc-400">Add a topic and we prepare a draft SMS for you.</p>
                   </div>
                   <Button
                     onClick={handleGenerate}
@@ -221,7 +221,7 @@ export function SmsCampaignDashboard() {
                     disabled={aiLoading}
                   >
                     {aiLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
-                    Generate Draft
+                    Prepare Draft
                   </Button>
                 </div>
                 <Input

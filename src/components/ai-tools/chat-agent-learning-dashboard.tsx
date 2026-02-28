@@ -166,7 +166,7 @@ export default function ChatAgentLearningDashboard({ agentId }: { agentId?: stri
   return (
     <div className="learning-dashboard" style={{ padding: 24 }}>
       <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800 }}>Learning Dashboard</h2>
-      <p style={{ marginTop: 6, color: 'var(--text-secondary)' }}>Upload brochures and documents to teach the AI about your projects. Monitor recent training activity and evaluation runs.</p>
+      <p style={{ marginTop: 6, color: 'var(--text-secondary)' }}>Upload brochures and documents to teach the assistant about your projects. Monitor recent updates and quality checks.</p>
 
       <div style={{ marginTop: 18, display: 'grid', gap: 12 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 12 }}>
@@ -226,7 +226,7 @@ export default function ChatAgentLearningDashboard({ agentId }: { agentId?: stri
                 <div style={{ fontWeight: 700, fontSize: 13 }}>{thread.lastUserMessage || 'New conversation'}</div>
                 {lastAgentMessage && (
                   <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 4 }}>
-                    AI reply: {String(lastAgentMessage.text).slice(0, 80)}{String(lastAgentMessage.text).length > 80 ? '…' : ''}
+                    Assistant reply: {String(lastAgentMessage.text).slice(0, 80)}{String(lastAgentMessage.text).length > 80 ? '…' : ''}
                   </div>
                 )}
                 <div style={{ fontSize: 10, color: 'var(--text-secondary)', marginTop: 4 }}>

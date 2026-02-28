@@ -8,8 +8,8 @@ import { AppProviders } from "@/components/app-providers";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Entrestate OS",
-  description: "The operating system for modern real estate entrepreneurs.",
+  title: "Entrestate",
+  description: "A simple real estate platform to launch pages, capture leads, and manage listings.",
 };
 
 export default function RootLayout({

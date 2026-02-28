@@ -13,34 +13,34 @@ import { cn } from '@/lib/utils';
 const SERVICE_DATA = {
   website: {
     title: "Website Builder",
-    tagline: "Brochure to Web in 30 Seconds",
-    description: "Upload a brochure and get a ready-to-share project page in minutes. We pull the details, write the copy, and build the layout for you.",
+    tagline: "From Brochure to Website, Fast",
+    description: "Upload a brochure and get a ready-to-share project page in minutes. We organize the details and present them in a clean layout.",
     icon: Globe,
     color: "blue",
     features: [
-      "Auto-pull project details and specs",
-      "Sales copy written for you",
+      "Project details and specs organized clearly",
+      "Ready-to-share listing content",
       "Looks great on mobile",
       "Connected to live market data",
-      "Preview link included (sitename.site.entrestate.com)"
+      "Preview link included"
     ],
-    cta: "Launch Architect",
+    cta: "Start Website Setup",
     href: "/builder"
   },
   'ai-market-expert': {
-    title: "Market Intelligence",
-    tagline: "Real-time UAE Project Data",
-    description: "Access a centralized market hub with curated projects, pricing insights, and inventory updates.",
+    title: "Market Feed",
+    tagline: "Live UAE Project Updates",
+    description: "Browse a single market view with curated projects, pricing snapshots, and availability updates.",
     icon: Bot,
     color: "orange",
     features: [
-        "Real-time ROI & Yield analytics",
-        "Developer performance insights",
-        "Historical price trend visualization",
-        "Branded PDF export for investors",
-        "Direct campaign generation"
+        "Rental yield and return snapshots",
+        "Developer and area comparisons",
+        "Past pricing trends",
+        "Exportable reports for buyers",
+        "Fast lead follow-up links"
     ],
-    cta: "Explore Market Data",
+    cta: "Explore Market Feed",
     href: "/discover"
   },
   'google-ads': {
@@ -52,25 +52,26 @@ const SERVICE_DATA = {
     features: [
         "One-click campaign launch",
         "High-intent keyword grouping",
-        "AI-optimized ad copy variations",
+        "Ad copy options ready to review",
         "Real-time performance dashboard",
-        "Automatic tracking setup"
+        "Tracking setup included"
     ],
     cta: "Connect Google Ads",
     href: "/dashboard/google-ads"
   },
   'instagram-bot': {
-    title: "Social Automation",
+    title: "Instagram Assistant",
     tagline: "Always-On Instagram Replies",
-    description: "Turn your Instagram profile into a sales engine. Our AI bot handles project inquiries, qualifies investors, and pushes hot leads to your WhatsApp.",
+    description: "Turn your Instagram profile into a steady source of buyer inquiries. The assistant replies quickly, qualifies leads, and routes hot leads to WhatsApp.",
     icon: Facebook,
     color: "pink",
     features: [
         "Official Meta connection",
-        "Speaks 40+ languages natively",
-        "Automated project info sharing",
-        "Lead qualification & CRM updates",
-        "Zero missed inquiries policy"
+        "Speaks multiple languages",
+        "Instant property detail replies",
+        "Lead qualification and handoff",
+        "Clear lead history",
+        "Fewer missed inquiries"
     ],
     cta: "Launch Instagram Assistant",
     href: "/instagram-assistant"
@@ -113,7 +114,7 @@ export default function ServicePage({ params }: PageProps) {
               >
                   <div className={cn("inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold uppercase tracking-[0.3em] mx-auto", `text-${service.color}-500`)}>
                     <Activity className="h-3.5 w-3.5" />
-                    Service Overview
+                    Service
                   </div>
                   <h1 className="text-6xl md:text-8xl font-black tracking-tighter leading-[0.9]">{service.title}<br/><span className="text-zinc-600 italic uppercase">{service.tagline}</span></h1>
                   <p className="text-zinc-500 text-2xl max-w-3xl mx-auto font-light leading-relaxed">
@@ -171,8 +172,8 @@ export default function ServicePage({ params }: PageProps) {
                                   </div>
                               </div>
                               <div className="p-6 rounded-2xl bg-black/40 border border-white/5">
-                                  <p className="text-[10px] font-bold text-zinc-600 uppercase mb-2">Smart Optimization</p>
-                                  <p className="text-lg font-black text-white">Smart tuning active</p>
+                                  <p className="text-[10px] font-bold text-zinc-600 uppercase mb-2">Campaign Status</p>
+                                  <p className="text-lg font-black text-white">Running smoothly</p>
                               </div>
                           </div>
 

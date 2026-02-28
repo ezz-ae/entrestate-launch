@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 type Lead = {
   id: string;
@@ -17,13 +17,13 @@ export function LeadsClient({ orderId }: { orderId: string }) {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState<string | null>(null);
 
-  async function load() {
+  const load = useCallback(async () => {
     const response = await fetch(`/api/workspace/${orderId}/leads`);
     const data = await response.json();
     if (response.ok) {
       setLeads(data.leads || []);
     }
-  }
+  }, [orderId]);
 
   async function submit() {
     const response = await fetch(`/api/workspace/${orderId}/leads`, {
@@ -45,22 +45,22 @@ export function LeadsClient({ orderId }: { orderId: string }) {
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-2 rounded-lg border border-slate-200 p-3">
-        <h3 className="text-sm font-semibold text-slate-900">Capture lead</h3>
-        <input className="rounded border border-slate-300 px-3 py-2 text-sm" placeholder="Name" value={name} onChange={(event) => setName(event.target.value)} />
-        <input className="rounded border border-slate-300 px-3 py-2 text-sm" placeholder="Phone" value={phone} onChange={(event) => setPhone(event.target.value)} />
-        <input className="rounded border border-slate-300 px-3 py-2 text-sm" placeholder="Email" value={email} onChange={(event) => setEmail(event.target.value)} />
-        <button onClick={submit} className="rounded bg-slate-900 px-4 py-2 text-sm text-white">Save lead</button>
-        {message ? <p className="text-xs text-slate-600">{message}</p> : null}
+      <div className="grid gap-2 rounded-lg border border-border bg-card p-3">
+        <h3 className="text-sm font-semibold text-card-foreground">Capture lead</h3>
+        <input className="rounded border border-border bg-background px-3 py-2 text-sm text-foreground" placeholder="Name" value={name} onChange={(event) => setName(event.target.value)} />
+        <input className="rounded border border-border bg-background px-3 py-2 text-sm text-foreground" placeholder="Phone" value={phone} onChange={(event) => setPhone(event.target.value)} />
+        <input className="rounded border border-border bg-background px-3 py-2 text-sm text-foreground" placeholder="Email" value={email} onChange={(event) => setEmail(event.target.value)} />
+        <button onClick={submit} className="rounded bg-primary px-4 py-2 text-sm text-primary-foreground">Save lead</button>
+        {message ? <p className="text-xs text-muted-foreground">{message}</p> : null}
       </div>
 
-      <div className="rounded-lg border border-slate-200">
+      <div className="rounded-lg border border-border bg-card">
         <table className="min-w-full text-left text-sm">
-          <thead className="bg-slate-100 text-slate-700">
+          <thead className="bg-muted text-muted-foreground">
             <tr>
               <th className="px-3 py-2">Name</th>
               <th className="px-3 py-2">Phone</th>
@@ -70,7 +70,7 @@ export function LeadsClient({ orderId }: { orderId: string }) {
           </thead>
           <tbody>
             {leads.map((lead) => (
-              <tr key={lead.id} className="border-t border-slate-200">
+              <tr key={lead.id} className="border-t border-border text-card-foreground">
                 <td className="px-3 py-2">{lead.name || '-'}</td>
                 <td className="px-3 py-2">{lead.phone || '-'}</td>
                 <td className="px-3 py-2">{lead.email || '-'}</td>

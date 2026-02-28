@@ -32,16 +32,16 @@ export default function InitControlRoom() {
 
     useEffect(() => {
         const events = [
-            "Starting your system...",
+            "Starting your workspace...",
             "Connecting to the Dubai data feed...",
-            "Checking smart features...",
+            "Checking listing tools...",
             "Checking data security...",
             "Confirming hosting network...",
             "Payment gateway check: PayPal active",
             "Payment gateway check: Ziina active",
             "Email service ready",
             "SMS service ready",
-            "System check: all clear",
+            "Workspace check: all clear",
             "READY TO LAUNCH."
         ];
 
@@ -68,7 +68,7 @@ export default function InitControlRoom() {
             <div className="max-w-[1800px] mx-auto flex justify-between items-start mb-20 border-b border-white/5 pb-8 relative z-10">
                 <div className="flex gap-10">
                     <div className="space-y-1">
-                        <p className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.3em]">System</p>
+                        <p className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.3em]">Workspace</p>
                         <h1 className="text-3xl font-black text-white italic uppercase tracking-tighter">Entrestate Status</h1>
                     </div>
                     <div className="h-12 w-px bg-white/5" />
@@ -84,7 +84,7 @@ export default function InitControlRoom() {
                         <div className="flex items-center gap-2">
                             <div className={cn("w-2 h-2 rounded-full animate-pulse", status === 'live' ? "bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]" : "bg-orange-500")} />
                             <span className={cn("text-xs font-bold uppercase", status === 'live' ? "text-green-500" : "text-orange-500")}>
-                                {status === 'live' ? 'All Systems Ready' : 'Getting things ready...'}
+                                {status === 'live' ? 'Ready to use' : 'Getting things ready...'}
                             </span>
                         </div>
                     </div>
@@ -116,7 +116,7 @@ export default function InitControlRoom() {
                      </div>
 
                      <div className="p-8 rounded-2xl bg-blue-600/5 border border-blue-500/10 space-y-4">
-                        <h4 className="text-[10px] font-black uppercase text-blue-500 tracking-widest">Smart Insights</h4>
+                        <h4 className="text-[10px] font-black uppercase text-blue-500 tracking-widest">Team Insights</h4>
                         <p className="text-xs text-zinc-400 leading-relaxed font-medium italic">
                             "Your dashboard is preparing the latest project insights."
                         </p>
@@ -126,7 +126,7 @@ export default function InitControlRoom() {
                 {/* 3. CORE INFRASTRUCTURE STATUS */}
                 <div className="lg:col-span-3 grid md:grid-cols-3 gap-8">
                     <StatusCard title="Database" icon={Database} status="Connected" sub="Secure data storage" />
-                    <StatusCard title="Smart Assistant" icon={Cpu} status="Optimized" sub="Smart recommendations" />
+                    <StatusCard title="Property Assistant" icon={Cpu} status="Ready" sub="Quick follow-up help" />
                     <StatusCard title="Hosting Network" icon={Globe} status="Live" sub="Fast global hosting" />
                     <StatusCard title="Messaging" icon={Radio} status="Ready" sub="Email & SMS ready" />
                     <StatusCard title="Payments" icon={CreditCard} status="Secure" sub="Payments connected" />
@@ -137,7 +137,7 @@ export default function InitControlRoom() {
                         <Card className="bg-zinc-950 border-white/5 rounded-[3rem] overflow-hidden border-2 border-blue-600/20 shadow-2xl">
                             <div className="p-10 border-b border-white/5 flex justify-between items-center bg-zinc-900/20">
                                 <div>
-                                    <h3 className="text-xl font-bold text-white uppercase italic tracking-tighter">System Health Monitor</h3>
+                                    <h3 className="text-xl font-bold text-white uppercase italic tracking-tighter">Workspace Health</h3>
                                     <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest mt-1">Live performance across regions</p>
                                 </div>
                                 <Badge className="bg-green-500/10 text-green-500 border-0 text-[10px] font-black uppercase px-4 py-2 rounded-full">Optimal Performance</Badge>
@@ -159,7 +159,7 @@ export default function InitControlRoom() {
                                     ))}
                                 </div>
                                 <div className="grid grid-cols-4 gap-10 mt-12 pt-10 border-t border-white/5">
-                                    <MetricItem label="Smart Response Time" value="840ms" />
+                                    <MetricItem label="Response Time" value="840ms" />
                                     <MetricItem label="Data Speed" value="12.4K req/s" />
                                     <MetricItem label="Uptime" value="99.99%" />
                                     <MetricItem label="Traffic Balance" value="Active" />

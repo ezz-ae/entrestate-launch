@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 
 const STAGES = [
   { id: 'new', label: 'New Leads', color: 'bg-slate-100 dark:bg-slate-800' },
-  { id: 'qualified', label: 'AI Qualified', color: 'bg-blue-50 dark:bg-blue-900/20' },
+  { id: 'qualified', label: 'Qualified', color: 'bg-blue-50 dark:bg-blue-900/20' },
   { id: 'negotiation', label: 'Negotiation', color: 'bg-purple-50 dark:bg-purple-900/20' },
   { id: 'closed', label: 'Closed Won', color: 'bg-green-50 dark:bg-green-900/20' },
 ];
@@ -55,7 +55,7 @@ export function PipelineDemo() {
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h3 className="text-lg font-bold text-slate-900 dark:text-white">Live Pipeline View</h3>
-          <p className="text-sm text-slate-500">Leads are automatically routed based on intent score.</p>
+          <p className="text-sm text-slate-500">Leads move through each stage as your team follows up.</p>
         </div>
         <div className="flex items-center gap-2 rounded-lg bg-green-100 px-4 py-2 text-green-700 dark:bg-green-900/30 dark:text-green-400">
           <DollarSign className="h-4 w-4" />
@@ -97,7 +97,7 @@ export function PipelineDemo() {
                     </div>
                     {stage.id === 'qualified' && (
                       <div className="mt-2 flex items-center gap-1 text-[10px] text-blue-600">
-                        <CheckCircle className="h-3 w-3" /> AI Verified
+                        <CheckCircle className="h-3 w-3" /> Verified
                       </div>
                     )}
                     {stage.id === 'negotiation' && (

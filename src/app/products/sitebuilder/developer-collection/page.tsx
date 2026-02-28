@@ -35,7 +35,7 @@ const DeveloperCollectionPage = () => {
           <p 
             className="mt-4 text-lg max-w-3xl mx-auto text-zinc-300"
           >
-            Showcase a developer's entire body of work in a stunning, AI-curated portfolio that tells their story and inspires confidence.
+            Showcase a developer's full body of work in a polished portfolio that tells their story and builds trust.
           </p>
           <div 
             className="mt-8"

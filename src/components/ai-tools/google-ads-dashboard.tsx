@@ -20,8 +20,8 @@ export function GoogleAdsDashboard() {
     <div className="space-y-8">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Smart Google Ads</h2>
-          <p className="text-muted-foreground">High-intent search campaigns managed by AI.</p>
+          <h2 className="text-3xl font-bold tracking-tight">Google Ads Dashboard</h2>
+          <p className="text-muted-foreground">High-intent search campaigns managed by your team.</p>
         </div>
         <Button className="bg-blue-600 hover:bg-blue-700 rounded-full px-6 gap-2 h-11">
           <Plus className="h-4 w-4" /> New Campaign
@@ -72,7 +72,7 @@ export function GoogleAdsDashboard() {
         <Card>
            <CardHeader>
               <CardTitle>Keyword Opportunities</CardTitle>
-              <CardDescription>AI found these high-ROI keywords for your projects.</CardDescription>
+              <CardDescription>Top high-ROI keyword ideas for your projects.</CardDescription>
            </CardHeader>
            <CardContent>
               <div className="space-y-2">

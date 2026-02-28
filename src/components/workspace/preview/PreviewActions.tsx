@@ -39,23 +39,26 @@ export function PreviewActions({ orderId, previewUrl }: { orderId: string; previ
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
-        <button onClick={requestPreview} className="rounded-lg border border-slate-300 px-4 py-2 text-sm">
+        <button
+          onClick={requestPreview}
+          className="rounded-lg border border-border bg-background px-4 py-2 text-sm text-foreground hover:bg-muted"
+        >
           Build preview now
         </button>
         {previewUrl ? (
-          <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+          <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-600">
             Preview ready
           </span>
         ) : (
-          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">
+          <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
             Awaiting preview
           </span>
         )}
       </div>
 
-      <div className="rounded-lg border border-slate-200 bg-white p-3">
-        <p className="text-sm font-medium text-slate-800">QA checklist</p>
-        <div className="mt-2 space-y-2 text-sm text-slate-600">
+      <div className="rounded-lg border border-border bg-card p-3">
+        <p className="text-sm font-medium text-card-foreground">QA checklist</p>
+        <div className="mt-2 space-y-2 text-sm text-muted-foreground">
           {CHECKLIST_ITEMS.map((item) => (
             <label key={item.id} className="flex items-center gap-2">
               <input
@@ -67,7 +70,7 @@ export function PreviewActions({ orderId, previewUrl }: { orderId: string; previ
             </label>
           ))}
         </div>
-        <label className="mt-3 flex items-center gap-2 text-xs text-slate-500">
+        <label className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
           <input
             type="checkbox"
             checked={allowBypass}
@@ -81,13 +84,13 @@ export function PreviewActions({ orderId, previewUrl }: { orderId: string; previ
         onClick={publish}
         disabled={publishDisabled}
         className={`rounded-lg px-4 py-2 text-sm font-medium ${
-          publishDisabled ? 'bg-slate-200 text-slate-500' : 'bg-emerald-600 text-white'
+          publishDisabled ? 'bg-muted text-muted-foreground' : 'bg-emerald-600 text-white'
         }`}
       >
         Publish now
       </button>
 
-      {status ? <p className="text-sm text-slate-600">{status}</p> : null}
+      {status ? <p className="text-sm text-muted-foreground">{status}</p> : null}
     </div>
   );
 }

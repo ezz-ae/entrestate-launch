@@ -12,7 +12,7 @@ export default function InstagramAssistantDemoPage() {
       <div className="container mx-auto px-6 max-w-4xl space-y-12">
         <div className="text-center space-y-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-            <MessageSquare className="h-3 w-3" /> Lead Qualification Demo
+            <MessageSquare className="h-3 w-3" /> Lead Qualification Preview
           </div>
           <h1 className="text-4xl md:text-6xl font-black tracking-tight">How It Qualifies Leads</h1>
           <p className="text-zinc-400 text-lg">

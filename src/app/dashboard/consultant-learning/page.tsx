@@ -29,7 +29,7 @@ export default function ConsultantLearningPage() {
             </div>
           </div>
           <p className="text-xs text-zinc-500">
-            Required: source connection + indexing pipeline.
+            Required: source connection and initial setup.
           </p>
         </CardContent>
       </Card>

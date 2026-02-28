@@ -14,7 +14,7 @@ const LeadColdCallingPage = () => {
                 Lead Cold Calling
             </h1>
             <p className="mt-6 text-base md:text-lg text-[#b7c3df] max-w-2xl mx-auto">
-              A modern approach to cold calling. Our system helps you identify stalled leads and provides you with the right context to restart the conversation.
+              A modern approach to cold calling. Review stalled leads, get clear context, and restart conversations with confidence.
             </p>
             <div className="mt-8">
                 <Link href="/dashboard/leads/cold-calling">

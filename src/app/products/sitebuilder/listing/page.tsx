@@ -29,7 +29,7 @@ const ListingPage = () => {
             transition={{ duration: 0.8, delay: 0.2 }}
             className="mt-6 text-lg leading-8 text-zinc-300 max-w-3xl mx-auto"
           >
-            Go beyond static listings. Create intelligent, interactive, and high-converting websites for every property in your portfolio, powered by Google's Gemini.
+            Go beyond static listings. Create clean, interactive, and high-converting websites for every property in your portfolio.
           </motion.p>
           <motion.div 
              initial={{ opacity: 0, y: 20 }}
@@ -39,28 +39,28 @@ const ListingPage = () => {
           >
             <Link href="/builder?template=template-ads-launch">
               <Button size="lg" className="bg-[#00d09c] text-black hover:bg-[#00d09c]/90 rounded-full px-8 py-4 text-base font-bold">
-                Generate a Smart Site
+                Build a Listing Site
               </Button>
             </Link>
           </motion.div>
         </div>
       </section>
 
-      {/* Powered by Gemini Section */}
+      {/* Listing Quality Section */}
       <section className="py-24 bg-[#0d1425]">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
             <div className="text-center md:text-left">
               <Gem className="w-16 h-16 text-[#00d09c] mx-auto md:mx-0" />
-              <h2 className="mt-6 text-3xl font-bold text-white sm:text-4xl">Powered by Gemini</h2>
+              <h2 className="mt-6 text-3xl font-bold text-white sm:text-4xl">Built for Serious Buyers</h2>
               <p className="mt-4 text-lg text-zinc-400">
-                Entrestate's listing sites are built on Google's most advanced AI. This allows us to create websites that are not only beautiful but also intelligent, persuasive, and effective.
+                Entrestate listing sites focus on clear details, persuasive structure, and strong inquiry capture.
               </p>
             </div>
             <div className="space-y-4">
-              <p className="text-zinc-300 p-4 border border-white/10 rounded-lg"><strong>AI-Generated Narratives:</strong> Gemini crafts compelling stories for each property.</p>
-              <p className="text-zinc-300 p-4 border border-white/10 rounded-lg"><strong>Smart Lead Insights:</strong> Understand your leads better with AI-powered analysis.</p>
-              <p className="text-zinc-300 p-4 border border-white/10 rounded-lg"><strong>Personalized Experiences:</strong> The site adapts to each visitor, showing them the most relevant information.</p>
+              <p className="text-zinc-300 p-4 border border-white/10 rounded-lg"><strong>Clear Property Story:</strong> Present each home with strong, buyer-friendly copy.</p>
+              <p className="text-zinc-300 p-4 border border-white/10 rounded-lg"><strong>Lead Highlights:</strong> Understand inquiry quality quickly and follow up with confidence.</p>
+              <p className="text-zinc-300 p-4 border border-white/10 rounded-lg"><strong>Mobile-First Experience:</strong> Buyers get a smooth experience on phone or desktop.</p>
             </div>
           </div>
         </div>
@@ -94,9 +94,9 @@ const ListingPage = () => {
        <section className="py-24 bg-[#0d1425]">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="text-center">
-             <h2 className="text-3xl font-bold text-white sm:text-4xl">Google-Powered Analytics</h2>
-             <p className="mt-4 text-lg text-zinc-400 max-w-2xl mx-auto">
-              Track your success with our built-in, Google-powered analytics dashboard.
+            <h2 className="text-3xl font-bold text-white sm:text-4xl">Google-Powered Analytics</h2>
+            <p className="mt-4 text-lg text-zinc-400 max-w-2xl mx-auto">
+              Track your results with simple performance reporting.
             </p>
           </div>
           <div className="mt-12 w-full max-w-4xl mx-auto bg-[#0a0f1c] rounded-lg p-8 border border-white/10">
@@ -117,7 +117,7 @@ const ListingPage = () => {
           <div className="mt-10">
             <Link href="/builder?template=template-ads-launch">
               <Button size="lg" className="bg-[#00d09c] text-black hover:bg-[#00d09c]/90 rounded-full px-12 py-6 text-xl font-bold">
-                Generate Your First Smart Site
+                Build Your First Listing Site
               </Button>
             </Link>
           </div>
@@ -128,4 +128,3 @@ const ListingPage = () => {
 };
 
 export default ListingPage;
-

@@ -23,7 +23,7 @@ const InstagramAssistantSalesFunnel: React.FC<InstagramAssistantSalesFunnelProps
         </div>
         <h1 className="screen-title" style={{ fontSize: '32px', marginBottom: '16px', fontWeight: '800', color: 'white' }}>Turn DMs into Deals.</h1>
         <p style={{ fontSize: '16px', color: 'var(--text-secondary)', marginBottom: '40px', lineHeight: '1.5', maxWidth: '320px', margin: '0 auto 40px' }}>
-          Your AI assistant replies to inquiries, qualifies buyers, and books viewings 24/7.
+          Your assistant replies to inquiries, qualifies buyers, and books viewings around the clock.
         </p>
         
         {/* Interactive Demo Placeholder - Visual First */}

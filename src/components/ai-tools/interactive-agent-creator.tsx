@@ -102,7 +102,7 @@ export function InteractiveAgentCreator() {
                 const missingKeys = data?.error?.missing || data?.missing;
                 if (Array.isArray(missingKeys) && missingKeys.includes('GEMINI_API_KEY')) {
                     setAiConfigured(false);
-                    setAiError('AI key missing. Contact your admin to enable Gemini.');
+                    setAiError('Assistant setup key is missing. Contact your admin to enable service access.');
                 }
                 setMessages(prev => [
                     ...prev,
@@ -321,7 +321,7 @@ export function InteractiveAgentCreator() {
                 >
                     {!aiConfigured && (
                         <div className="rounded-2xl border border-red-500/30 bg-red-500/5 px-4 py-2 text-[10px] font-black uppercase tracking-[0.3em] text-red-200">
-                            {aiError || 'AI is not configured. Ask your admin to enable Gemini.'}
+                            {aiError || 'Assistant is not configured. Ask your admin to enable service access.'}
                         </div>
                     )}
                     {messages.map((msg, i) => (
@@ -380,7 +380,7 @@ export function InteractiveAgentCreator() {
                             </Button>
                         </div>
                     </div>
-                    <p className="text-center text-[10px] text-zinc-600 font-bold uppercase tracking-[0.3em] mt-4">Powered by Entrestate AI</p>
+                    <p className="text-center text-[10px] text-zinc-600 font-bold uppercase tracking-[0.3em] mt-4">Powered by Entrestate</p>
                 </div>
 
             </div>
