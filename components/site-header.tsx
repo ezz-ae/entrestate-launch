@@ -16,24 +16,16 @@ import {
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { useState } from "react"
 
-import { useSession, signIn, signOut } from "next-auth/react"
-
-function AuthButton() {
-  const { data: session } = useSession()
-
-  if (session) {
-    return (
-      <>
-        {session.user?.name} <br />
-        <Button onClick={() => signOut()}>Sign out</Button>
-      </>
-    )
-  }
+function HeaderCta() {
   return (
-    <>
-      Not signed in <br />
-      <Button onClick={() => signIn()}>Sign in</Button>
-    </>
+    <Button
+      asChild
+      className="rounded-full bg-lime-400 px-5 text-sm font-semibold text-black hover:bg-lime-300"
+    >
+      <a href="https://wa.link/rc25na" target="_blank" rel="noopener noreferrer">
+        Get a quote
+      </a>
+    </Button>
   )
 }
 
@@ -86,7 +78,7 @@ export function SiteHeader() {
               <NavigationMenuList>
                 <NavigationMenuItem>
                   <NavigationMenuTrigger
-                    className="bg-transparent text-white/90 hover:text-purple-300 data-[state=open]:text-purple-300
+                    className="bg-transparent text-white/90 hover:text-lime-300 data-[state=open]:text-lime-300
                                hover:bg-transparent focus:bg-transparent
                                data-[state=open]:bg-transparent data-[state=open]:hover:bg-transparent
                                data-[active=true]:bg-transparent"
@@ -101,13 +93,13 @@ export function SiteHeader() {
                             <Link
                               href={service.href}
                               className="group relative flex items-start gap-3 rounded-xl p-3 transition-all
-                                         hover:bg-white/5 hover:ring-1 hover:ring-purple-300/60
-                                         hover:shadow-[0_0_0_1px_rgba(168,85,247,0.25),0_0_20px_rgba(168,85,247,0.15)]
-                                         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-300/70"
+                                         hover:bg-white/5 hover:ring-1 hover:ring-lime-300/60
+                                         hover:shadow-[0_0_0_1px_rgba(132,204,22,0.25),0_0_20px_rgba(132,204,22,0.15)]
+                                         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-300/70"
                             >
-                              <service.icon className="h-5 w-5 text-purple-300 mt-0.5 shrink-0 group-hover:text-purple-200" />
+                              <service.icon className="h-5 w-5 text-lime-300 mt-0.5 shrink-0 group-hover:text-lime-200" />
                               <div>
-                                <div className="text-sm font-medium text-white group-hover:text-purple-300">
+                                <div className="text-sm font-medium text-white group-hover:text-lime-300">
                                   {service.label}
                                 </div>
                                 <p className="text-xs text-gray-400 mt-0.5">{service.description}</p>
@@ -122,7 +114,7 @@ export function SiteHeader() {
               </NavigationMenuList>
             </NavigationMenu>
             {links.map((l) => (
-              <Link key={l.href} href={l.href} className="hover:text-purple-300 transition-colors">
+              <Link key={l.href} href={l.href} className="hover:text-lime-300 transition-colors">
                 {l.label}
               </Link>
             ))}
@@ -130,7 +122,7 @@ export function SiteHeader() {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex">
-            <AuthButton />
+            <HeaderCta />
           </div>
 
           {/* Mobile Nav */}
@@ -156,7 +148,7 @@ export function SiteHeader() {
                 {/* Nav Links */}
                 <nav className="flex flex-col gap-1 mt-2 text-gray-200">
                   <Collapsible open={servicesOpen} onOpenChange={setServicesOpen}>
-                    <CollapsibleTrigger className="flex items-center justify-between w-full px-4 py-3 hover:bg-gray-900 hover:text-purple-300 transition-colors">
+                    <CollapsibleTrigger className="flex items-center justify-between w-full px-4 py-3 hover:bg-gray-900 hover:text-lime-300 transition-colors">
                       <div className="flex items-center gap-3">
                         <span className="inline-flex items-center justify-center w-5 h-5 text-gray-400">
                           <Building2 className="h-4 w-4" />
@@ -168,14 +160,14 @@ export function SiteHeader() {
                       />
                     </CollapsibleTrigger>
                     <CollapsibleContent>
-                      <div className="flex flex-col bg-gray-900/50 border-l-2 border-purple-300/30 ml-4">
+                      <div className="flex flex-col bg-gray-900/50 border-l-2 border-lime-300/30 ml-4">
                         {services.map((service) => (
                           <Link
                             key={service.href}
                             href={service.href}
-                            className="flex items-center gap-3 pl-8 pr-4 py-2.5 hover:bg-gray-900 hover:text-purple-300 transition-colors"
+                            className="flex items-center gap-3 pl-8 pr-4 py-2.5 hover:bg-gray-900 hover:text-lime-300 transition-colors"
                           >
-                            <service.icon className="h-4 w-4 text-purple-300/70" />
+                            <service.icon className="h-4 w-4 text-lime-300/70" />
                             <span className="text-sm">{service.label}</span>
                           </Link>
                         ))}
@@ -187,7 +179,7 @@ export function SiteHeader() {
                     <Link
                       key={l.href}
                       href={l.href}
-                      className="flex items-center gap-3 px-4 py-3 hover:bg-gray-900 hover:text-purple-300 transition-colors"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-gray-900 hover:text-lime-300 transition-colors"
                     >
                       <span className="inline-flex items-center justify-center w-5 h-5 text-gray-400">
                         <l.icon className="h-4 w-4" />
@@ -199,7 +191,7 @@ export function SiteHeader() {
 
                 {/* CTA Button at Bottom */}
                 <div className="mt-auto border-t border-gray-800 p-4">
-                  <AuthButton />
+                  <HeaderCta />
                 </div>
               </SheetContent>
             </Sheet>

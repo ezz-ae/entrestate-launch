@@ -3,13 +3,14 @@ import type React from "react"
 import "./globals.css"
 import '@mantine/core/styles.css';
 import type { Metadata } from "next"
-import { Inter } from "next/font/google"
+import { Manrope, Sora } from "next/font/google"
 import Script from "next/script"
 import { ColorSchemeScript, MantineProvider } from '@mantine/core';
 import Providers from './providers';
 import { theme } from '../lib/mantine-theme';
 
-const inter = Inter({ subsets: ["latin"], display: "swap" })
+const manrope = Manrope({ subsets: ["latin"], display: "swap", variable: "--font-sans" })
+const sora = Sora({ subsets: ["latin"], display: "swap", variable: "--font-display" })
 
 export const metadata: Metadata = {
   title: "Mashroi | Real Estate Website Templates + AI Builder",
@@ -24,22 +25,12 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={inter.className}>
+    <html lang="en" className={`${manrope.variable} ${sora.variable}`}>
       <head>
         <ColorSchemeScript />
         <meta
           name="viewport"
           content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
-        />
-
-        {/* Font Preload */}
-        <link
-          rel="preload"
-          href="/fonts/Inter.woff2"
-          as="font"
-          type="font/woff2"
-          crossOrigin="anonymous"
-          fetchPriority="high"
         />
 
         {/* Dynamic Favicon Script */}
