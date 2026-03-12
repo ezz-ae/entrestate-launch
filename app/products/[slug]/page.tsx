@@ -7,6 +7,13 @@ import { Button } from "@/components/ui/button"
 import { products, getProductBySlug } from "@/lib/products"
 
 export const dynamic = "force-static"
+export const dynamicParams = false
+
+export function generateStaticParams() {
+  return products.map((product) => ({
+    slug: product.slug,
+  }))
+}
 
 export default function ProductPage({ params }: { params: { slug: string } }) {
   const product = getProductBySlug(params.slug)
