@@ -1,5 +1,5 @@
 async function main() {
-  const base = process.env.DEV_BASE || 'http://localhost:3002';
+  const base = process.env.DEV_BASE || 'http://localhost:3001';
   console.log('Testing dev endpoints on', base);
   const cookiePath = '/tmp/dev-cookies.txt';
   const fs = await import('fs');
@@ -37,6 +37,7 @@ async function main() {
   const headers = cookieHeader ? { 'cookie': cookieHeader } : undefined;
 
   try {
+    console.log(`Fetching ${base}/api/dev/fixtures`);
     const fx = await fetch(`${base}/api/dev/fixtures`, { headers });
     if (!fx.ok) throw new Error(`fixtures failed: ${fx.status}`);
     const j = await fx.json();

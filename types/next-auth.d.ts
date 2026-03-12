@@ -5,6 +5,7 @@ declare module 'next-auth' {
   interface User {
     role?: string;
     tenantId?: string;
+    subscriptionStatus?: string;
   }
 
   interface Session {
@@ -15,6 +16,7 @@ declare module 'next-auth' {
       role: string;
       tenantId: string;
       roles?: string[];
+      subscriptionStatus?: string;
     } & DefaultSession['user'];
   }
 }
@@ -24,5 +26,6 @@ declare module 'next-auth/jwt' {
     role?: string;
     tenantId?: string;
     roles?: string[];
+    subscriptionStatus?: string;
   }
 }

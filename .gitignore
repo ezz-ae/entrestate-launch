@@ -1,72 +1,65 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# Dependencies
+# dependencies
 /node_modules
 /.pnp
 .pnp.js
 
-# Testing
+# testing
 /coverage
+/test-results
+/.playwright-cli
 
-# Next.js build output
+# next.js
 /.next/
 /out/
 
-# Local runtime artifacts
+# local runtime artifacts
 .cache/
-test-results/
 .next-dev.log
 .next-dev.pid
 
-# TypeScript incremental cache
-tsconfig.tsbuildinfo
-
-# Production build files
+# production
 /build
 
-# Static files
-/public
-
-# Miscellaneous
-.DS_Store
-*.pem
-
-# Logs
+# logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.pnpm-debug.log*
 firebase-debug.log
 build_errors.txt
 build_output.txt
 lint_errors.txt
 lint_output.txt
 
-# Local .env file
-.env.local
+# env files
 .env
+.env.local
+.env.*.local
 .env.vercel*
+!.env.example
 
 # IDEs
 .vscode
 .idea
 
+# OS
+.DS_Store
+
 # Vercel
 .vercel
 
-# Secrets
+# TypeScript incremental cache
+*.tsbuildinfo
+
+# secrets
 service-account-key.json
 *-firebase-adminsdk-*.json
-
-# secrets
-src/config/service-account.json
 *.pem
 *.key
-
-# secrets
-src/config/service-account.json
-src/config/service-account.json
-.env*.local
-
-# Firebase Admin SDK Keys
 firebase-adminsdk.json
-gen-lang-client-0927332284-571bd59f331e.json
+gen-lang-client-*.json
+
+# archives
+*.zip
