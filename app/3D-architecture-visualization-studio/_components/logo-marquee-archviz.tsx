@@ -4,39 +4,46 @@ import { useState } from "react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 
-export function LogoMarqueeArchviz() {
-  const [pausedRow, setPausedRow] = useState<string | null>(null)
+const logos = [
+  { name: "Lionsgate", image: "/icons/skitbit-white.png" },
+  { name: "Skitbit", image: "/icons/skitbit-white.png" },
+  { name: "AP", image: "/icons/skitbit-white.png" },
+  { name: "Framework", image: "/icons/skitbit-white.png" },
+]
 
-  const logos = [
-    { name: "Lionsgate", image: "/icons/skitbit-white.png" },
-    { name: "Skitbit", image: "/icons/skitbit-white.png" },
-    { name: "AP", image: "/icons/skitbit-white.png" },
-    { name: "Framework", image: "/icons/skitbit-white.png" },
-  ]
+type RowProps = {
+  dir: "left" | "right"
+  id: string
+  pausedRow: string | null
+  setPausedRow: (value: string | null) => void
+}
 
-  const Row = ({ dir, id }: { dir: "left" | "right"; id: string }) => (
-    <div className="flex overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
-      <div
-        className={`flex ${dir === "left" ? "animate-scroll-left" : "animate-scroll-right"} whitespace-nowrap`}
-        style={{ animationPlayState: pausedRow === id ? "paused" : "running", width: "max-content" }}
-      >
-        {[...logos, ...logos, ...logos].map((logo, i) => (
-          <div
-            key={`${id}-${i}`}
-            className="flex-shrink-0 mx-3"
-            onMouseEnter={() => setPausedRow(id)}
-            onMouseLeave={() => setPausedRow(null)}
-          >
-            <div className="w-24 h-24 rounded-2xl bg-black/40 border border-white/20 backdrop-blur-xl flex items-center justify-center overflow-hidden">
-              <div className="relative w-full h-full">
-                <Image src={logo.image || "/placeholder.svg"} alt={logo.name} fill className="object-cover" />
-              </div>
+const Row = ({ dir, id, pausedRow, setPausedRow }: RowProps) => (
+  <div className="flex overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
+    <div
+      className={`flex ${dir === "left" ? "animate-scroll-left" : "animate-scroll-right"} whitespace-nowrap`}
+      style={{ animationPlayState: pausedRow === id ? "paused" : "running", width: "max-content" }}
+    >
+      {[...logos, ...logos, ...logos].map((logo, i) => (
+        <div
+          key={`${id}-${i}`}
+          className="flex-shrink-0 mx-3"
+          onMouseEnter={() => setPausedRow(id)}
+          onMouseLeave={() => setPausedRow(null)}
+        >
+          <div className="w-24 h-24 rounded-2xl bg-black/40 border border-white/20 backdrop-blur-xl flex items-center justify-center overflow-hidden">
+            <div className="relative w-full h-full">
+              <Image src={logo.image || "/placeholder.svg"} alt={logo.name} fill className="object-cover" />
             </div>
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
     </div>
-  )
+  </div>
+)
+
+export function LogoMarqueeArchviz() {
+  const [pausedRow, setPausedRow] = useState<string | null>(null)
 
   return (
     <section className="text-white py-16 sm:py-20 overflow-hidden">
@@ -50,9 +57,9 @@ export function LogoMarqueeArchviz() {
           </Button>
         </div>
         <div className="relative">
-          <Row dir="right" id="first" />
+          <Row dir="right" id="first" pausedRow={pausedRow} setPausedRow={setPausedRow} />
           <div className="mt-6" />
-          <Row dir="left" id="second" />
+          <Row dir="left" id="second" pausedRow={pausedRow} setPausedRow={setPausedRow} />
         </div>
       </div>
     </section>

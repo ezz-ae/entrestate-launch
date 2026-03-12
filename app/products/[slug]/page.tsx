@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation"
+import Link from "next/link"
 import { SiteHeader } from "@/components/site-header"
 import { Pricing } from "@/components/pricing"
 import { AppverseFooter } from "@/components/appverse-footer"
@@ -45,12 +46,12 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
             >
               View pricing
             </a>
-            <a
+            <Link
               href="/products"
               className="rounded-full border border-white/20 px-6 py-2 text-sm font-semibold text-white hover:border-white/40"
             >
               Back to products
-            </a>
+            </Link>
           </div>
         </div>
       </section>

@@ -1,5 +1,6 @@
 // app/about/page.tsx
 import React from "react";
+import Link from "next/link";
 
 export default function AboutPage() {
   const schemaData = {
@@ -94,12 +95,12 @@ export default function AboutPage() {
         <p className="text-lg opacity-80 mb-8">
           Pick a template and customize it with the AI builder.
         </p>
-        <a
+        <Link
           href="/#pricing"
           className="bg-white text-black px-6 py-3 rounded-full font-semibold hover:bg-neutral-200 transition-all"
         >
           View pricing
-        </a>
+        </Link>
       </section>
     </>
   );

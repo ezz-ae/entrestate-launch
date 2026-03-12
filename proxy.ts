@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
-export function middleware(request: NextRequest) {
-  console.log(request);
+export function proxy(request: NextRequest) {
   // Only check admin routes, not the login page
   if (
     request.nextUrl.pathname === "/admin" ||

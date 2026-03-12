@@ -10,7 +10,7 @@
     "prebuild": "node scripts/check-mobile-imports.mjs",
     "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "test:dev": "tsx scripts/test/dev-sends-smoke.ts",
     "test:dev-jobs": "tsx scripts/test/dev-jobs-retry-smoke.ts",
     "test:env-safety": "tsx scripts/test/env-safety.ts",
