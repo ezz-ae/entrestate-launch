@@ -35,74 +35,65 @@ export default function TermsPage() {
                 </p>
               </header>
 
-                <section className="space-y-3">
-                  <h2 className="text-2xl font-semibold text-white">1. Introduction</h2>
-                  <p className="text-neutral-300">
-                    These Terms and Conditions govern your use of the Mashroi website and services. By using our
-                    website, you accept these Terms in full.
-                  </p>
-                </section>
+              <section className="space-y-3">
+                <h2 className="text-2xl font-semibold text-white">1. Introduction</h2>
+                <p className="text-neutral-300">
+                  These Terms and Conditions govern your use of the Mashroi website and services. By using our
+                  website, you accept these Terms in full.
+                </p>
+              </section>
 
-                <section className="space-y-3">
-                  <h2 className="text-2xl font-semibold text-white">2. Intellectual Property Rights</h2>
-                  <p className="text-neutral-300">
-                    Unless otherwise stated, Mashroi owns all the project files. This includes all electronic files,
-                    drawings, source files, and any materials provided to the client, which remain the sole property of
-                    Mashroi, even if shared.
-                  </p>
-                  <ul className="list-disc list-inside space-y-2 text-neutral-400">
-                    <li>You must not republish material from this site.</li>
-                    <li>
-                      You must not reproduce, duplicate, or copy material for commercial purposes without permission.
-                    </li>
-                    <li>You must not edit or modify any content without consent.</li>
-                    <li>Currently all the content on the site are just place-holders (site is under production)</li>
-                  </ul>
-                </section>
+              <section className="space-y-3">
+                <h2 className="text-2xl font-semibold text-white">2. Intellectual Property Rights</h2>
+                <p className="text-neutral-300">
+                  Unless otherwise stated, Mashroi owns all the project files. This includes all electronic files,
+                  drawings, source files, and any materials provided to the client, which remain the sole property of
+                  Mashroi, even if shared.
+                </p>
+                <ul className="list-disc list-inside space-y-2 text-neutral-400">
+                  <li>You must not republish material from this site.</li>
+                  <li>
+                    You must not reproduce, duplicate, or copy material for commercial purposes without permission.
+                  </li>
+                  <li>You must not edit or modify any content without consent.</li>
+                </ul>
+              </section>
 
-                <section className="space-y-3">
-                  <h2 className="text-2xl font-semibold text-white">3. Acceptable Use</h2>
-                  <p className="text-neutral-300">
-                    You must not use this website in any way that causes, or may cause, damage to the website or
-                    impairment of the availability or accessibility of the website.
-                  </p>
-                </section>
+              <section className="space-y-3">
+                <h2 className="text-2xl font-semibold text-white">3. Acceptable Use</h2>
+                <p className="text-neutral-300">
+                  You must not use this website in any way that causes, or may cause, damage to the website or
+                  impairment of the availability or accessibility of the website.
+                </p>
+              </section>
 
-                <section className="space-y-3">
-                  <h2 className="text-2xl font-semibold text-white">
-                    4. Limitation of Liability & Subjectivity of Content
-                  </h2>
-                  <p className="text-neutral-300">
-                    Mashroi will not be liable for any direct, indirect, or consequential loss or damage arising under
-                    these Terms or in connection with our website or services. The perceived quality, style, or
-                    suitability of content created by us remains subjective and cannot be used as grounds to increase
-                    scope of work. Revisions are strictly governed by our{" "}
-                    <Link href="/revisions" className="text-lime-300 underline">
-                      revision policy
-                    </Link>
-                    .
-                  </p>
-                </section>
+              <section className="space-y-3">
+                <h2 className="text-2xl font-semibold text-white">
+                  4. Limitation of Liability
+                </h2>
+                <p className="text-neutral-300">
+                  Mashroi will not be liable for any direct, indirect, or consequential loss or damage arising under
+                  these Terms or in connection with our website or services. The perceived quality, style, or
+                  suitability of content created by us remains subjective and cannot be used as grounds to increase
+                  scope of work. Revisions are strictly governed by our <Link href="/revisions" className="text-lime-300 underline">revision policy</Link>.
+                </p>
+              </section>
 
-                <section className="space-y-3">
-                  <h2 className="text-2xl font-semibold text-white">5. Changes to These Terms</h2>
-                  <p className="text-neutral-300">
-                    We may revise these Terms from time to time. The revised Terms will apply from the date of
-                    publication on this site.
-                  </p>
-                </section>
+              <section className="space-y-3">
+                <h2 className="text-2xl font-semibold text-white">5. Changes to These Terms</h2>
+                <p className="text-neutral-300">
+                  We may revise these Terms from time to time. The revised Terms will apply from the date of
+                  publication on this site.
+                </p>
+              </section>
 
-                <section className="space-y-3">
-                  <h2 className="text-2xl font-semibold text-white">6. Contact Us</h2>
-                  <p className="text-neutral-300">If you have any questions about these Terms, please contact us at:</p>
-                  <p className="text-neutral-300">
-                    Email:{" "}
-                    <a href="mailto:hello@mashroi.com" className="text-lime-300 underline">
-                      hello@mashroi.com
-                    </a>
-                  </p>
-                </section>
-              </div>
+              <section className="space-y-3 border-t border-white/5 pt-8">
+                <h2 className="text-2xl font-semibold text-white">6. Contact Us</h2>
+                <p className="text-neutral-300">If you have any questions about these Terms, please contact us at:</p>
+                <p className="text-lime-300 font-bold">
+                  Email: <a href="mailto:hello@mashroi.com" className="underline underline-offset-4">hello@mashroi.com</a>
+                </p>
+              </section>
             </div>
           </div>
         </div>

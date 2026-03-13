@@ -13,7 +13,6 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { useState } from "react"
 
 function HeaderCta() {
@@ -30,8 +29,6 @@ function HeaderCta() {
 }
 
 export function SiteHeader() {
-  const [servicesOpen, setServicesOpen] = useState(false)
-
   const services = [
     {
       href: "/products",
@@ -140,23 +137,6 @@ export function SiteHeader() {
               </div>
             </SheetContent>
           </Sheet>
-        </div>
-      </div>
-    </header>
-  )
-}
-                      <span className="text-sm">{l.label}</span>
-                    </Link>
-                  ))}
-                </nav>
-
-                {/* CTA Button at Bottom */}
-                <div className="mt-auto border-t border-gray-800 p-4">
-                  <HeaderCta />
-                </div>
-              </SheetContent>
-            </Sheet>
-          </div>
         </div>
       </div>
     </header>
