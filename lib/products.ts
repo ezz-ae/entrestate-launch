@@ -22,6 +22,7 @@ export type Product = {
   timeline: ProductTimelineStep[]
   outcomes: ProductOutcome[]
   heroImage: string
+  demoUrl?: string
 }
 
 export const products: Product[] = [
@@ -35,6 +36,7 @@ export const products: Product[] = [
     badge: "Best Seller",
     price: "AED 2,399",
     priceNote: "one-time purchase, hosting included",
+    demoUrl: "https://goldcentury.ae/",
     highlights: [
       "12+ conversion-ready sections",
       "Lead capture + WhatsApp routing",

@@ -16,21 +16,24 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <>
+    <main className="min-h-screen bg-black text-white">
       <SiteHeader />
-      <section className="bg-[#0a0a0a] text-white py-16">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            <div className="relative overflow-hidden rounded-3xl border border-neutral-800 bg-[#0f0f0f] p-6 sm:p-10 shadow-xl">
-              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(163,230,53,0.10),transparent_55%)]" />
-              <div className="relative space-y-12">
-                <header className="space-y-4">
-                  <h1 className="text-4xl font-bold tracking-tight text-lime-300">Terms and Conditions</h1>
-                  <p className="text-neutral-400 text-lg">
-                    Welcome to Mashroi. By accessing our website, you agree to these terms and conditions. Please read
-                    them carefully.
-                  </p>
-                </header>
+      <section className="relative overflow-hidden py-24 sm:py-32">
+        <div className="pointer-events-none absolute inset-0 opacity-30">
+          <div className="absolute left-0 top-0 h-[400px] w-[400px] rounded-full bg-[radial-gradient(circle,rgba(132,204,22,0.1),rgba(0,0,0,0))]" />
+        </div>
+        
+        <div className="container relative mx-auto px-4 max-w-4xl">
+          <div className="relative overflow-hidden rounded-[32px] border border-white/5 bg-neutral-900/40 p-8 sm:p-12 shadow-2xl backdrop-blur-xl">
+            <div className="relative space-y-12">
+              <header className="space-y-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-lime-300/80">Legal</p>
+                <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white">Terms and Conditions</h1>
+                <p className="text-neutral-400 text-lg leading-relaxed">
+                  Welcome to Mashroi. By accessing our website, you agree to these terms and conditions. Please read
+                  them carefully.
+                </p>
+              </header>
 
                 <section className="space-y-3">
                   <h2 className="text-2xl font-semibold text-white">1. Introduction</h2>

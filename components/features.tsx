@@ -16,34 +16,23 @@ const defaultContent: FeaturesContent = {
 }
 
 export function Features() {
-  const [content, setContent] = useState<FeaturesContent>(defaultContent)
-
-  useEffect(() => {
-    // Load content from localStorage
-    const savedContent = localStorage.getItem("skitbit-content")
-    if (savedContent) {
-      try {
-        const parsed = JSON.parse(savedContent)
-        if (parsed.features) {
-          setContent(parsed.features)
-        }
-      } catch (error) {
-        console.error("Error parsing saved content:", error)
-      }
-    }
-  }, [])
-
   return (
     <section id="features" className="container mx-auto px-4 py-16 sm:py-20">
-      <h2 className="mb-8 text-center text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
-        {content.title}
-      </h2>
+      <div className="mx-auto max-w-3xl text-center mb-16">
+        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-lime-300/80">Features</p>
+        <h2 className="mt-4 text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
+          Why Mashroi closes deals faster.
+        </h2>
+        <p className="mt-4 text-sm text-neutral-300 sm:text-base">
+          Real estate websites, launched fast and optimized for leads. Our platform combines the speed of AI with the polish of high-end templates.
+        </p>
+      </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {/* Launch Speed */}
-        <Card className="hidden md:block liquid-glass border border-white/20">
+        <Card className="liquid-glass border border-white/10 group hover:border-lime-300/30 transition-all duration-300">
           <CardHeader>
-            <p className="text-[11px] tracking-widest text-white/80">LAUNCH SPEED</p>
+            <p className="text-[11px] tracking-widest text-lime-300/80 font-semibold uppercase">Launch Speed</p>
             <CardTitle className="mt-1 text-xl text-white">Ready templates + AI builder</CardTitle>
           </CardHeader>
           <CardContent>
@@ -51,9 +40,9 @@ export function Features() {
               <div className="relative aspect-[3/4] overflow-hidden rounded-xl border border-white/10">
                 <Image
                   src="/images/intuitive-1.png"
-                  alt="Close-up smartphone camera module on textured leather back"
+                  alt="Intuitive UI 1"
                   fill
-                  className="object-cover"
+                  className="object-cover group-hover:scale-105 transition-transform duration-500"
                   sizes="(min-width: 768px) 240px, 45vw"
                   priority={false}
                 />
@@ -61,9 +50,9 @@ export function Features() {
               <div className="relative aspect-[3/4] overflow-hidden rounded-xl border border-white/10">
                 <Image
                   src="/images/intuitive-2.png"
-                  alt="Hand gripping textured phone back — macro detail"
+                  alt="Intuitive UI 2"
                   fill
-                  className="object-cover"
+                  className="object-cover group-hover:scale-105 transition-transform duration-500"
                   sizes="(min-width: 768px) 240px, 45vw"
                   priority={false}
                 />
@@ -72,12 +61,32 @@ export function Features() {
           </CardContent>
         </Card>
 
-        {/* Client Love Card - Always visible */}
-        <Card className="liquid-glass border border-white/20">
+        {/* Lead Capture */}
+        <Card className="liquid-glass border border-white/10 group hover:border-lime-300/30 transition-all duration-300">
           <CardHeader>
-            <p className="text-[11px] tracking-widest text-white/80">CLIENT LOVE</p>
+            <p className="text-[11px] tracking-widest text-lime-300/80 font-semibold uppercase">Lead Gen</p>
+            <CardTitle className="mt-1 text-xl text-white">Conversion-first architecture</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+                <div className="h-2 w-2/3 bg-lime-300/20 rounded-full mb-2" />
+                <div className="h-2 w-full bg-white/10 rounded-full mb-2" />
+                <div className="h-8 w-1/3 bg-lime-400 rounded-lg mt-4" />
+              </div>
+              <p className="text-sm text-neutral-400">
+                Every page is wired with lead capture forms, WhatsApp routing, and tracking pixels.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Client Love Card */}
+        <Card className="liquid-glass border border-white/10 group hover:border-lime-300/30 transition-all duration-300">
+          <CardHeader>
+            <p className="text-[11px] tracking-widest text-lime-300/80 font-semibold uppercase">Reliability</p>
             <CardTitle className="mt-1 text-xl text-white">
-              Templates that convert faster with instant AI customization.
+              Trusted by top brokers.
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -85,19 +94,34 @@ export function Features() {
               <div className="text-5xl font-bold text-lime-300">4.9</div>
               <div className="flex items-center gap-1">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <Star key={i} className="h-5 w-5 fill-lime-300 text-lime-300" />
+                  <Star key={i} className="h-5 w-5 fill-lime-300 text-lime-300 shadow-[0_0_10px_rgba(132,204,22,0.4)]" />
                 ))}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <Image
-                src={"/images/top-rated-1.png"}
-                width={280}
-                height={160}
-                alt="Product sketch concepts of backpack on paper"
-                className="h-full w-full rounded-xl border border-white/10 object-cover"
-              />
-              <Image
+              <div className="relative aspect-[16/9] overflow-hidden rounded-xl border border-white/10">
+                <Image
+                  src="/images/top-rated-1.png"
+                  fill
+                  alt="Top rated product"
+                  className="object-cover"
+                />
+              </div>
+              <div className="relative aspect-[16/9] overflow-hidden rounded-xl border border-white/10">
+                <Image
+                  src="/images/top-rated-2.png"
+                  fill
+                  alt="Top rated project"
+                  className="object-cover"
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </section>
+  )
+}
                 src={"/images/top-rated-2.png"}
                 width={280}
                 height={160}

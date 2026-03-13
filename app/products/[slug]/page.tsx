@@ -3,8 +3,10 @@ import Image from "next/image"
 import Link from "next/link"
 import { SiteHeader } from "@/components/site-header"
 import { AppverseFooter } from "@/components/appverse-footer"
+import { SiteBuilder } from "@/components/site-builder"
 import { Button } from "@/components/ui/button"
 import { products, getProductBySlug } from "@/lib/products"
+import { Sparkles, Eye } from "lucide-react"
 
 export const dynamic = "force-static"
 export const dynamicParams = false
@@ -47,6 +49,18 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
                 >
                   <Link href="/#pricing">Reserve this product</Link>
                 </Button>
+                {product.demoUrl && (
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="rounded-full border border-white/15 bg-white/5 px-6 text-sm text-white hover:bg-white/10 gap-2"
+                  >
+                    <a href="#builder">
+                      <Sparkles className="h-4 w-4 text-lime-400" />
+                      Try with AI
+                    </a>
+                  </Button>
+                )}
                 <Button
                   asChild
                   className="rounded-full border border-white/15 bg-white/5 px-6 text-sm text-white hover:bg-white/10"
@@ -96,6 +110,26 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
           </div>
         </div>
       </section>
+
+      {/* Builder Section */}
+      {product.demoUrl && (
+        <section id="builder" className="py-20 relative overflow-hidden border-t border-white/5">
+          <div className="container mx-auto px-4">
+            <div className="mx-auto max-w-3xl text-center mb-16">
+              <div className="inline-flex items-center gap-2 rounded-full bg-lime-400/10 px-4 py-2 text-xs font-bold text-lime-400 mb-6">
+                <Sparkles className="h-3 w-3" />
+                Live Demo & AI Builder
+              </div>
+              <h2 className="text-4xl font-black text-white sm:text-5xl mb-6">Customize in real-time.</h2>
+              <p className="text-neutral-400 text-lg leading-relaxed">
+                Experience the power of our AI builder. Change colors, layouts, and content of the <span className="text-white font-bold">{product.title}</span> template instantly.
+              </p>
+            </div>
+            
+            <SiteBuilder initialUrl={product.demoUrl} productTitle={product.title} />
+          </div>
+        </section>
+      )}
 
       <section className="py-16 sm:py-20">
         <div className="container mx-auto px-4">

@@ -88,3 +88,29 @@ export async function captureSubscription(subscriptionId) {
   const response = await client().execute(request);
   return response.result;
 }
+
+export async function createOrder(amount, currency = 'AED') {
+  const request = new checkoutNodeJssdk.orders.OrdersCreateRequest();
+  request.prefer("return=representation");
+  request.requestBody({
+    intent: 'CAPTURE',
+    purchase_units: [
+      {
+        amount: {
+          currency_code: currency,
+          value: amount,
+        },
+      },
+    ],
+    application_context: {
+      brand_name: 'Mashroi',
+      shipping_preference: 'NO_SHIPPING',
+      user_action: 'PAY_NOW',
+      return_url: `${process.env.NEXTAUTH_URL}/api/payments/success`,
+      cancel_url: `${process.env.NEXTAUTH_URL}/api/payments/cancel`,
+    },
+  });
+
+  const response = await client().execute(request);
+  return response.result;
+}

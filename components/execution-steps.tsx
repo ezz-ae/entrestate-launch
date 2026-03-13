@@ -20,31 +20,40 @@ const steps = [
 
 export function ExecutionSteps() {
   return (
-    <section className="relative py-16 sm:py-20">
-      <div className="container mx-auto px-4">
-        <div className="mx-auto max-w-3xl text-center">
-          <p className="text-xs uppercase tracking-[0.3em] text-lime-300/80">Execution</p>
-          <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+    <section className="relative py-20 sm:py-32 overflow-hidden">
+      <div className="pointer-events-none absolute inset-0 opacity-30">
+        <div className="absolute right-0 top-1/2 h-[300px] w-[300px] -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(132,204,22,0.1),rgba(0,0,0,0))]" />
+      </div>
+      
+      <div className="container relative mx-auto px-4">
+        <div className="mx-auto max-w-3xl text-center mb-16">
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-lime-300/80">Process</p>
+          <h2 className="mt-4 text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
             The launch rhythm we follow
           </h2>
-          <p className="mt-3 text-sm text-neutral-300 sm:text-base">
-            Every product follows the same high-velocity execution path so you know exactly what happens next.
+          <p className="mt-4 text-sm text-neutral-400 sm:text-base leading-relaxed">
+            Every product follows the same high-velocity execution path, ensuring consistency and speed for your launch.
           </p>
         </div>
-        <div className="mt-10 grid gap-6 md:grid-cols-3">
+        
+        <div className="mt-10 grid gap-8 md:grid-cols-3">
           {steps.map((step, index) => {
             const Icon = step.icon
             return (
               <div
                 key={step.title}
-                className="group rounded-2xl border border-white/10 bg-white/5 p-6 text-white shadow-[0_20px_50px_rgba(0,0,0,0.25)] transition duration-300 hover:-translate-y-1 hover:border-lime-300/40 animate-fade-up"
-                style={{ animationDelay: `${index * 80}ms` }}
+                className="group relative overflow-hidden rounded-[32px] border border-white/5 bg-neutral-900/40 p-8 shadow-2xl backdrop-blur-xl transition-all duration-300 hover:border-lime-400/30 hover:-translate-y-2 animate-fade-up"
+                style={{ animationDelay: `${index * 100}ms` }}
               >
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-lime-300/10 text-lime-300">
-                  <Icon className="h-6 w-6" />
+                <div className="absolute inset-0 bg-gradient-to-br from-lime-400/5 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-lime-400/10 text-lime-400 mb-6 transition-transform duration-500 group-hover:scale-110">
+                  <Icon className="h-7 w-7" />
                 </div>
-                <h3 className="mt-5 text-xl font-semibold">{step.title}</h3>
-                <p className="mt-2 text-sm text-neutral-300">{step.description}</p>
+                <h3 className="text-2xl font-bold mb-3 text-white group-hover:text-lime-300 transition-colors">{step.title}</h3>
+                <p className="text-neutral-400 leading-relaxed text-sm">{step.description}</p>
+                <div className="mt-8 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-lime-400/40 group-hover:text-lime-400 transition-colors">
+                  Step {index + 1}
+                </div>
               </div>
             )
           })}

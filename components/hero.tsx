@@ -17,13 +17,16 @@ export function Hero() {
             <Image src="/icons/skitbit-white.svg" alt="Mashroi logo" width={32} height={32} className="h-8 w-8" />
             <p className="text-sm uppercase tracking-[0.25em] text-lime-300/80">mashroi</p>
           </div>
-          <h1 className="mt-3 text-center text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl">
-            <span className="block">Sell Real Estate Websites</span>
+          <h1 className="mt-3 text-center text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
+            <span className="block">Build Real Estate Websites</span>
             <span className="block text-lime-300 drop-shadow-[0_0_20px_rgba(132,204,22,0.35)]">
-              Templates, AI Builder, Instant Launch
+              With AI in Minutes.
             </span>
           </h1>
-          <div className="mt-6">{buttonNew}</div>
+          <p className="mt-6 max-w-2xl text-center text-lg text-neutral-300 sm:text-xl">
+            Mashroi offers ready-made templates, a powerful AI site builder, and all the pages a real estate professional needs to launch and grow.
+          </p>
+          <div className="mt-8">{buttonNew}</div>
 
           {/* Phone grid mimic */}
           <div className="mt-10 grid w-full gap-4 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">

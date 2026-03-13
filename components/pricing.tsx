@@ -6,148 +6,144 @@ import { CheckCircle2 } from "lucide-react"
 
 type Feature = { text: string; muted?: boolean }
 
-const ACCENT = "#C6FF3A"
+const ACCENT = "var(--color-lime-300)"
 
 function FeatureItem({ text, muted = false }: Feature) {
   return (
     <li className="flex items-start gap-2">
-      <CheckCircle2 className="mt-0.5 h-4 w-4" style={{ color: ACCENT }} />
-      <span className={`text-sm ${muted ? "text-neutral-300" : "text-neutral-100"}`}>{text}</span>
+      <CheckCircle2 className="mt-0.5 h-4 w-4 text-lime-400" />
+      <span className={`text-sm ${muted ? "text-neutral-400" : "text-neutral-200"}`}>{text}</span>
     </li>
   )
 }
 
 export function Pricing() {
   return (
-    <section id="pricing" className="text-white" itemScope itemType="https://schema.org/PriceSpecification">
-      <div className="container mx-auto px-4 py-16 sm:py-20">
+    <section id="pricing" className="text-white relative overflow-hidden" itemScope itemType="https://schema.org/PriceSpecification">
+       <div className="pointer-events-none absolute inset-0 opacity-50">
+        <div className="absolute left-1/4 bottom-0 h-[300px] w-[300px] rounded-full bg-[radial-gradient(circle,rgba(132,204,22,0.1),rgba(0,0,0,0))]" />
+      </div>
+
+      <div className="container relative mx-auto px-4 py-16 sm:py-20">
         <div className="mx-auto max-w-3xl text-center">
-          <div
-            className="mx-auto mb-4 inline-flex items-center rounded-full px-3 py-1 text-xs font-medium text-white"
-            style={{ backgroundColor: "rgba(0, 0, 0, 0.6)", border: `1px solid ${ACCENT}` }}
-          >
-            Our Pricing and Packages
-          </div>
-          <h2 className="text-4xl font-extrabold tracking-tight sm:text-5xl" itemProp="name">
-            Our Pricing.
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-lime-300/80">Pricing</p>
+          <h2 className="mt-4 text-4xl font-extrabold tracking-tight sm:text-5xl" itemProp="name">
+            Simple, transparent pricing.
           </h2>
-          <p className="mx-auto mt-2 max-w-xl text-sm text-neutral-300" itemProp="description">
-            Buy a ready template once, or start from scratch with the AI builder.
+          <p className="mx-auto mt-4 max-w-xl text-sm text-neutral-300 sm:text-base" itemProp="description">
+            Buy a ready template once, or start from scratch with the AI builder. No hidden fees, just high-performance results.
           </p>
-          <div className="mt-6">
-            <Button
-              asChild
-              className="rounded-full px-5 text-neutral-900 hover:brightness-95"
-              style={{ backgroundColor: "#f2f2f2" }}
-            >
-              <a href="#products">See products</a>
-            </Button>
-          </div>
         </div>
 
-        <div className="mt-10 grid gap-6 lg:grid-cols-3">
-          {/* Template Purchase */}
-          <Card
-            className="relative overflow-hidden rounded-2xl liquid-glass shadow-[0_12px_40px_rgba(0,0,0,0.3)] transition-all duration-300"
-            itemScope
-            itemType="https://schema.org/Offer"
-          >
-            <CardHeader className="space-y-3 pb-4">
-              <div className="text-sm font-semibold text-neutral-100" itemProp="name">
-                Gold Century Template
-              </div>
-              <div className="flex items-end gap-2 text-white">
-                <div className="text-xl font-bold tracking-tight" itemProp="price">
-                  AED 2,399
-                </div>
-                <span className="pb-0.5 text-[11px] text-neutral-300">one-time</span>
-                <meta itemProp="priceCurrency" content="AED" />
-              </div>
-              <Button className="w-full rounded-full px-4 py-2 text-sm font-medium transition-colors">
-                Buy template
-              </Button>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <ul className="grid gap-2" itemProp="description">
-                {[
-                  "Luxury Dubai investment layout",
-                  "Live subdomain included",
-                  "AI builder customization",
-                  "Lead capture + chat widgets",
-                ].map((f, i) => (
-                  <FeatureItem key={i} text={f} />
-                ))}
-              </ul>
-            </CardContent>
-            <CardFooter />
-          </Card>
-
+        <div className="mt-16 grid gap-8 lg:grid-cols-3">
           {/* Builder Subscription */}
           <Card
-            className="relative overflow-hidden rounded-2xl liquid-glass shadow-[0_12px_40px_rgba(0,0,0,0.3)] transition-all duration-300"
+            className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-2 shadow-2xl transition-all duration-300 hover:border-white/20"
             itemScope
             itemType="https://schema.org/Offer"
           >
-            <CardHeader className="space-y-3 pb-4">
-              <div className="text-sm font-semibold text-neutral-100" itemProp="name">
-                AI Builder (from scratch)
+            <CardHeader className="space-y-2 p-6">
+              <div className="text-sm font-semibold text-neutral-400 uppercase tracking-widest" itemProp="name">
+                AI Builder
               </div>
-              <div className="flex items-end gap-2 text-white">
-                <div className="text-xl font-bold tracking-tight" itemProp="price">
-                  $20
-                </div>
-                <span className="pb-0.5 text-[11px] text-neutral-300">/ month</span>
+              <div className="flex items-baseline gap-1 text-white">
+                <span className="text-4xl font-bold" itemProp="price">$20</span>
+                <span className="text-sm text-neutral-400">/mo</span>
                 <meta itemProp="priceCurrency" content="USD" />
               </div>
-              <Button className="w-full rounded-full px-4 py-2 text-sm font-medium transition-colors">
-                Start builder
-              </Button>
+              <p className="text-xs text-neutral-500 mt-2">Perfect for DIYers starting fresh.</p>
             </CardHeader>
-            <CardContent className="pt-0">
-              <ul className="grid gap-2" itemProp="description">
+            <CardContent className="px-6 pb-6">
+              <ul className="space-y-3" itemProp="description">
                 {[
                   "Start from a blank canvas",
                   "AI-assisted content + layout",
                   "Publish to a live subdomain",
-                  "Upgrade to a template anytime",
+                  "Full control over every page",
                 ].map((f, i) => (
                   <FeatureItem key={i} text={f} />
                 ))}
               </ul>
+              <Button className="mt-8 w-full rounded-full bg-white/10 border border-white/10 text-white hover:bg-white/20 py-6">
+                Start builder
+              </Button>
             </CardContent>
-            <CardFooter />
           </Card>
 
-          {/* Custom Templates */}
+          {/* Template Purchase */}
           <Card
-            className="relative overflow-hidden rounded-2xl liquid-glass-enhanced shadow-[0_16px_50px_rgba(0,0,0,0.4)] transition-all duration-300"
+            className="relative overflow-hidden rounded-3xl border-2 border-lime-400/50 bg-neutral-900/50 p-2 shadow-[0_0_50px_rgba(132,204,22,0.15)] transition-all duration-300 scale-105 z-10"
             itemScope
             itemType="https://schema.org/Offer"
           >
-            <CardHeader className="relative space-y-3 pb-4">
-              <div className="text-sm font-semibold text-neutral-100" itemProp="name">
-                More templates
+            <div className="absolute top-4 right-4 bg-lime-400 text-black text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-tighter">
+              Popular
+            </div>
+            <CardHeader className="space-y-2 p-6">
+              <div className="text-sm font-semibold text-lime-300 uppercase tracking-widest" itemProp="name">
+                Ready Templates
               </div>
-              <div className="flex items-end gap-2 text-white">
-                <div className="text-xl font-bold tracking-tight" itemProp="price">
-                  Custom pricing
-                </div>
-                <span className="pb-0.5 text-[11px] text-neutral-300">per template</span>
+              <div className="flex items-baseline gap-1 text-white">
+                <span className="text-sm text-neutral-400">from</span>
+                <span className="text-4xl font-bold" itemProp="price">AED 2,399</span>
                 <meta itemProp="priceCurrency" content="AED" />
               </div>
-              <Button className="w-full rounded-full px-4 py-2 text-sm font-medium transition-colors">
-                Request catalog
-              </Button>
+              <p className="text-xs text-neutral-400 mt-2">One-time purchase. Professional setup.</p>
             </CardHeader>
-            <CardContent className="relative pt-0">
-              <ul className="grid gap-2" itemProp="description">
+            <CardContent className="px-6 pb-6">
+              <ul className="space-y-3" itemProp="description">
                 {[
-                  "Broker sites, bio links, and AI agents",
-                  "Each template includes subdomain",
-                  "Customize instantly with AI builder",
-                  "Ask for pricing per template",
+                  "Luxury Dubai-ready layouts",
+                  "Live subdomain + hosting",
+                  "AI builder customization",
+                  "Lead capture + CRM wiring",
                 ].map((f, i) => (
-                  <li key={i} className="flex items-start gap-2">
+                  <FeatureItem key={i} text={f} />
+                ))}
+              </ul>
+              <Button className="mt-8 w-full rounded-full bg-lime-400 text-black hover:bg-lime-300 py-6 font-bold">
+                Buy a template
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Custom / Enterprise */}
+          <Card
+            className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-2 shadow-2xl transition-all duration-300 hover:border-white/20"
+            itemScope
+            itemType="https://schema.org/Offer"
+          >
+            <CardHeader className="space-y-2 p-6">
+              <div className="text-sm font-semibold text-neutral-400 uppercase tracking-widest" itemProp="name">
+                Custom Solutions
+              </div>
+              <div className="flex items-baseline gap-1 text-white">
+                <span className="text-4xl font-bold" itemProp="price">Custom</span>
+                <meta itemProp="priceCurrency" content="AED" />
+              </div>
+              <p className="text-xs text-neutral-500 mt-2">For large teams and custom needs.</p>
+            </CardHeader>
+            <CardContent className="px-6 pb-6">
+              <ul className="space-y-3" itemProp="description">
+                {[
+                  "Bulk template licenses",
+                  "White-label options",
+                  "Custom AI agent training",
+                  "Dedicated support channel",
+                ].map((f, i) => (
+                  <FeatureItem key={i} text={f} />
+                ))}
+              </ul>
+              <Button className="mt-8 w-full rounded-full bg-white/10 border border-white/10 text-white hover:bg-white/20 py-6">
+                Request Quote
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </section>
+  )
+}
                     <CheckCircle2 className="mt-0.5 h-4 w-4" style={{ color: ACCENT }} />
                     <span className="text-sm text-neutral-100">{f}</span>
                   </li>

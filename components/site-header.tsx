@@ -54,50 +54,97 @@ export function SiteHeader() {
   ]
 
   const links = [
-    { href: "/models/image", label: "Models", icon: FileText },
     { href: "/pricing", label: "Pricing", icon: Tag },
     { href: "/docs", label: "Docs", icon: HelpCircle },
-    { href: "/blog", label: "Blog", icon: FileText },
     { href: "/About", label: "About", icon: Info },
-    { href: "/nano-gpt", label: "NanoGPT", icon: FileText },
   ]
 
   return (
-    <header className="sticky top-0 z-50 p-4">
-      <div className="container mx-auto max-w-4xl">
-        <div className="flex h-14 items-center justify-between px-6 liquid-glass-header rounded-full">
-          {/* Brand Logo */}
-          <Link href="/" className="flex items-center gap-1.5">
-            <Image src="/icons/skitbit-white.svg" alt="Mashroi logo" width={20} height={20} className="h-5 w-5" />
-            <span className="font-semibold tracking-wide text-white">Mashroi</span>
-          </Link>
+    <header className="sticky top-4 z-50 mx-auto max-w-5xl px-4">
+      <div className="flex h-16 items-center justify-between px-6 liquid-glass-header rounded-full border border-white/10 shadow-2xl backdrop-blur-2xl">
+        {/* Brand Logo */}
+        <Link href="/" className="flex items-center gap-2 group">
+          <div className="relative h-8 w-8 overflow-hidden rounded-lg bg-lime-400 p-1.5 transition-transform group-hover:scale-110">
+            <Image src="/icons/skitbit-white.svg" alt="Mashroi logo" width={32} height={32} className="h-full w-full invert" />
+          </div>
+          <span className="text-lg font-bold tracking-tight text-white group-hover:text-lime-300 transition-colors">Mashroi</span>
+        </Link>
 
-          {/* Desktop Nav with Services Dropdown */}
-          <nav className="hidden items-center gap-6 text-sm text-white/90 md:flex">
-            <NavigationMenu>
-              <NavigationMenuList>
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger
-                    className="bg-transparent text-white/90 hover:text-lime-300 data-[state=open]:text-lime-300
-                               hover:bg-transparent focus:bg-transparent
-                               data-[state=open]:bg-transparent data-[state=open]:hover:bg-transparent
-                               data-[active=true]:bg-transparent"
-                  >
-                    Products
-                  </NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    <ul className="grid w-[280px] gap-2 p-3 bg-gray-950/95 backdrop-blur-xl border border-gray-800 rounded-lg">
-                      {services.map((service) => (
-                        <li key={service.href}>
-                          <NavigationMenuLink asChild>
-                            <Link
-                              href={service.href}
-                              className="group relative flex items-start gap-3 rounded-xl p-3 transition-all
-                                         hover:bg-white/5 hover:ring-1 hover:ring-lime-300/60
-                                         hover:shadow-[0_0_0_1px_rgba(132,204,22,0.25),0_0_20px_rgba(132,204,22,0.15)]
-                                         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-300/70"
-                            >
-                              <service.icon className="h-5 w-5 text-lime-300 mt-0.5 shrink-0 group-hover:text-lime-200" />
+        {/* Desktop Nav */}
+        <nav className="hidden items-center gap-8 text-sm font-medium text-white/70 md:flex">
+          <NavigationMenu>
+            <NavigationMenuList>
+              <NavigationMenuItem>
+                <NavigationMenuTrigger className="bg-transparent text-white/70 hover:text-white data-[state=open]:text-lime-300 transition-colors">
+                  Products
+                </NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <ul className="grid w-[400px] gap-3 p-4 bg-neutral-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl">
+                    {services.map((service) => (
+                      <li key={service.label}>
+                        <NavigationMenuLink asChild>
+                          <Link
+                            href={service.href}
+                            className="flex flex-col gap-1 rounded-xl p-3 hover:bg-white/5 hover:ring-1 hover:ring-lime-300/30 transition-all"
+                          >
+                            <div className="flex items-center gap-2 text-white font-semibold">
+                              <service.icon className="h-4 w-4 text-lime-400" />
+                              {service.label}
+                            </div>
+                            <p className="text-xs text-neutral-400 leading-relaxed">{service.description}</p>
+                          </Link>
+                        </NavigationMenuLink>
+                      </li>
+                    ))}
+                  </ul>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+            </NavigationMenuList>
+          </NavigationMenu>
+
+          {links.map((link) => (
+            <Link key={link.href} href={link.href} className="hover:text-white transition-colors">
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="flex items-center gap-4">
+          <HeaderCta />
+          {/* Mobile Menu */}
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="md:hidden text-white hover:bg-white/10 rounded-full">
+                <Menu className="h-6 w-6" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="bg-neutral-950 border-white/10 text-white p-8">
+              <div className="flex flex-col gap-8 mt-8">
+                <div className="space-y-4">
+                  <p className="text-xs font-bold text-neutral-500 uppercase tracking-widest">Navigation</p>
+                  {links.map((link) => (
+                    <Link key={link.href} href={link.href} className="block text-2xl font-bold hover:text-lime-300 transition-colors">
+                      {link.label}
+                    </Link>
+                  ))}
+                </div>
+                <div className="space-y-4">
+                  <p className="text-xs font-bold text-neutral-500 uppercase tracking-widest">Products</p>
+                  {services.map((service) => (
+                    <Link key={service.label} href={service.href} className="block text-xl font-semibold hover:text-lime-300 transition-colors">
+                      {service.label}
+                    </Link>
+                  ))}
+                </div>
+                <HeaderCta />
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+      </div>
+    </header>
+  )
+}
                               <div>
                                 <div className="text-sm font-medium text-white group-hover:text-lime-300">
                                   {service.label}
