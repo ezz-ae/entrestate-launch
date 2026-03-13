@@ -1,8 +1,15 @@
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
-import LazyVideo from "./lazy-video"
+import { getProducts } from "@/lib/products"
 
-export function Hero() {
+export async function Hero() {
+  const products = await getProducts()
+  const phoneData = products.slice(0, 5).map((product) => ({
+    title: product.title,
+    sub: product.tagline,
+    imageSrc: product.heroImage,
+    previewSrc: product.demoUrl ? `/api/proxy?url=${encodeURIComponent(product.demoUrl)}` : undefined,
+  }))
   const buttonNew = (
     <Button asChild className="rounded-full bg-lime-400 px-6 text-black hover:bg-lime-300">
       <a href="#pricing">Start with a template</a>
@@ -49,36 +56,31 @@ export function Hero() {
 function PhoneCard({
   title = "8°",
   sub = "Clear night. Great for render farm runs.",
-  videoSrc,
   imageSrc,
+  previewSrc,
 }: {
   title?: string
   sub?: string
-  videoSrc?: string
   imageSrc?: string
+  previewSrc?: string
 }) {
   return (
     <div className="relative rounded-[28px] glass-border bg-neutral-900 p-2">
       <div className="relative aspect-[9/19] w-full overflow-hidden rounded-2xl bg-black">
-        {imageSrc ? (
-           <Image
+        {imageSrc && (
+          <Image
             src={imageSrc}
             alt={title}
             fill
             className="object-cover"
           />
-        ) : (
-          <LazyVideo
-            src={
-              videoSrc ??
-              "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/b0f3222371106db366a14ca1c29cef55-1b1EWVSa4w3FL2zslcaCGYTy9vcxjF.mp4"
-            }
-            className="absolute inset-0 h-full w-full object-cover"
-            autoplay={true}
-            loop={true}
-            muted={true}
-            playsInline={true}
-            aria-label={`${title} - ${sub}`}
+        )}
+        {previewSrc && (
+          <iframe
+            src={previewSrc}
+            title={`${title} template preview`}
+            className="absolute inset-0 h-full w-full border-none pointer-events-none"
+            loading="lazy"
           />
         )}
 
@@ -96,31 +98,3 @@ function PhoneCard({
     </div>
   )
 }
-
-const phoneData = [
-  {
-    title: "Gold Century",
-    sub: "Luxury Dubai dark mode brokerage.",
-    imageSrc: "/images/intuitive-1.png",
-  },
-  {
-    title: "Modern Mini",
-    sub: "High-speed minimalist search hub.",
-    imageSrc: "/images/top-rated-1.png",
-  },
-  {
-    title: "Elite Bio",
-    sub: "Personal brand hub with social links.",
-    imageSrc: "/images/intuitive-2.png",
-  },
-  {
-    title: "Reveal Pro",
-    sub: "Immersive off-plan launch template.",
-    imageSrc: "/images/top-rated-2.png",
-  },
-  {
-    title: "DM AI Agent",
-    sub: "24/7 lead qualification assistant.",
-    videoSrc: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/b0f3222371106db366a14ca1c29cef55-1b1EWVSa4w3FL2zslcaCGYTy9vcxjF.mp4",
-  },
-]
