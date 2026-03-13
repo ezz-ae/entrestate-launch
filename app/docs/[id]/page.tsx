@@ -1,18 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getSortedPostsData, getPostData } from '../../../lib/docs';
-
-export async function generateStaticParams() {
-  const posts = getSortedPostsData();
-  return posts
-    .map((post) => post.id)
-    .filter((id): id is string => typeof id === 'string' && id.length > 0)
-    .map((id) => ({ id }));
-}
-
-import Link from 'next/link';
-import { notFound } from 'next/navigation';
-import { getSortedPostsData, getPostData } from '../../../lib/docs';
 import { SiteHeader } from "@/components/site-header";
 import { AppverseFooter } from "@/components/appverse-footer";
 import { ChevronRight, FileText, BookOpen, Sparkles, ArrowLeft } from "lucide-react";

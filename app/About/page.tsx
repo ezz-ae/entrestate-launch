@@ -123,10 +123,3 @@ export default function AboutPage() {
     </main>
   );
 }
-        >
-          View pricing
-        </Link>
-      </section>
-    </>
-  );
-}

@@ -144,16 +144,3 @@ export function Pricing() {
     </section>
   )
 }
-                    <CheckCircle2 className="mt-0.5 h-4 w-4" style={{ color: ACCENT }} />
-                    <span className="text-sm text-neutral-100">{f}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-            <CardFooter />
-          </Card>
-        </div>
-      </div>
-    </section>
-  )
-}

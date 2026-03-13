@@ -108,8 +108,3 @@ export function LogoMarquee() {
     </section>
   )
 }
-        </div>
-      </div>
-    </section>
-  )
-}

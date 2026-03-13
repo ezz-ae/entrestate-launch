@@ -108,6 +108,6 @@ export default function TermsPage() {
         </div>
       </section>
       <AppverseFooter />
-    </>
+    </main>
   )
 }

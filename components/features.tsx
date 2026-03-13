@@ -122,16 +122,3 @@ export function Features() {
     </section>
   )
 }
-                src={"/images/top-rated-2.png"}
-                width={280}
-                height={160}
-                alt="Backpacks on stage with Smartpack PRO lighting"
-                className="h-full w-full rounded-xl border border-white/10 object-cover"
-              />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </section>
-  )
-}

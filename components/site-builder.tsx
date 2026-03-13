@@ -1,3 +1,5 @@
+"use client"
+
 import { useState, useEffect } from "react"
 import { Monitor, Smartphone, Tablet, Send, Sparkles, X, ChevronRight, Layout, Palette, Type, Database, CreditCard, CheckCircle2, Loader2, Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
