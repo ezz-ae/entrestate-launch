@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button"
+import Image from "next/image"
 import { Sparkles, ArrowRight, Zap, Shield, Globe, CheckCircle2 } from "lucide-react"
 import Link from "next/link"
 import { getProducts } from "@/lib/products"
@@ -7,6 +8,10 @@ export async function BuilderCta() {
   const products = await getProducts()
   const builderTarget =
     products.find((product) => product.demoUrl)?.slug ?? products[0]?.slug ?? "products"
+  const previewProduct = products.find((product) => product.demoUrl) ?? products[0]
+  const previewSrc = previewProduct?.demoUrl
+    ? `/api/proxy?url=${encodeURIComponent(previewProduct.demoUrl)}`
+    : undefined
 
   return (
     <section className="py-24 relative overflow-hidden bg-black">
@@ -65,31 +70,36 @@ export async function BuilderCta() {
             <div className="relative group lg:h-[600px] flex items-center justify-center">
               <div className="absolute inset-0 bg-lime-400/20 blur-[120px] rounded-full transition-all group-hover:bg-lime-400/30" />
               <div className="relative w-full max-w-[440px] aspect-[9/16] rounded-[48px] border-8 border-neutral-800 bg-black overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.8)] transition-transform duration-700 group-hover:rotate-1">
-                {/* Simulated Builder Mobile Preview */}
-                <div className="h-full w-full bg-neutral-900 flex flex-col">
-                  <div className="h-6 w-full bg-black/40 flex items-center justify-center">
-                    <div className="h-1 w-12 rounded-full bg-white/10" />
+                {/* Live Template Preview */}
+                <div className="relative h-full w-full bg-neutral-900">
+                  {previewProduct?.heroImage && (
+                    <Image
+                      src={previewProduct.heroImage}
+                      alt={`${previewProduct.title} template`}
+                      fill
+                      className="object-cover"
+                      sizes="(min-width: 1024px) 22rem, 100vw"
+                    />
+                  )}
+                  {previewSrc && (
+                    <iframe
+                      src={previewSrc}
+                      title={`${previewProduct?.title ?? "Template"} preview`}
+                      className="absolute inset-0 h-full w-full border-none pointer-events-none"
+                      loading="lazy"
+                    />
+                  )}
+                  <div className="absolute inset-x-0 top-0 z-10 h-6 bg-black/50 flex items-center justify-center">
+                    <div className="h-1 w-12 rounded-full bg-white/20" />
                   </div>
-                  <div className="flex-1 p-6 space-y-6">
-                    <div className="h-4 w-2/3 bg-lime-400/20 rounded-full" />
-                    <div className="h-32 w-full bg-white/5 rounded-2xl border border-white/10" />
-                    <div className="space-y-3">
-                      <div className="h-2 w-full bg-white/10 rounded-full" />
-                      <div className="h-2 w-full bg-white/10 rounded-full" />
-                      <div className="h-2 w-3/4 bg-white/10 rounded-full" />
-                    </div>
-                    <div className="pt-8">
-                      <div className="h-10 w-full bg-lime-400 rounded-xl flex items-center justify-center">
-                        <div className="h-2 w-16 bg-black/20 rounded-full" />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="p-4 bg-black/60 backdrop-blur-md border-t border-white/5">
+                  <div className="absolute inset-x-0 bottom-0 z-10 p-4 bg-black/70 backdrop-blur-md border-t border-white/5">
                     <div className="flex items-center gap-3">
                       <div className="h-8 w-8 rounded-lg bg-lime-400/20 border border-lime-400/30 flex items-center justify-center">
                         <Sparkles className="h-4 w-4 text-lime-400" />
                       </div>
-                      <div className="h-2 w-1/2 bg-white/20 rounded-full" />
+                      <div className="text-[10px] uppercase tracking-[0.3em] text-white/70">
+                        {previewProduct?.title ?? "Live Template"}
+                      </div>
                     </div>
                   </div>
                 </div>
