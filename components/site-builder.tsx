@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Monitor, Smartphone, Tablet, Send, Sparkles, X, ChevronRight, Layout, Palette, Type, Database, CreditCard, CheckCircle2, Loader2, Info } from "lucide-react"
+import { Monitor, Smartphone, Tablet, Send, Sparkles, X, ChevronRight, Layout, Palette, Type, Database, CreditCard, CheckCircle2, Loader2, Info, Globe } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -16,10 +16,35 @@ interface SiteBuilderProps {
 export function SiteBuilder({ initialUrl, productTitle }: SiteBuilderProps) {
   const [viewMode, setViewMode] = useState<"desktop" | "tablet" | "mobile">("desktop")
   const [isAiPanelOpen, setIsAiPanelOpen] = useState(true)
-  const [activeTab, setActiveTab] = useState<"chat" | "data" | "blocks" | "checkout">("chat")
+  const [activeTab, setActiveTab] = useState<"chat" | "data" | "blocks" | "domain" | "checkout">("chat")
   const [isBuilding, setIsBuilding] = useState(false)
   const [buildProgress, setBuildProgress] = useState(0)
   const [chatInput, setChatInput] = useState("")
+  const [domain, setDomain] = useState("")
+  const [domainStatus, setDomainStatus] = useState<any>(null)
+  const [isCheckingDomain, setIsCheckingDomain] = useState(false)
+  const [iframeContent, setIframeContent] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchHtml = async () => {
+      if (initialUrl) {
+        setIframeContent(null);
+        try {
+          const response = await fetch(`/api/proxy?url=${encodeURIComponent(initialUrl)}`);
+          if (response.ok) {
+            const html = await response.text();
+            setIframeContent(html);
+          } else {
+            setIframeContent("<h1>Error: Could not load template preview. The site may be blocking it.</h1>");
+          }
+        } catch (error) {
+          console.error("Failed to fetch page for iframe", error);
+          setIframeContent("<h1>Error: Could not load template preview. Please check your connection.</h1>");
+        }
+      }
+    };
+    fetchHtml();
+  }, [initialUrl]);
 
   const realEstateBlocks = [
     { id: "hero-1", name: "Luxury Hero", category: "Hero", icon: Layout, desc: "High-impact video or image background with CTAs." },
@@ -251,11 +276,12 @@ export function SiteBuilder({ initialUrl, productTitle }: SiteBuilderProps) {
         >
           <div className="flex h-full flex-col">
             {/* Tabs */}
-            <div className="grid grid-cols-4 border-b border-white/5">
+            <div className="grid grid-cols-5 border-b border-white/5">
               {[
                 { id: "chat", icon: Sparkles, label: "AI Chat" },
                 { id: "data", icon: Database, label: "Data" },
                 { id: "blocks", icon: Layout, label: "Blocks" },
+                { id: "domain", icon: Globe, label: "Domain" },
                 { id: "checkout", icon: CreditCard, label: "Launch" }
               ].map((tab) => (
                 <button
@@ -435,6 +461,64 @@ export function SiteBuilder({ initialUrl, productTitle }: SiteBuilderProps) {
                       </button>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {activeTab === "domain" && (
+                <div className="p-6 space-y-6 animate-fade-up">
+                  <div className="rounded-2xl bg-purple-500/10 p-4 border border-purple-500/20">
+                    <p className="text-xs text-purple-300 font-medium flex items-center gap-2">
+                      <Globe className="h-3 w-3" />
+                      Connect your custom domain to go live.
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">Your Domain</Label>
+                      <div className="flex gap-2">
+                        <Input 
+                          value={domain}
+                          onChange={(e) => setDomain(e.target.value)}
+                          placeholder="e.g. mybrokerage.com"
+                          className="bg-white/5 border-white/10 text-white rounded-xl focus:ring-purple-400/50"
+                        />
+                        <Button
+                          onClick={() => {}}
+                          className="bg-purple-600 hover:bg-purple-700 text-white rounded-xl"
+                        >
+                          Add
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {domainStatus && (
+                     <div className="rounded-2xl bg-white/5 border border-white/10 p-4 space-y-4">
+                        <div className="flex justify-between items-center">
+                          <h4 className="font-bold text-white">{domainStatus.name}</h4>
+                          <Badge variant={domainStatus.verified ? "secondary" : "destructive"}>
+                            {domainStatus.verified ? "Verified" : "Pending"}
+                          </Badge>
+                        </div>
+                        
+                        {!domainStatus.verified && (
+                          <div className="space-y-3 text-xs">
+                            <p className="text-neutral-400">Please add the following DNS records to your domain provider:</p>
+                            {domainStatus.verification.map((rec: any) => (
+                              <div key={rec.type} className="p-3 bg-black/30 rounded-lg border border-neutral-700">
+                                <p><strong className="text-neutral-300">Type:</strong> {rec.type}</p>
+                                <p><strong className="text-neutral-300">Name:</strong> {rec.domain.endsWith(rec.value) ? '@' : rec.domain.replace(`.${domainStatus.name}`, '')}</p>
+                                <p><strong className="text-neutral-300">Value:</strong> <code className="text-purple-300 break-all">{rec.value}</code></p>
+                              </div>
+                            ))}
+                            <Button onClick={() => {}} size="sm" className="w-full mt-2 bg-purple-500/20 text-purple-300 hover:bg-purple-500/30">
+                              Refresh Status
+                            </Button>
+                          </div>
+                        )}
+                     </div>
+                  )}
                 </div>
               )}
 

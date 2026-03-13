@@ -114,3 +114,11 @@ export async function createOrder(amount, currency = 'AED') {
   const response = await client().execute(request);
   return response.result;
 }
+
+export async function captureOrder(orderId: string) {
+  const request = new checkoutNodeJssdk.orders.OrdersCaptureRequest(orderId);
+  request.requestBody({});
+  
+  const response = await client().execute(request);
+  return response.result;
+}

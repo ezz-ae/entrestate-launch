@@ -30,7 +30,7 @@ export default function ProductsPage() {
                 asChild
                 className="rounded-full bg-lime-400 px-6 text-sm font-semibold text-black hover:bg-lime-300"
               >
-                <Link href="/products/ready-broker-site">Start with broker site</Link>
+                <Link href="/products/gold-century-luxury">Start with a Template</Link>
               </Button>
               <Button
                 asChild

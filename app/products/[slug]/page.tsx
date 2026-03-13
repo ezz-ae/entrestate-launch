@@ -9,7 +9,7 @@ import { products, getProductBySlug } from "@/lib/products"
 import { Sparkles, Eye } from "lucide-react"
 
 export const dynamic = "force-static"
-export const dynamicParams = true
+export const dynamicParams = false
 
 export function generateStaticParams() {
   return products.map((product) => ({
@@ -17,9 +17,8 @@ export function generateStaticParams() {
   }))
 }
 
-export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params
-  const product = getProductBySlug(slug)
+export default function ProductPage({ params }: { params: { slug: string } }) {
+  const product = getProductBySlug(params.slug)
   if (!product) notFound()
 
   const related = products.filter((item) => item.slug !== product.slug).slice(0, 3)
