@@ -1,6 +1,7 @@
 import { SiteHeader } from "@/components/site-header"
 import { AppverseFooter } from "@/components/appverse-footer"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { getMarketingFooter } from "@/lib/marketing"
 
 const faqs = [
   {
@@ -29,7 +30,11 @@ const faqs = [
   }
 ]
 
-export default function FAQPage() {
+export const revalidate = 60
+
+export default async function FAQPage() {
+  const footer = await getMarketingFooter()
+
   return (
     <main className="min-h-screen bg-black text-white">
       <SiteHeader />
@@ -79,7 +84,7 @@ export default function FAQPage() {
         </div>
       </section>
       
-      <AppverseFooter />
+      <AppverseFooter content={footer} />
     </main>
   )
 }

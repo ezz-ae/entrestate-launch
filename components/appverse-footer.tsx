@@ -14,12 +14,11 @@ interface FooterContent {
 }
 
 const defaultContent: FooterContent = {
-  tagline: "Mashroi launches real estate websites fast — templates, AI builder, and conversion-ready pages.",
-  copyright: "© 2025 — Mashroi.com",
+  tagline: "Mashroi launches real estate websites fast - templates, AI builder, and conversion-ready pages.",
+  copyright: "Copyright 2025 - Mashroi.com",
 }
 
-export function AppverseFooter() {
-  const content = defaultContent;
+export function AppverseFooter({ content = defaultContent }: { content?: FooterContent }) {
 
   return (
     <section className="text-white">

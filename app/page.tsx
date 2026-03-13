@@ -7,23 +7,25 @@ import { BuilderCta } from "@/components/builder-cta"
 import { ExecutionSteps } from "@/components/execution-steps"
 import { Pricing } from "@/components/pricing"
 import { AppverseFooter } from "@/components/appverse-footer"
+import { getMarketingFooter, getMarketingLogos } from "@/lib/marketing"
 
-// ✅ Force static generation for low TTFB
-export const dynamic = "force-static"
+export const revalidate = 60
 
-export default function Page() {
+export default async function Page() {
+  const [logos, footer] = await Promise.all([getMarketingLogos(), getMarketingFooter()])
+
   return (
     <>
       <main className="min-h-[100dvh] text-white">
         <SiteHeader />
         <Hero />
-        <LogoMarquee />
+        <LogoMarquee firstRow={logos.first} secondRow={logos.second} />
         <Features />
         <BuilderCta />
         <ProductFeatures />
         <ExecutionSteps />
         <Pricing />
-        <AppverseFooter />
+        <AppverseFooter content={footer} />
       </main>
     </>
   )

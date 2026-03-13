@@ -1,11 +1,10 @@
-const URLS = [
+import { getProducts } from "@/lib/products"
+import { getMarketingBlogPosts } from "@/lib/marketing"
+
+const STATIC_URLS = [
   { url: "/", priority: "1.0", changefreq: "weekly" },
   { url: "/#pricing", priority: "0.9", changefreq: "weekly" },
   { url: "/products", priority: "0.9", changefreq: "weekly" },
-  { url: "/products/ready-broker-site", priority: "0.8", changefreq: "weekly" },
-  { url: "/products/realtor-bio-link", priority: "0.8", changefreq: "weekly" },
-  { url: "/products/brochure-to-landing", priority: "0.8", changefreq: "weekly" },
-  { url: "/products/instagram-dm-ai", priority: "0.8", changefreq: "weekly" },
   { url: "/faq", priority: "0.8", changefreq: "monthly" },
   { url: "/About", priority: "0.7", changefreq: "monthly" },
   { url: "/revisions", priority: "0.6", changefreq: "monthly" },
@@ -14,10 +13,24 @@ const URLS = [
 export async function GET(request: Request) {
   const { origin } = new URL(request.url)
   const lastmod = new Date().toISOString()
+  const [products, posts] = await Promise.all([getProducts(), getMarketingBlogPosts()])
+  const urls = [
+    ...STATIC_URLS,
+    ...products.map((product) => ({
+      url: `/products/${product.slug}`,
+      priority: "0.8",
+      changefreq: "weekly",
+    })),
+    ...posts.map((post) => ({
+      url: `/blog/${post.slug}`,
+      priority: "0.6",
+      changefreq: "monthly",
+    })),
+  ]
 
   const body = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${URLS.map(
+${urls.map(
   ({ url, priority, changefreq }) => `  <url>
     <loc>${origin}${url}</loc>
     <lastmod>${lastmod}</lastmod>

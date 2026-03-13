@@ -5,13 +5,14 @@ import { SiteHeader } from "@/components/site-header"
 import { AppverseFooter } from "@/components/appverse-footer"
 import { SiteBuilder } from "@/components/site-builder"
 import { Button } from "@/components/ui/button"
-import { products, getProductBySlug } from "@/lib/products"
-import { Sparkles, Eye } from "lucide-react"
+import { getProducts, getProductBySlug } from "@/lib/products"
+import { Sparkles } from "lucide-react"
+import { getMarketingFooter } from "@/lib/marketing"
 
-export const dynamic = "force-static"
-export const dynamicParams = true
+export const revalidate = 60
 
-export function generateStaticParams() {
+export async function generateStaticParams() {
+  const products = await getProducts()
   return products.map((product) => ({
     slug: product.slug,
   }))
@@ -19,9 +20,13 @@ export function generateStaticParams() {
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const product = getProductBySlug(slug)
+  const [product, footer] = await Promise.all([
+    getProductBySlug(slug),
+    getMarketingFooter(),
+  ])
   if (!product) notFound()
 
+  const products = await getProducts()
   const related = products.filter((item) => item.slug !== product.slug).slice(0, 3)
 
   return (
@@ -197,7 +202,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         </div>
       </section>
 
-      <AppverseFooter />
+      <AppverseFooter content={footer} />
     </main>
   )
 }

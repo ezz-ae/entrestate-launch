@@ -1,10 +1,13 @@
 import { SiteHeader } from "@/components/site-header"
 import { AppverseFooter } from "@/components/appverse-footer"
 import { Pricing } from "@/components/pricing"
+import { getMarketingFooter } from "@/lib/marketing"
 
-export const dynamic = "force-static"
+export const revalidate = 60
 
-export default function PricingPage() {
+export default async function PricingPage() {
+  const footer = await getMarketingFooter()
+
   return (
     <main className="min-h-[100dvh] text-white">
       <SiteHeader />
@@ -23,7 +26,7 @@ export default function PricingPage() {
           <Pricing />
         </div>
       </section>
-      <AppverseFooter />
+      <AppverseFooter content={footer} />
     </main>
   )
 }

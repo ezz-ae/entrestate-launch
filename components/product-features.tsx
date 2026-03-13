@@ -1,7 +1,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import { products } from "@/lib/products"
+import { getProducts } from "@/lib/products"
 
 type ProductFeaturesProps = {
   title?: string
@@ -10,12 +10,13 @@ type ProductFeaturesProps = {
   showCta?: boolean
 }
 
-export function ProductFeatures({
+export async function ProductFeatures({
   title = "Products engineered for faster real estate launches",
   subtitle = "Choose a ready-made template or an AI-first flow. Every product ships with conversion wiring and a launch plan.",
   limit,
   showCta = true,
 }: ProductFeaturesProps) {
+  const products = await getProducts()
   const featuredProducts = typeof limit === "number" ? products.slice(0, limit) : products
 
   return (

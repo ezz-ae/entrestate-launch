@@ -5,10 +5,13 @@ import { AppverseFooter } from "@/components/appverse-footer"
 import { ExecutionSteps } from "@/components/execution-steps"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { getMarketingFooter } from "@/lib/marketing"
 
-export const dynamic = "force-static"
+export const revalidate = 60
 
-export default function ProductsPage() {
+export default async function ProductsPage() {
+  const footer = await getMarketingFooter()
+
   return (
     <main className="min-h-[100dvh] text-white">
       <SiteHeader />
@@ -50,7 +53,7 @@ export default function ProductsPage() {
       />
       <ExecutionSteps />
       <Pricing />
-      <AppverseFooter />
+      <AppverseFooter content={footer} />
     </main>
   )
 }

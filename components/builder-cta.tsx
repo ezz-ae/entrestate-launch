@@ -1,8 +1,13 @@
 import { Button } from "@/components/ui/button"
 import { Sparkles, ArrowRight, Zap, Shield, Globe, CheckCircle2 } from "lucide-react"
 import Link from "next/link"
+import { getProducts } from "@/lib/products"
 
-export function BuilderCta() {
+export async function BuilderCta() {
+  const products = await getProducts()
+  const builderTarget =
+    products.find((product) => product.demoUrl)?.slug ?? products[0]?.slug ?? "products"
+
   return (
     <section className="py-24 relative overflow-hidden bg-black">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_50%,rgba(132,204,22,0.1),transparent)] pointer-events-none" />
@@ -46,7 +51,7 @@ export function BuilderCta() {
 
               <div className="flex flex-wrap gap-4">
                 <Button asChild className="rounded-full bg-lime-400 text-black font-black px-10 py-7 text-lg hover:bg-lime-300 hover:scale-105 transition-all shadow-[0_0_30px_rgba(132,204,22,0.3)]">
-                  <Link href="/products/ready-broker-site#builder">
+                  <Link href={builderTarget === "products" ? "/products" : `/products/${builderTarget}#builder`}>
                     Try the Builder
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>

@@ -1,11 +1,15 @@
 // app/about/page.tsx
-import React from "react";
-import Link from "next/link";
-import { SiteHeader } from "@/components/site-header";
-import { AppverseFooter } from "@/components/appverse-footer";
-import { Button } from "@/components/ui/button";
+import React from "react"
+import Link from "next/link"
+import { SiteHeader } from "@/components/site-header"
+import { AppverseFooter } from "@/components/appverse-footer"
+import { Button } from "@/components/ui/button"
+import { getMarketingFooter } from "@/lib/marketing"
 
-export default function AboutPage() {
+export const revalidate = 60
+
+export default async function AboutPage() {
+  const footer = await getMarketingFooter()
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -27,7 +31,7 @@ export default function AboutPage() {
     contactPoint: [
       {
         "@type": "ContactPoint",
-        telephone: "+1-555-555-5555",
+        email: "hello@mashroi.com",
         contactType: "customer service",
       },
     ],
@@ -119,7 +123,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <AppverseFooter />
+      <AppverseFooter content={footer} />
     </main>
-  );
+  )
 }

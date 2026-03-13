@@ -37,6 +37,7 @@ import {
   Package,
   Move,
 } from "lucide-react"
+import { defaultAdminContent } from "@/lib/marketing-defaults"
 
 interface ContentData {
   hero: {
@@ -115,165 +116,17 @@ interface ActivityItem {
   timestamp: number
 }
 
-const defaultContent: ContentData = {
-  hero: {
-    title: "BUILD REAL ESTATE WEBSITES WITH AI",
-    subtitle: "mashroi",
-    buttonText: "Start Building",
-  },
-  features: {
-    title: "Why Mashroi closes deals faster.",
-    subtitle: "Real estate websites, launched fast and optimized for leads.",
-  },
-  footer: {
-    tagline: "Mashroi launches real estate websites fast — templates, AI builder, and conversion-ready pages.",
-    copyright: "© 2025 — Mashroi.com",
-  },
-  about: {
-    title: "About Mashroi OS",
-    description: "The fastest way to build your real estate presence.",
-    mission: "To empower real estate professionals with instant, high-end digital solutions.",
-    vision: "To be the global standard for real estate web architecture.",
-    teamSize: "20+ AI & Design Experts",
-    founded: "2024",
-    locations: "Dubai, London, New York",
-  },
-  pricing: {
-    startup: {
-      price_usd: "$299",
-      price_inr: "₹25,000/-",
-      features: [
-        "Up to 15s 3D Animation",
-        "2 Revisions",
-        "Creative Backgrounds",
-        "Simple 3D Animation",
-        "7–10 Day Turnaround time",
-        "Simple 3D Models Included", // Updated to show it's included
-      ],
-      videos: [
-        "ysz5S6PUM-U",
-        "aqz-KE-bpKQ",
-        "ScMzIvxBSi4",
-        "dQw4w9WgXcQ",
-        "VYOjWnS4cMY",
-        "9bZkp7q19f0",
-        "3JZ_D3ELwOQ",
-        "e-ORhEE9VVg",
-        "fJ9rUzIMcZQ",
-      ],
-    },
-    pro: {
-      price_usd: "$699",
-      price_inr: "₹55,000/-",
-      features: [
-        "Up to 25s 3D Animation",
-        "4 Revisions",
-        "Creative Backgrounds, Lite graphics",
-        "Detailed 3D Animation",
-        "20–25 Day Turnaround",
-        "Pre-built 3D Models",
-      ],
-      videos: [
-        "ASV2myPRfKA",
-        "eTfS2lqwf6A",
-        "KALbYHmGV4I",
-        "Go0AA9hZ4as",
-        "sB7RZ9QCOAg",
-        "TK2WboJOJaw",
-        "5Xq7UdXXOxI",
-        "kMjWCidQSK0",
-        "RKKdQvwKOhQ",
-      ],
-    },
-    premium: {
-      price_usd: "$2,049",
-      price_inr: "₹1,70,500/-",
-      features: [
-        "40–60s 3D Animation",
-        "Creative Backgrounds, Lite graphics",
-        "Liquid, Smoke, Fire, Cloth Simulations",
-        "Lighting, Camera Animation, Depth effects",
-        "Priority – 20 Day Turnaround",
-        "Highly Complex 3D Models Included", // Updated to show it's included
-      ],
-      videos: [
-        "v2AC41dglnM",
-        "pRpeEdMmmQ0",
-        "3AtDnEC4zak",
-        "JRfuAukYTKg",
-        "LsoLEjrDogU",
-        "RB-RcX5DS5A",
-        "hTWKbfoikeg",
-        "YQHsXMglC9A",
-        "09R8_2nJtjg",
-      ],
-    },
-  },
-  orderForm: {
-    whatsappNumber: "+918384092211",
-    modelingOptions: {
-      simple: { price_usd: 35, price_inr: 3000, description: "Basic shapes, minimal details" },
-      medium: { price_usd: 60, price_inr: 5000, description: "Moderate details, textures" },
-      complex: { price_usd: 120, price_inr: 10000, description: "High detail, advanced geometry" },
-    },
-    renderOptions: {
-      basic: { price_usd: 25, price_inr: 2000, quantity: 3 },
-      standard: { price_usd: 35, price_inr: 3000, quantity: 5 },
-      premium: { price_usd: 60, price_inr: 5000, quantity: 10 },
-    },
-    formSteps: [
-      { enabled: true, title: "Package Selection", description: "Choose your animation package" },
-      { enabled: true, title: "3D Model Question", description: "Do you have a 3D model? (Pro plan only)" },
-      { enabled: true, title: "Modeling Add-on", description: "Select modeling complexity (Pro plan only)" },
-      { enabled: true, title: "Render Upsell", description: "Add 3D renders to your order" },
-      { enabled: true, title: "Order Summary", description: "Review and confirm your order" },
-    ],
-  },
-  settings: {
-    adminEmail: "admin@theskitbit.com",
-    adminPassword: "1234",
-  },
+interface AnalyticsItem {
+  metric: string
+  value: string
+  change: string
+  trend: "up" | "down"
 }
 
+const defaultContent: ContentData = defaultAdminContent
+
 // Initial activity data
-const initialActivity: ActivityItem[] = [
-  {
-    id: "1",
-    name: "Homepage Content",
-    status: "Updated",
-    change: "+2.1%",
-    icon: "🏠",
-    time: "2 hours ago",
-    timestamp: Date.now() - 2 * 60 * 60 * 1000,
-  },
-  {
-    id: "2",
-    name: "Pricing Plans",
-    status: "Modified",
-    change: "+1.8%",
-    icon: "💰",
-    time: "4 hours ago",
-    timestamp: Date.now() - 4 * 60 * 60 * 1000,
-  },
-  {
-    id: "3",
-    name: "About Page",
-    status: "Published",
-    change: "+3.2%",
-    icon: "ℹ️",
-    time: "6 hours ago",
-    timestamp: Date.now() - 6 * 60 * 60 * 1000,
-  },
-  {
-    id: "4",
-    name: "Footer Content",
-    status: "Updated",
-    change: "+0.9%",
-    icon: "📄",
-    time: "8 hours ago",
-    timestamp: Date.now() - 8 * 60 * 60 * 1000,
-  },
-]
+const initialActivity: ActivityItem[] = []
 
 export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -285,16 +138,11 @@ export default function AdminDashboard() {
   const [isSaving, setIsSaving] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-  const [notifications, setNotifications] = useState(3)
+  const [notifications, setNotifications] = useState(0)
   const [saveMessage, setSaveMessage] = useState("")
   const [activityItems, setActivityItems] = useState<ActivityItem[]>(initialActivity)
   const [activityPage, setActivityPage] = useState(0)
-  const [analyticsData, setAnalyticsData] = useState([
-    { metric: "Page Views", value: "12,543", change: "+15.2%", trend: "up" },
-    { metric: "Unique Visitors", value: "8,921", change: "+8.7%", trend: "up" },
-    { metric: "Bounce Rate", value: "23.4%", change: "-5.1%", trend: "down" },
-    { metric: "Avg. Session", value: "3m 42s", change: "+12.3%", trend: "up" },
-  ])
+  const [analyticsData] = useState<AnalyticsItem[]>([])
   const [videoToAdd, setVideoToAdd] = useState("")
   const [featureToAdd, setFeatureToAdd] = useState("")
   const [currentPricingTier, setCurrentPricingTier] = useState<"startup" | "pro" | "premium">("startup")
@@ -309,19 +157,20 @@ export default function AdminDashboard() {
 
       if (sessionCookie && sessionCookie.includes("authenticated")) {
         setIsAuthenticated(true)
-        // Load saved content from localStorage
-        const savedContent = localStorage.getItem("skitbit-content")
-        if (savedContent) {
-          const parsedContent = JSON.parse(savedContent)
-          setContent(parsedContent)
-          setOriginalContent(parsedContent)
-        }
-
-        // Load saved activity from localStorage
-        const savedActivity = localStorage.getItem("skitbit-activity")
-        if (savedActivity) {
-          setActivityItems(JSON.parse(savedActivity))
-        }
+        ;(async () => {
+          try {
+            const response = await fetch("/api/marketing/content?key=admin-content")
+            if (!response.ok) throw new Error("Failed to load content")
+            const payload = await response.json()
+            if (payload?.data) {
+              setContent(payload.data)
+              setOriginalContent(payload.data)
+            }
+          } catch {
+            setContent(defaultContent)
+            setOriginalContent(defaultContent)
+          }
+        })()
       } else {
         router.push("/admin/login")
       }
@@ -408,12 +257,16 @@ export default function AdminDashboard() {
     setIsSaving(true)
     setSaveMessage("")
 
-    // Simulate save delay
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-
     try {
-      // Save to localStorage
-      localStorage.setItem("skitbit-content", JSON.stringify(content))
+      const response = await fetch("/api/marketing/content?key=admin-content", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data: content }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to save")
+      }
 
       // Create a new activity item
       const section = selectedPage.charAt(0).toUpperCase() + selectedPage.slice(1)
@@ -438,7 +291,6 @@ export default function AdminDashboard() {
 
       const updatedActivity = [newActivity, ...activityItems.slice(0, 9)]
       setActivityItems(updatedActivity)
-      localStorage.setItem("skitbit-activity", JSON.stringify(updatedActivity))
 
       // Update original content to match current content
       setOriginalContent(JSON.parse(JSON.stringify(content)))
@@ -639,25 +491,31 @@ export default function AdminDashboard() {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {currentActivityItems.map((item) => (
-                <div key={item.id} className="flex items-center justify-between p-3 rounded-lg bg-[#0f0f0f]">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-neutral-800 rounded-lg flex items-center justify-center">
-                      <span className="text-lg">{item.icon}</span>
+              {currentActivityItems.length ? (
+                currentActivityItems.map((item) => (
+                  <div key={item.id} className="flex items-center justify-between p-3 rounded-lg bg-[#0f0f0f]">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-neutral-800 rounded-lg flex items-center justify-center">
+                        <span className="text-lg">{item.icon}</span>
+                      </div>
+                      <div>
+                        <p className="text-white font-medium">{item.name}</p>
+                        <p className="text-neutral-400 text-sm">
+                          {item.status} • {item.time}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-white font-medium">{item.name}</p>
-                      <p className="text-neutral-400 text-sm">
-                        {item.status} • {item.time}
-                      </p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-green-400 font-semibold">{item.change}</span>
+                      <TrendingUp className="h-4 w-4 text-green-400" />
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-green-400 font-semibold">{item.change}</span>
-                    <TrendingUp className="h-4 w-4 text-green-400" />
-                  </div>
+                ))
+              ) : (
+                <div className="rounded-lg border border-dashed border-neutral-800 px-4 py-6 text-center text-sm text-neutral-500">
+                  No recent updates yet.
                 </div>
-              ))}
+              )}
             </CardContent>
           </Card>
         </div>
@@ -1369,69 +1227,68 @@ export default function AdminDashboard() {
             <p className="text-neutral-400">Monitor your website performance and user engagement</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {analyticsData.map((item, index) => (
-              <Card key={index} className="bg-[#1a1a1a] border-neutral-800">
-                <CardContent className="p-6">
-                  <div className="space-y-2">
-                    <p className="text-neutral-400 text-sm">{item.metric}</p>
-                    <p className="text-2xl font-bold text-white">{item.value}</p>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`text-sm font-semibold ${item.trend === "up" ? "text-green-400" : "text-red-400"}`}
-                      >
-                        {item.change}
-                      </span>
-                      <TrendingUp
-                        className={`h-4 w-4 ${item.trend === "up" ? "text-green-400" : "text-red-400 rotate-180"}`}
-                      />
+          {analyticsData.length ? (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {analyticsData.map((item, index) => (
+                  <Card key={index} className="bg-[#1a1a1a] border-neutral-800">
+                    <CardContent className="p-6">
+                      <div className="space-y-2">
+                        <p className="text-neutral-400 text-sm">{item.metric}</p>
+                        <p className="text-2xl font-bold text-white">{item.value}</p>
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`text-sm font-semibold ${
+                              item.trend === "up" ? "text-green-400" : "text-red-400"
+                            }`}
+                          >
+                            {item.change}
+                          </span>
+                          <TrendingUp
+                            className={`h-4 w-4 ${
+                              item.trend === "up" ? "text-green-400" : "text-red-400 rotate-180"
+                            }`}
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              <Card className="bg-[#1a1a1a] border-neutral-800">
+                <CardHeader>
+                  <CardTitle className="text-white">Traffic Overview</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-64 flex items-center justify-center text-neutral-400">
+                    <div className="text-center">
+                      <BarChart3 className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>Connect your analytics provider to render charts here.</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-            ))}
-          </div>
 
-          <Card className="bg-[#1a1a1a] border-neutral-800">
-            <CardHeader>
-              <CardTitle className="text-white">Traffic Overview</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-64 flex items-center justify-center text-neutral-400">
-                <div className="text-center">
-                  <BarChart3 className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>Analytics chart would be displayed here</p>
-                  <p className="text-sm">Integration with Google Analytics or similar service</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-[#1a1a1a] border-neutral-800">
-            <CardHeader>
-              <CardTitle className="text-white">Top Pages</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {[
-                  { page: "Homepage", views: "5,432", change: "+12.3%" },
-                  { page: "About Us", views: "2,871", change: "+8.7%" },
-                  { page: "Pricing", views: "2,103", change: "+15.2%" },
-                  { page: "3D Product Rendering", views: "1,654", change: "+9.5%" },
-                ].map((item, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-[#0f0f0f]">
-                    <div>
-                      <p className="text-white font-medium">{item.page}</p>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <span className="text-neutral-300">{item.views} views</span>
-                      <span className="text-green-400 font-semibold">{item.change}</span>
-                    </div>
+              <Card className="bg-[#1a1a1a] border-neutral-800">
+                <CardHeader>
+                  <CardTitle className="text-white">Top Pages</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4 text-neutral-400">
+                    <p>No analytics data available yet.</p>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            </>
+          ) : (
+            <Card className="bg-[#1a1a1a] border-neutral-800">
+              <CardContent className="p-10 text-center text-neutral-400">
+                <BarChart3 className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No analytics data connected yet.</p>
+              </CardContent>
+            </Card>
+          )}
         </div>
       )
     }
@@ -1520,14 +1377,23 @@ export default function AdminDashboard() {
                 <Button
                   variant="destructive"
                   className="bg-red-600 hover:bg-red-700"
-                  onClick={() => {
-                    if (confirm("Are you sure you want to reset all dashboard data? This cannot be undone.")) {
-                      localStorage.removeItem("skitbit-content")
-                      localStorage.removeItem("skitbit-activity")
+                  onClick={async () => {
+                    if (!confirm("Are you sure you want to reset all dashboard data? This cannot be undone.")) {
+                      return
+                    }
+                    try {
+                      const response = await fetch("/api/marketing/content?key=admin-content", {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ data: defaultContent }),
+                      })
+                      if (!response.ok) throw new Error("Reset failed")
                       setContent(defaultContent)
                       setOriginalContent(defaultContent)
                       setActivityItems(initialActivity)
                       setSaveMessage("Dashboard reset successfully!")
+                    } catch {
+                      setSaveMessage("Error resetting dashboard. Please try again.")
                     }
                   }}
                 >
@@ -1602,7 +1468,7 @@ export default function AdminDashboard() {
               <CardContent className="space-y-4">
                 <div>
                   <p className="text-white font-medium">Email Support</p>
-                  <p className="text-neutral-400 text-sm">admin@theskitbit.com</p>
+                  <p className="text-neutral-400 text-sm">hello@mashroi.com</p>
                 </div>
                 <div>
                   <p className="text-white font-medium">Response Time</p>

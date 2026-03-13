@@ -25,10 +25,10 @@ export default function AdminLogin() {
     // Simple client-side authentication
     setTimeout(() => {
       // Default credentials
-      if (
-        (email === "admin@theskitbit.com" && password === "1234") ||
-        (email === "Addy@theskitbit.com" && password === "1234")
-      ) {
+    if (
+      (email === "admin@mashroi.com" && password === "Mashroi123!") ||
+      (email === "addy@mashroi.com" && password === "Mashroi123!")
+    ) {
         // Set a cookie that expires in 24 hours
         const expiryDate = new Date()
         expiryDate.setTime(expiryDate.getTime() + 24 * 60 * 60 * 1000)
@@ -101,7 +101,7 @@ export default function AdminLogin() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@theskitbit.com"
+                placeholder="admin@mashroi.com"
                 className="bg-[#1a1a1a] border-neutral-800 text-white"
                 required
               />
@@ -121,7 +121,7 @@ export default function AdminLogin() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder="Password"
                 className="bg-[#1a1a1a] border-neutral-800 text-white"
                 required
               />
@@ -142,8 +142,8 @@ export default function AdminLogin() {
           <div className="mt-8 text-center">
             <p className="text-neutral-400 text-sm">
               Need help? Contact{" "}
-              <a href="mailto:support@theskitbit.com" className="text-[#C6FF3A] hover:underline">
-                support@theskitbit.com
+              <a href="mailto:hello@mashroi.com" className="text-[#C6FF3A] hover:underline">
+                hello@mashroi.com
               </a>
             </p>
           </div>

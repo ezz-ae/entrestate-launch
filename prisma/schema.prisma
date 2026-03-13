@@ -618,6 +618,66 @@ model EditRequest {
   deployment Deployment @relation(fields: [deploymentId], references: [id], onDelete: Cascade)
 }
 
+model MarketingSiteConfig {
+  id        String   @id @default(cuid())
+  tenantId  String?
+  key       String   @unique
+  data      Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([tenantId])
+}
+
+model MarketingProduct {
+  id          String   @id @default(cuid())
+  tenantId    String?
+  slug        String   @unique
+  title       String
+  tagline     String
+  description String
+  category    String
+  badge       String?
+  priceLabel  String
+  priceNote   String?
+  highlights  Json
+  deliverables Json
+  timeline    Json
+  outcomes    Json
+  heroImage   String
+  demoUrl     String?
+  sortOrder   Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  @@index([tenantId, sortOrder])
+}
+
+model MarketingBlogPost {
+  id          String   @id @default(cuid())
+  tenantId    String?
+  slug        String   @unique
+  title       String
+  description String
+  heroImage   String
+  publishedAt DateTime
+  content     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  @@index([tenantId, publishedAt])
+}
+
+model MarketingLogo {
+  id        String   @id @default(cuid())
+  tenantId  String?
+  name      String
+  imageUrl  String
+  row       String
+  sortOrder Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([tenantId, row, sortOrder])
+  @@unique([row, name])
+}
+
 model Job {
   id           String   @id @default(cuid())
   tenantId     String

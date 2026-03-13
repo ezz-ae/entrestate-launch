@@ -5,30 +5,15 @@ import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 
-export function LogoMarquee() {
+type LogoItem = { name: string; image: string }
+
+type LogoMarqueeProps = {
+  firstRow?: LogoItem[]
+  secondRow?: LogoItem[]
+}
+
+export function LogoMarquee({ firstRow = [], secondRow = [] }: LogoMarqueeProps) {
   const [pausedRow, setPausedRow] = useState<string | null>(null)
-
-  const logos = [
-    { name: "VK", image: "/icons/Supp.png" },
-    { name: "TechCrunch", image: "/icons/SHKUP.png" },
-    { name: "MailChimp", image: "/icons/Persona.png" },
-    { name: "ESJ", image: "/icons/HFFB.png" },
-    { name: "Palladio", image: "/icons/Palladio.png" },
-    { name: "Victorinox", image: "/icons/Victorinox.png" },
-    { name: "Trump", image: "/icons/Trumpp.png" },
-    { name: "Poedagar", image: "/icons/Poedagarr.png" },
-  ]
-
-  const secondRowLogos = [
-    { name: "Kami", image: "/icons/Kami.png" },
-    { name: "Neemans", image: "/icons/NEEMANS.png" },
-    { name: "Flick", image: "/icons/FLICK.png" },
-    { name: "Vandelay", image: "/icons/Vandelay.png" },
-    { name: "KejbyKej", image: "/icons/KEJBYKEJ.png" },
-    { name: "Skinny", image: "/icons/Skinny.png" },
-    { name: "Rico", image: "/icons/RICO.png" },
-    { name: "Skyborne", image: "/icons/Skyborne.png" },
-  ]
 
   const LogoCard = ({ logo, rowId }: { logo: any; rowId: string }) => (
     <div
@@ -39,7 +24,7 @@ export function LogoMarquee() {
       <div className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-3xl bg-neutral-900/40 border border-white/5 backdrop-blur-2xl flex items-center justify-center overflow-hidden transition-all duration-300 hover:border-lime-400/30 hover:shadow-[0_0_30px_rgba(132,204,22,0.1)] group">
         <div className="relative w-2/3 h-2/3 transition-transform duration-500 group-hover:scale-110">
           <Image
-            src={logo.image || "/placeholder.svg"}
+            src={logo.image}
             alt={logo.name}
             fill
             className="object-contain filter brightness-110 opacity-70 group-hover:opacity-100 transition-all"
@@ -84,7 +69,7 @@ export function LogoMarquee() {
                 width: "max-content",
               }}
             >
-              {[...logos, ...logos, ...logos].map((logo, index) => (
+              {[...firstRow, ...firstRow, ...firstRow].map((logo, index) => (
                 <LogoCard key={`first-${index}`} logo={logo} rowId="first" />
               ))}
             </div>
@@ -99,7 +84,7 @@ export function LogoMarquee() {
                 width: "max-content",
               }}
             >
-              {[...secondRowLogos, ...secondRowLogos, ...secondRowLogos].map((logo, index) => (
+              {[...secondRow, ...secondRow, ...secondRow].map((logo, index) => (
                 <LogoCard key={`second-${index}`} logo={logo} rowId="second" />
               ))}
             </div>

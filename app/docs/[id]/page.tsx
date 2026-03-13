@@ -1,9 +1,12 @@
-import Link from 'next/link';
-import { notFound } from 'next/navigation';
-import { getSortedPostsData, getPostData } from '../../../lib/docs';
-import { SiteHeader } from "@/components/site-header";
-import { AppverseFooter } from "@/components/appverse-footer";
-import { ChevronRight, FileText, BookOpen, Sparkles, ArrowLeft } from "lucide-react";
+import Link from "next/link"
+import { notFound } from "next/navigation"
+import { getSortedPostsData, getPostData } from "../../../lib/docs"
+import { SiteHeader } from "@/components/site-header"
+import { AppverseFooter } from "@/components/appverse-footer"
+import { ChevronRight, FileText, BookOpen, Sparkles, ArrowLeft } from "lucide-react"
+import { getMarketingFooter } from "@/lib/marketing"
+
+export const revalidate = 60
 
 export async function generateStaticParams() {
   const posts = getSortedPostsData();
@@ -19,8 +22,11 @@ export default async function DocPage({ params }: { params: Promise<{ id: string
     notFound();
   }
 
-  const allPostsData = getSortedPostsData();
-  const postData = await getPostData(id);
+  const [allPostsData, postData, footer] = await Promise.all([
+    getSortedPostsData(),
+    getPostData(id),
+    getMarketingFooter(),
+  ])
 
   return (
     <main className="min-h-screen bg-black text-white">
@@ -93,7 +99,7 @@ export default async function DocPage({ params }: { params: Promise<{ id: string
         </div>
       </section>
 
-      <AppverseFooter />
+      <AppverseFooter content={footer} />
     </main>
-  );
+  )
 }

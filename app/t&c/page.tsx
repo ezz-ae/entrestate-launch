@@ -2,6 +2,7 @@ import { SiteHeader } from "@/components/site-header"
 import { AppverseFooter } from "@/components/appverse-footer"
 import Link from "next/link"
 import type { Metadata } from "next"
+import { getMarketingFooter } from "@/lib/marketing"
 
 export const metadata: Metadata = {
   title: "Terms and Conditions — Mashroi",
@@ -14,7 +15,11 @@ export const metadata: Metadata = {
   },
 }
 
-export default function TermsPage() {
+export const revalidate = 60
+
+export default async function TermsPage() {
+  const footer = await getMarketingFooter()
+
   return (
     <main className="min-h-screen bg-black text-white">
       <SiteHeader />
@@ -98,7 +103,7 @@ export default function TermsPage() {
           </div>
         </div>
       </section>
-      <AppverseFooter />
+      <AppverseFooter content={footer} />
     </main>
   )
 }

@@ -1,11 +1,14 @@
-import Link from 'next/link';
-import { getSortedPostsData } from '../../lib/docs';
-import { SiteHeader } from "@/components/site-header";
-import { AppverseFooter } from "@/components/appverse-footer";
-import { ChevronRight, FileText, BookOpen, Sparkles } from "lucide-react";
+import Link from "next/link"
+import { getSortedPostsData } from "../../lib/docs"
+import { SiteHeader } from "@/components/site-header"
+import { AppverseFooter } from "@/components/appverse-footer"
+import { ChevronRight, FileText, BookOpen, Sparkles } from "lucide-react"
+import { getMarketingFooter } from "@/lib/marketing"
 
-export default function DocsPage() {
-  const allPostsData = getSortedPostsData();
+export const revalidate = 60
+
+export default async function DocsPage() {
+  const [allPostsData, footer] = await Promise.all([getSortedPostsData(), getMarketingFooter()])
 
   return (
     <main className="min-h-screen bg-black text-white">
@@ -91,7 +94,7 @@ export default function DocsPage() {
         </div>
       </section>
 
-      <AppverseFooter />
+      <AppverseFooter content={footer} />
     </main>
-  );
+  )
 }

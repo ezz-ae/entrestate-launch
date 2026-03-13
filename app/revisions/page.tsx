@@ -1,7 +1,12 @@
-import { SiteHeader } from "@/components/site-header";
-import { AppverseFooter } from "@/components/appverse-footer";
+import { SiteHeader } from "@/components/site-header"
+import { AppverseFooter } from "@/components/appverse-footer"
+import { getMarketingFooter } from "@/lib/marketing"
 
-export default function RevisionPolicyPage() {
+export const revalidate = 60
+
+export default async function RevisionPolicyPage() {
+  const footer = await getMarketingFooter()
+
   return (
     <main className="min-h-screen bg-black text-white">
       <SiteHeader />
@@ -65,7 +70,7 @@ export default function RevisionPolicyPage() {
           </div>
         </div>
       </section>
-      <AppverseFooter />
+      <AppverseFooter content={footer} />
     </main>
-  );
+  )
 }

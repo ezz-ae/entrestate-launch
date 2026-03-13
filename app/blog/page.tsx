@@ -1,40 +1,15 @@
-import React from 'react';
-import { SiteHeader } from "@/components/site-header";
-import { AppverseFooter } from "@/components/appverse-footer";
-import { BlogCard } from '@/components/blog/blog-card';
-import { Search, Filter, Sparkles } from "lucide-react";
+import React from "react"
+import { SiteHeader } from "@/components/site-header"
+import { AppverseFooter } from "@/components/appverse-footer"
+import { BlogCard } from "@/components/blog/blog-card"
+import { Search, Filter, Sparkles } from "lucide-react"
+import { getMarketingBlogPosts, getMarketingFooter } from "@/lib/marketing"
 
-const posts = [
-  {
-    slug: 'scaling-your-brokerage-with-ai',
-    frontMatter: {
-      title: 'Scaling Your Brokerage with AI: 2026 Strategy',
-      date: '2026-03-12T03:28:38.742Z',
-      description: 'Learn how modern real estate teams are using AI to automate lead capture and property descriptions at scale.',
-      image: '/images/intuitive-1.png',
-    },
-  },
-  {
-    slug: 'why-speed-to-lead-matters',
-    frontMatter: {
-      title: 'Why Speed-to-Lead is the Only Metric That Matters',
-      date: '2026-03-11T03:43:25.606Z',
-      description: 'New data shows that responding to a lead within 5 minutes increases conversion rates by over 400%.',
-      image: '/images/top-rated-1.png',
-    },
-  },
-  {
-    slug: 'luxury-branding-for-real-estate',
-    frontMatter: {
-      title: 'Luxury Branding: Beyond the Logo',
-      date: '2026-03-10T02:47:46.420Z',
-      description: 'How to create a high-end digital presence that resonates with ultra-high-net-worth investors.',
-      image: '/images/intuitive-2.png',
-    },
-  },
-];
+export const revalidate = 60
 
-const BlogPage = () => {
+const BlogPage = async () => {
+  const [posts, footer] = await Promise.all([getMarketingBlogPosts(), getMarketingFooter()])
+
   return (
     <main className="min-h-screen bg-black text-white">
       <SiteHeader />
@@ -103,9 +78,9 @@ const BlogPage = () => {
         </div>
       </section>
 
-      <AppverseFooter />
+      <AppverseFooter content={footer} />
     </main>
-  );
-};
+  )
+}
 
 export default BlogPage;

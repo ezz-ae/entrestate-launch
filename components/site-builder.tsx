@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 
 interface SiteBuilderProps {
@@ -23,28 +24,7 @@ export function SiteBuilder({ initialUrl, productTitle }: SiteBuilderProps) {
   const [domain, setDomain] = useState("")
   const [domainStatus, setDomainStatus] = useState<any>(null)
   const [isCheckingDomain, setIsCheckingDomain] = useState(false)
-  const [iframeContent, setIframeContent] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchHtml = async () => {
-      if (initialUrl) {
-        setIframeContent(null);
-        try {
-          const response = await fetch(`/api/proxy?url=${encodeURIComponent(initialUrl)}`);
-          if (response.ok) {
-            const html = await response.text();
-            setIframeContent(html);
-          } else {
-            setIframeContent("<h1>Error: Could not load template preview. The site may be blocking it.</h1>");
-          }
-        } catch (error) {
-          console.error("Failed to fetch page for iframe", error);
-          setIframeContent("<h1>Error: Could not load template preview. Please check your connection.</h1>");
-        }
-      }
-    };
-    fetchHtml();
-  }, [initialUrl]);
+  const previewSrc = initialUrl ? `/api/proxy?url=${encodeURIComponent(initialUrl)}` : undefined
 
   const realEstateBlocks = [
     { id: "hero-1", name: "Luxury Hero", category: "Hero", icon: Layout, desc: "High-impact video or image background with CTAs." },
@@ -251,7 +231,7 @@ export function SiteBuilder({ initialUrl, productTitle }: SiteBuilderProps) {
             )}
 
             <iframe 
-              src={initialUrl} 
+              src={previewSrc} 
               className={cn(
                 "h-full w-full border-none transition-opacity duration-500",
                 isBuilding ? "opacity-30 grayscale blur-[2px]" : "opacity-100"
