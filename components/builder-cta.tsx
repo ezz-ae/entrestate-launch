@@ -3,15 +3,14 @@ import Image from "next/image"
 import { Sparkles, ArrowRight, Zap, Shield, Globe, CheckCircle2 } from "lucide-react"
 import Link from "next/link"
 import { getProducts } from "@/lib/products"
+import { resolvePreviewSrc } from "@/lib/preview-url"
 
 export async function BuilderCta() {
   const products = await getProducts()
   const builderTarget =
     products.find((product) => product.demoUrl)?.slug ?? products[0]?.slug ?? "products"
   const previewProduct = products.find((product) => product.demoUrl) ?? products[0]
-  const previewSrc = previewProduct?.demoUrl
-    ? `/api/proxy?url=${encodeURIComponent(previewProduct.demoUrl)}`
-    : undefined
+  const previewSrc = resolvePreviewSrc(previewProduct?.demoUrl)
 
   return (
     <section className="py-24 relative overflow-hidden bg-black">

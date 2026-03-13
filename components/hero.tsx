@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
 import { getProducts } from "@/lib/products"
+import { resolvePreviewSrc } from "@/lib/preview-url"
 
 export async function Hero() {
   const products = await getProducts()
@@ -8,7 +9,7 @@ export async function Hero() {
     title: product.title,
     sub: product.tagline,
     imageSrc: product.heroImage,
-    previewSrc: product.demoUrl ? `/api/proxy?url=${encodeURIComponent(product.demoUrl)}` : undefined,
+    previewSrc: resolvePreviewSrc(product.demoUrl),
   }))
   const buttonNew = (
     <Button asChild className="rounded-full bg-lime-400 px-6 text-black hover:bg-lime-300">

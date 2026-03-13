@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { resolvePreviewSrc } from "@/lib/preview-url"
 
 interface SiteBuilderProps {
   initialUrl: string
@@ -24,7 +25,7 @@ export function SiteBuilder({ initialUrl, productTitle }: SiteBuilderProps) {
   const [domain, setDomain] = useState("")
   const [domainStatus, setDomainStatus] = useState<any>(null)
   const [isCheckingDomain, setIsCheckingDomain] = useState(false)
-  const previewSrc = initialUrl ? `/api/proxy?url=${encodeURIComponent(initialUrl)}` : undefined
+  const previewSrc = resolvePreviewSrc(initialUrl)
 
   const realEstateBlocks = [
     { id: "hero-1", name: "Luxury Hero", category: "Hero", icon: Layout, desc: "High-impact video or image background with CTAs." },

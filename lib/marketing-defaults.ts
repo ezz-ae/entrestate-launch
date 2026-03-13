@@ -131,7 +131,7 @@ export const defaultProducts: MarketingProductSeed[] = [
     badge: "Most Popular",
     priceLabel: "AED 2,399",
     priceNote: "one-time purchase",
-    demoUrl: "https://goldcentury.ae/",
+    demoUrl: "/templates/luxury-boutique",
     highlights: [
       "Luxury dark mode aesthetic",
       "Investment yield calculators",
@@ -166,7 +166,7 @@ export const defaultProducts: MarketingProductSeed[] = [
     badge: "High Conversion",
     priceLabel: "AED 1,999",
     priceNote: "one-time purchase",
-    demoUrl: "https://goldcentury.ae/",
+    demoUrl: "/templates/modern-minimalist",
     highlights: [
       "Sub-second load times",
       "Mobile-first search experience",
@@ -199,7 +199,7 @@ export const defaultProducts: MarketingProductSeed[] = [
     badge: "Trending",
     priceLabel: "AED 899",
     priceNote: "one-time purchase",
-    demoUrl: "https://goldcentury.ae/",
+    demoUrl: "/templates/community-focused",
     highlights: [
       "Instagram-optimized layout",
       "Verified track record block",
@@ -232,7 +232,7 @@ export const defaultProducts: MarketingProductSeed[] = [
     badge: "Limited Edition",
     priceLabel: "AED 1,499",
     priceNote: "per launch",
-    demoUrl: "https://goldcentury.ae/",
+    demoUrl: "/templates/template-product-launch",
     highlights: [
       "Urgency & Scarcity blocks",
       "3D render showreels",
@@ -265,6 +265,7 @@ export const defaultProducts: MarketingProductSeed[] = [
     badge: "Fast Results",
     priceLabel: "AED 999",
     priceNote: "one-time event",
+    demoUrl: "/templates/template-sales-landing",
     highlights: [
       "Live countdown clock",
       "Unit availability status",
@@ -297,6 +298,7 @@ export const defaultProducts: MarketingProductSeed[] = [
     badge: "Creator Ready",
     priceLabel: "AED 799",
     priceNote: "one-time purchase",
+    demoUrl: "/templates/template-offer",
     highlights: [
       "Video-first hero section",
       "Social media content grid",
