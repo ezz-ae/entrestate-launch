@@ -1,33 +1,35 @@
-
-import { Container, Title, Text, Image } from '@mantine/core';
+import { Container, Title, Text } from '@mantine/core';
 import React from 'react';
+import Image from "next/image";
+import { SiteHeader } from "@/components/site-header";
+import { AppverseFooter } from "@/components/appverse-footer";
 
 const posts = [
   {
-    slug: 'how-to-detect-and-block-malicious-bots-in-apis',
+    slug: 'scaling-your-brokerage-with-ai',
     frontMatter: {
-      title: 'How to Detect and Block Malicious Bots in APIs',
+      title: 'Scaling Your Brokerage with AI: 2026 Strategy',
       date: '2026-03-12T03:28:38.742Z',
-      description: 'Layer IP reputation, behavioral analysis, rate limits, TLS fingerprints, and CAPTCHAs to detect and block malicious bots targeting your APIs.',
-      image: 'https://assets.seobotai.com/cdn-cgi/image/quality=75,w=1536,h=1024/nano-gpt.com/69b205c712de151ab0291894-1773286219583.jpg',
+      description: 'Learn how modern real estate teams are using AI to automate lead capture and property descriptions at scale.',
+      image: '/images/intuitive-1.png',
     },
   },
   {
-    slug: 'ai-model-testing-protocols-best-practices',
+    slug: 'why-speed-to-lead-matters',
     frontMatter: {
-      title: 'AI Model Testing Protocols: Best Practices',
+      title: 'Why Speed-to-Lead is the Only Metric That Matters',
       date: '2026-03-11T03:43:25.606Z',
-      description: 'Practical guidelines for testing AI models: define objectives, build golden datasets, run edge-case and adversarial tests, version control, and monitor drift.',
-      image: 'https://assets.seobotai.com/cdn-cgi/image/quality=75,w=1536,h=1024/nano-gpt.com/69b0b4a512de151ab028e440-1773200688688.jpg',
+      description: 'New data shows that responding to a lead within 5 minutes increases conversion rates by over 400%.',
+      image: '/images/top-rated-1.png',
     },
   },
   {
-    slug: 'ultimate-ai-model-storage-needs-guide',
+    slug: 'luxury-branding-for-real-estate',
     frontMatter: {
-      title: 'Ultimate Guide to AI Model Storage Needs',
+      title: 'Luxury Branding: Beyond the Logo',
       date: '2026-03-10T02:47:46.420Z',
-      description: 'Practical guide to AI storage: VRAM/RAM sizing, NVMe vs HDD, checkpoints, object storage, and caching strategies to prevent GPU stalls and cut costs.',
-      image: 'https://assets.seobotai.com/cdn-cgi/image/quality=75,w=1536,h=1024/nano-gpt.com/69af613412de151ab028a43a-1773110938501.jpg',
+      description: 'How to create a high-end digital presence that resonates with ultra-high-net-worth investors.',
+      image: '/images/intuitive-2.png',
     },
   },
 ];
@@ -38,23 +40,42 @@ export async function generateStaticParams() {
   }));
 }
 
-const BlogPostPage = ({ params }: { params: { slug: string } }) => {
-  const post = posts.find((p) => p.slug === params.slug);
+export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const post = posts.find((p) => p.slug === slug);
 
   if (!post) {
     return <div>Post not found</div>;
   }
 
   return (
-    <Container py="xl">
-      <Title order={1}>{post.frontMatter.title}</Title>
-      <Text size="sm" color="dimmed" mt="md">
-        {new Date(post.frontMatter.date).toLocaleDateString()}
-      </Text>
-      <Image src={post.frontMatter.image} alt={post.frontMatter.title} my="xl" />
-      <Text>{post.frontMatter.description}</Text>
-    </Container>
+    <main className="min-h-screen bg-black text-white">
+      <SiteHeader />
+      <section className="py-24">
+        <Container size="md">
+          <div className="relative h-[400px] w-full overflow-hidden rounded-[40px] border border-white/10 mb-12 shadow-2xl">
+            <Image 
+              src={post.frontMatter.image} 
+              alt={post.frontMatter.title} 
+              fill
+              className="object-cover"
+            />
+          </div>
+          <p className="text-xs font-bold text-lime-400 uppercase tracking-[0.3em] mb-4">
+            {new Date(post.frontMatter.date).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
+          </p>
+          <h1 className="text-4xl md:text-6xl font-black tracking-tight mb-8 leading-tight">
+            {post.frontMatter.title}
+          </h1>
+          <div className="prose prose-invert prose-lime max-w-none">
+            <p className="text-xl text-neutral-400 leading-relaxed">
+              {post.frontMatter.description}
+            </p>
+            {/* Actual article content would go here */}
+          </div>
+        </Container>
+      </section>
+      <AppverseFooter />
+    </main>
   );
-};
-
-export default BlogPostPage;
+}

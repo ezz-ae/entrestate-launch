@@ -117,26 +117,26 @@ interface ActivityItem {
 
 const defaultContent: ContentData = {
   hero: {
-    title: "HIGH-IMPACT 3D ANIMATION FOR BRANDS",
-    subtitle: "skitbit",
-    buttonText: "Chat With Us",
+    title: "BUILD REAL ESTATE WEBSITES WITH AI",
+    subtitle: "mashroi",
+    buttonText: "Start Building",
   },
   features: {
-    title: "What makes us the best studio for you.",
-    subtitle: "Discover our unique approach to 3D animation",
+    title: "Why Mashroi closes deals faster.",
+    subtitle: "Real estate websites, launched fast and optimized for leads.",
   },
   footer: {
-    tagline: "Experience 3D animation like never before. We craft cinematic visuals for brands and products.",
-    copyright: "© 2025 — Skitbit International Uk",
+    tagline: "Mashroi launches real estate websites fast — templates, AI builder, and conversion-ready pages.",
+    copyright: "© 2025 — Mashroi.com",
   },
   about: {
-    title: "About Skitbit International",
-    description: "Pioneering the future of 3D product animation for global brands.",
-    mission: "To create stunning 3D animations that help brands tell their story and connect with their audience.",
-    vision: "To be the world's leading 3D animation studio, known for creativity, quality, and innovation.",
-    teamSize: "50+ Creative Professionals",
-    founded: "2020",
-    locations: "London, Noida, Bangalore, Mumbai, Toronto, New York, Dubai, Melbourne",
+    title: "About Mashroi OS",
+    description: "The fastest way to build your real estate presence.",
+    mission: "To empower real estate professionals with instant, high-end digital solutions.",
+    vision: "To be the global standard for real estate web architecture.",
+    teamSize: "20+ AI & Design Experts",
+    founded: "2024",
+    locations: "Dubai, London, New York",
   },
   pricing: {
     startup: {

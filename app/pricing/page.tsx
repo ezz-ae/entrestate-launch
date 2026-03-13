@@ -1,51 +1,29 @@
-'use client';
+import { SiteHeader } from "@/components/site-header"
+import { AppverseFooter } from "@/components/appverse-footer"
+import { Pricing } from "@/components/pricing"
 
-import { Container, Title, Text, Accordion } from '@mantine/core';
-import React from 'react';
-import { PricingTable } from '@/components/pricing/pricing-table';
+export const dynamic = "force-static"
 
-const textModelsHeaders = ['Model Name', 'API Name', 'Input Cost / 1M tokens', 'Output Cost / 1M tokens'];
-const textModelsData = [
-  ['GPT-4', 'gpt-4', '$10.00', '$30.00'],
-  ['GPT-3.5 Turbo', 'gpt-3.5-turbo', '$0.50', '$1.50'],
-];
-
-const imageModelsHeaders = ['Model Name', 'API Name', 'Resolution', 'Cost per Image'];
-const imageModelsData = [
-  ['Nano Banana 2 Fast', 'nano-banana-2-fast', '2K', '$0.045'],
-  ['Qwen Image 2.0', 'qwen-image-2.0', '1K', '$0.027'],
-];
-
-const PricingPage = () => {
+export default function PricingPage() {
   return (
-    <Container py="xl">
-      <Title order={1}>AI Model Pricing — Pay Per Prompt</Title>
-      <Text size="lg" c="dimmed">Pay only for what you use.</Text>
-
-      <Accordion defaultValue="pricing-example" mt="xl">
-        <Accordion.Item value="pricing-example">
-          <Accordion.Control>How Pricing Works</Accordion.Control>
-          <Accordion.Panel>
-            <Text>Pricing is based on tokens (roughly 3 words ≈ 4 tokens). You pay for input tokens (what you send) and output tokens (what the AI responds).</Text>
-          </Accordion.Panel>
-        </Accordion.Item>
-
-        <Accordion.Item value="text-model-pricing">
-          <Accordion.Control>Text Model Pricing</Accordion.Control>
-          <Accordion.Panel>
-            <PricingTable headers={textModelsHeaders} data={textModelsData} />
-          </Accordion.Panel>
-        </Accordion.Item>
-
-        <Accordion.Item value="image-model-pricing">
-          <Accordion.Control>Image Model Pricing</Accordion.Control>
-          <Accordion.Panel>
-            <PricingTable headers={imageModelsHeaders} data={imageModelsData} />
-          </Accordion.Panel>
-        </Accordion.Item>
-      </Accordion>
-    </Container>
-  );
-};
-
-export default PricingPage;
+    <main className="min-h-[100dvh] text-white">
+      <SiteHeader />
+      <section className="relative overflow-hidden py-20">
+        <div className="pointer-events-none absolute inset-0 opacity-40">
+          <div className="absolute left-1/2 top-0 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(132,204,22,0.1),rgba(0,0,0,0))]" />
+        </div>
+        <div className="container relative mx-auto px-4">
+          <div className="text-center mb-12 animate-fade-up">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-lime-300/80 mb-4">Investment</p>
+            <h1 className="text-4xl md:text-7xl font-black tracking-tight mb-6">Simple Pricing.</h1>
+            <p className="text-lg md:text-xl max-w-2xl mx-auto text-neutral-400 leading-relaxed">
+              Choose the launch path that fits your brokerage. Pay once for templates, or subscribe for full AI builder access.
+            </p>
+          </div>
+          <Pricing />
+        </div>
+      </section>
+      <AppverseFooter />
+    </main>
+  )
+}

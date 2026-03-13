@@ -42,7 +42,7 @@ export function LogoMarquee() {
             src={logo.image || "/placeholder.svg"}
             alt={logo.name}
             fill
-            className="object-contain filter grayscale brightness-200 opacity-50 group-hover:opacity-100 group-hover:grayscale-0 transition-all"
+            className="object-contain filter brightness-110 opacity-70 group-hover:opacity-100 transition-all"
             sizes="(min-width: 1024px) 128px, (min-width: 640px) 112px, 96px"
           />
         </div>

@@ -67,7 +67,7 @@ export async function createSubscription(planId, userEmail) {
       email_address: userEmail,
     },
     application_context: {
-      brand_name: 'NanoGPT',
+      brand_name: 'Mashroi',
       shipping_preference: 'NO_SHIPPING',
       user_action: 'SUBSCRIBE_NOW',
       return_url: `${process.env.NEXTAUTH_URL}/api/subscribe/success`,

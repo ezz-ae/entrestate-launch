@@ -16,10 +16,19 @@ interface SiteBuilderProps {
 export function SiteBuilder({ initialUrl, productTitle }: SiteBuilderProps) {
   const [viewMode, setViewMode] = useState<"desktop" | "tablet" | "mobile">("desktop")
   const [isAiPanelOpen, setIsAiPanelOpen] = useState(true)
-  const [activeTab, setActiveTab] = useState<"chat" | "data" | "checkout">("chat")
+  const [activeTab, setActiveTab] = useState<"chat" | "data" | "blocks" | "checkout">("chat")
   const [isBuilding, setIsBuilding] = useState(false)
   const [buildProgress, setBuildProgress] = useState(0)
   const [chatInput, setChatInput] = useState("")
+
+  const realEstateBlocks = [
+    { id: "hero-1", name: "Luxury Hero", category: "Hero", icon: Layout, desc: "High-impact video or image background with CTAs." },
+    { id: "prop-grid", name: "Property Grid", category: "Inventory", icon: Database, desc: "Showcase active listings with smart filters." },
+    { id: "stats-1", name: "Market Stats", category: "Data", icon: Info, desc: "Visual data on yields, prices, and ROI." },
+    { id: "agents-1", name: "Agent Profiles", category: "Team", icon: Smartphone, desc: "Personalized agent cards with WhatsApp links." },
+    { id: "faq-1", name: "Interactive FAQ", category: "Support", icon: ChevronRight, desc: "Common questions to reduce support friction." },
+    { id: "contact-1", name: "VIP Lead Form", category: "Contact", icon: Send, desc: "High-converting form for serious investors." }
+  ]
   const [userData, setUserData] = useState({
     brokerageName: "",
     location: "",
@@ -242,10 +251,11 @@ export function SiteBuilder({ initialUrl, productTitle }: SiteBuilderProps) {
         >
           <div className="flex h-full flex-col">
             {/* Tabs */}
-            <div className="grid grid-cols-3 border-b border-white/5">
+            <div className="grid grid-cols-4 border-b border-white/5">
               {[
                 { id: "chat", icon: Sparkles, label: "AI Chat" },
-                { id: "data", icon: Database, label: "Content" },
+                { id: "data", icon: Database, label: "Data" },
+                { id: "blocks", icon: Layout, label: "Blocks" },
                 { id: "checkout", icon: CreditCard, label: "Launch" }
               ].map((tab) => (
                 <button
@@ -396,6 +406,35 @@ export function SiteBuilder({ initialUrl, productTitle }: SiteBuilderProps) {
                   >
                     Sync with AI
                   </Button>
+                </div>
+              )}
+
+              {activeTab === "blocks" && (
+                <div className="p-6 space-y-6 animate-fade-up">
+                  <div className="rounded-2xl bg-blue-500/10 p-4 border border-blue-500/20">
+                    <p className="text-xs text-blue-400 font-medium flex items-center gap-2">
+                      <Layout className="h-3 w-3" />
+                      Select blocks to add to your site structure instantly.
+                    </p>
+                  </div>
+                  
+                  <div className="grid gap-3">
+                    {realEstateBlocks.map((block) => (
+                      <button
+                        key={block.id}
+                        onClick={() => { setIsBuilding(true); setBuildProgress(0); }}
+                        className="group flex items-start gap-4 rounded-2xl border border-white/5 bg-white/5 p-4 text-left transition-all hover:border-lime-400/30 hover:bg-white/10"
+                      >
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-neutral-900 group-hover:bg-lime-400/20">
+                          <block.icon className="h-5 w-5 text-neutral-400 group-hover:text-lime-400" />
+                        </div>
+                        <div>
+                          <h5 className="text-sm font-bold text-white group-hover:text-lime-300">{block.name}</h5>
+                          <p className="text-[11px] text-neutral-500 leading-tight mt-0.5">{block.desc}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
 

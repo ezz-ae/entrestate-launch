@@ -35,7 +35,7 @@ export function Hero() {
 
               return (
                 <div key={i} className={visibility}>
-                  <PhoneCard title={p.title} sub={p.sub} tone={p.tone} gradient={p.gradient} videoSrc={p.videoSrc} />
+                  <PhoneCard title={p.title} sub={p.sub} imageSrc={p.imageSrc} videoSrc={p.videoSrc} />
                 </div>
               )
             })}
@@ -50,26 +50,37 @@ function PhoneCard({
   title = "8°",
   sub = "Clear night. Great for render farm runs.",
   videoSrc,
+  imageSrc,
 }: {
   title?: string
   sub?: string
   videoSrc?: string
+  imageSrc?: string
 }) {
   return (
     <div className="relative rounded-[28px] glass-border bg-neutral-900 p-2">
       <div className="relative aspect-[9/19] w-full overflow-hidden rounded-2xl bg-black">
-        <LazyVideo
-          src={
-            videoSrc ??
-            "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/b0f3222371106db366a14ca1c29cef55-1b1EWVSa4w3FL2zslcaCGYTy9vcxjF.mp4"
-          }
-          className="absolute inset-0 h-full w-full object-cover"
-          autoplay={true}
-          loop={true}
-          muted={true}
-          playsInline={true}
-          aria-label={`${title} - ${sub}`}
-        />
+        {imageSrc ? (
+           <Image
+            src={imageSrc}
+            alt={title}
+            fill
+            className="object-cover"
+          />
+        ) : (
+          <LazyVideo
+            src={
+              videoSrc ??
+              "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/b0f3222371106db366a14ca1c29cef55-1b1EWVSa4w3FL2zslcaCGYTy9vcxjF.mp4"
+            }
+            className="absolute inset-0 h-full w-full object-cover"
+            autoplay={true}
+            loop={true}
+            muted={true}
+            playsInline={true}
+            aria-label={`${title} - ${sub}`}
+          />
+        )}
 
         <div className="relative z-10 p-3">
           <div className="mx-auto mb-3 h-1.5 w-16 rounded-full bg-white/20" />
@@ -89,27 +100,27 @@ function PhoneCard({
 const phoneData = [
   {
     title: "Gold Century",
-    sub: "Luxury Dubai investment template with AI builder.",
-    videoSrc: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/b0f3222371106db366a14ca1c29cef55-1b1EWVSa4w3FL2zslcaCGYTy9vcxjF.mp4",
+    sub: "Luxury Dubai dark mode brokerage.",
+    imageSrc: "/images/intuitive-1.png",
   },
   {
-    title: "Broker Pro",
-    sub: "Full broker site with listings and lead capture.",
-    videoSrc: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/b0f3222371106db366a14ca1c29cef55-1b1EWVSa4w3FL2zslcaCGYTy9vcxjF.mp4",
+    title: "Modern Mini",
+    sub: "High-speed minimalist search hub.",
+    imageSrc: "/images/top-rated-1.png",
   },
   {
-    title: "Bio Link",
-    sub: "Personal brand link with inventory + AI.",
-    videoSrc: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/b0f3222371106db366a14ca1c29cef55-1b1EWVSa4w3FL2zslcaCGYTy9vcxjF.mp4",
+    title: "Elite Bio",
+    sub: "Personal brand hub with social links.",
+    imageSrc: "/images/intuitive-2.png",
   },
   {
-    title: "Brochure to Page",
-    sub: "Upload a brochure and publish in minutes.",
-    videoSrc: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/b0f3222371106db366a14ca1c29cef55-1b1EWVSa4w3FL2zslcaCGYTy9vcxjF.mp4",
+    title: "Reveal Pro",
+    sub: "Immersive off-plan launch template.",
+    imageSrc: "/images/top-rated-2.png",
   },
   {
-    title: "Instagram DM AI",
-    sub: "AI property expert answering DMs instantly.",
+    title: "DM AI Agent",
+    sub: "24/7 lead qualification assistant.",
     videoSrc: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/b0f3222371106db366a14ca1c29cef55-1b1EWVSa4w3FL2zslcaCGYTy9vcxjF.mp4",
   },
 ]

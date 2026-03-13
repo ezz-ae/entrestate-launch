@@ -62,7 +62,7 @@ export function SiteHeader() {
         {/* Brand Logo */}
         <Link href="/" className="flex items-center gap-2 group">
           <div className="relative h-8 w-8 overflow-hidden rounded-lg bg-lime-400 p-1.5 transition-transform group-hover:scale-110">
-            <Image src="/icons/skitbit-white.svg" alt="Mashroi logo" width={32} height={32} className="h-full w-full invert" />
+            <Image src="/icons/skitbit-white.svg" alt="Mashroi logo" width={32} height={32} className="h-full w-full" />
           </div>
           <span className="text-lg font-bold tracking-tight text-white group-hover:text-lime-300 transition-colors">Mashroi</span>
         </Link>

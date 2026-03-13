@@ -44,17 +44,17 @@ export default function AdminLogin() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] flex flex-col md:flex-row">
       {/* Left side - only visible on desktop */}
-      <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-purple-600 to-blue-600 p-12 flex-col justify-between">
+      <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-lime-600 to-emerald-900 p-12 flex-col justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-              <span className="text-black font-bold text-lg">SK</span>
+            <div className="w-10 h-10 bg-lime-400 rounded-lg flex items-center justify-center">
+              <span className="text-black font-bold text-lg">M</span>
             </div>
-            <span className="text-2xl font-semibold text-white">Skitbit</span>
+            <span className="text-2xl font-semibold text-white">Mashroi</span>
           </div>
-          <h1 className="text-4xl font-bold text-white mt-12">Welcome to Skitbit Admin</h1>
-          <p className="text-purple-100 mt-4 max-w-md">
-            Manage your website content, pricing, and settings from one central dashboard.
+          <h1 className="text-4xl font-bold text-white mt-12">Welcome to Mashroi Admin</h1>
+          <p className="text-lime-100 mt-4 max-w-md">
+            Manage your real estate templates, site settings, and leads from one central dashboard.
           </p>
         </div>
         <div className="mt-auto">

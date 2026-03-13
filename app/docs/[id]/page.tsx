@@ -13,13 +13,14 @@ export async function generateStaticParams() {
     .map((id) => ({ id }));
 }
 
-export default async function DocPage({ params }: { params: { id: string } }) {
-  if (!params?.id) {
+export default async function DocPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  if (!id) {
     notFound();
   }
 
   const allPostsData = getSortedPostsData();
-  const postData = await getPostData(params.id);
+  const postData = await getPostData(id);
 
   return (
     <main className="min-h-screen bg-black text-white">
@@ -42,12 +43,12 @@ export default async function DocPage({ params }: { params: { id: string } }) {
                     <h2 className="text-sm font-bold uppercase tracking-widest text-white">Articles</h2>
                   </div>
                   <nav className="space-y-2">
-                    {allPostsData.map(({ id, title }) => {
-                      const isActive = id === params.id;
+                    {allPostsData.map(({ id: docId, title }) => {
+                      const isActive = docId === id;
                       return (
                         <Link
-                          key={id}
-                          href={`/docs/${encodeURIComponent(id)}`}
+                          key={docId}
+                          href={`/docs/${encodeURIComponent(docId)}`}
                           className={`group flex items-center justify-between rounded-2xl border px-4 py-3 text-sm transition-all ${
                             isActive 
                               ? "bg-lime-400/10 border-lime-400/30 text-white" 
@@ -56,7 +57,7 @@ export default async function DocPage({ params }: { params: { id: string } }) {
                         >
                           <div className="flex items-center gap-3">
                             <FileText className={`h-4 w-4 ${isActive ? "text-lime-400" : "text-neutral-500 group-hover:text-lime-400"}`} />
-                            {title || id}
+                            {title || docId}
                           </div>
                           <ChevronRight className={`h-4 w-4 transition-all ${isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`} />
                         </Link>

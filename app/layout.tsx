@@ -25,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${manrope.variable} ${sora.variable}`}>
+    <html lang="en" className={`dark ${manrope.variable} ${sora.variable}`}>
       <head>
         <ColorSchemeScript />
         <meta
