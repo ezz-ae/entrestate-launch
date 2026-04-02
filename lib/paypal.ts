@@ -67,7 +67,7 @@ export async function createSubscription(planId, userEmail) {
       email_address: userEmail,
     },
     application_context: {
-      brand_name: 'Mashroi',
+      brand_name: 'MTC Martech',
       shipping_preference: 'NO_SHIPPING',
       user_action: 'SUBSCRIBE_NOW',
       return_url: `${process.env.NEXTAUTH_URL}/api/subscribe/success`,
@@ -103,7 +103,7 @@ export async function createOrder(amount, currency = 'AED') {
       },
     ],
     application_context: {
-      brand_name: 'Mashroi',
+      brand_name: 'MTC Martech',
       shipping_preference: 'NO_SHIPPING',
       user_action: 'PAY_NOW',
       return_url: `${process.env.NEXTAUTH_URL}/api/payments/success`,

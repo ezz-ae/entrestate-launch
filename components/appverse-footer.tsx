@@ -1,12 +1,7 @@
-"use client"
-
-import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { Instagram, Twitter, Youtube, MessageCircle } from "lucide-react"
-import LazyVideo from "./lazy-video"
 import Image from "next/image"
+import { brand } from "@/lib/brand"
 
 interface FooterContent {
   tagline: string
@@ -14,107 +9,75 @@ interface FooterContent {
 }
 
 const defaultContent: FooterContent = {
-  tagline: "Mashroi launches real estate websites fast - templates, AI builder, and conversion-ready pages.",
-  copyright: "Copyright 2025 - Mashroi.com",
+  tagline: brand.tagline,
+  copyright: `Copyright 2025 - ${brand.name}`,
+}
+
+function isLegacyFooterTagline(value: string) {
+  const normalized = value.trim().toLowerCase()
+  return (
+    !normalized ||
+    normalized.includes("launches real estate websites") ||
+    normalized.includes("templates") ||
+    normalized.includes("ai builder")
+  )
+}
+
+function isLegacyFooterCopyright(value: string) {
+  const normalized = value.trim().toLowerCase()
+  return !normalized || (normalized.includes("copyright") && !normalized.includes("mtc"))
 }
 
 export function AppverseFooter({ content = defaultContent }: { content?: FooterContent }) {
+  const safeContent: FooterContent = {
+    tagline: isLegacyFooterTagline(content.tagline) ? defaultContent.tagline : content.tagline,
+    copyright: isLegacyFooterCopyright(content.copyright) ? defaultContent.copyright : content.copyright,
+  }
 
   return (
-    <section className="text-white">
-      {/* Contact CTA */}
-      <div className="container mx-auto px-4 pt-12 sm:pt-24 pb-12">
-        <div className="flex flex-col items-center justify-center text-center">
-          <h2 className="text-3xl font-extrabold sm:text-5xl mb-6">Ready to launch?</h2>
+    <footer className="border-t border-white/5 bg-[#081225] text-white">
+      <div className="container mx-auto px-4 pb-12 pt-16 sm:pt-24">
+        <div className="rounded-[2rem] border border-white/10 bg-[radial-gradient(circle_at_top,rgba(203,181,122,0.16),transparent_40%),#0d1831] px-6 py-10 text-center shadow-2xl sm:px-10 sm:py-12">
+          <h2 className="text-3xl font-extrabold sm:text-5xl">Ready to turn your site into an intelligence engine?</h2>
+          <p className="mx-auto mt-5 max-w-3xl text-lg leading-relaxed text-white/70">
+            Deploy live inventory, AI lead qualification, developer scorecards, and hyper-local heatmaps without
+            rebuilding your workflow from scratch.
+          </p>
           <Button
             asChild
-            className="rounded-full bg-lime-400 px-8 py-6 text-lg font-bold text-black shadow-[0_0_30px_rgba(163,230,53,0.3)] hover:bg-lime-300 transition-all hover:scale-105"
+            className="mt-8 rounded-full bg-[#CBB57A] px-8 py-6 text-lg font-bold text-[#102347] shadow-[0_0_30px_rgba(203,181,122,0.25)] transition-all hover:scale-105 hover:bg-[#d8c590]"
           >
-            <a href="#pricing">Get Started Now</a>
+            <a href={brand.ctaHref} target="_blank" rel="noopener noreferrer">
+              {brand.ctaLabel}
+            </a>
           </Button>
         </div>
-      </div>
-
-      {/* Hero Card */}
-      <div className="container mx-auto px-4 py-16">
-        <Card className="relative overflow-hidden rounded-[32px] border border-white/10 bg-neutral-900/40 p-8 sm:p-12 shadow-2xl backdrop-blur-xl">
-          <div className="absolute inset-0 bg-gradient-to-br from-lime-400/5 to-transparent pointer-events-none" />
-          <div className="relative grid items-center gap-12 md:grid-cols-2">
-            {/* Left copy */}
-            <div>
-              <p className="mb-4 text-[11px] font-bold tracking-[0.3em] text-lime-400 uppercase">Seamless Launch</p>
-              <h3 className="text-3xl font-bold leading-tight text-white sm:text-4xl md:text-5xl">
-                The fastest way to build your real estate presence.
-              </h3>
-              <p className="mt-6 text-lg text-neutral-400 leading-relaxed">
-                Pick a professional template, customize every pixel with AI, and go live on your own domain in minutes. No coding, no headaches.
-              </p>
-              <div className="mt-8 flex flex-wrap gap-4">
-                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-sm font-medium">
-                  <div className="h-2 w-2 rounded-full bg-lime-400 animate-pulse" />
-                  Live in 10 mins
-                </div>
-                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-sm font-medium">
-                  <div className="h-2 w-2 rounded-full bg-lime-400 animate-pulse" />
-                  AI-Powered Copy
-                </div>
-              </div>
-            </div>
-
-            {/* Right mockup */}
-            <div className="relative mx-auto w-full max-w-[340px]">
-              <div className="relative rounded-[40px] border-8 border-neutral-800 bg-black p-1 shadow-[0_40px_100px_rgba(0,0,0,0.8)] overflow-hidden">
-                <div className="relative aspect-[9/19] w-full overflow-hidden rounded-[32px]">
-                  <LazyVideo
-                    src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Timeline%202-YFaCK7cEiHWSMRv8XEHaLCoYj2SUAi.mp4"
-                    className="absolute inset-0 h-full w-full object-cover opacity-80"
-                    autoplay={true}
-                    loop={true}
-                    muted={true}
-                    playsInline={true}
-                  />
-                  <div className="relative z-10 h-full p-6 flex flex-col justify-end bg-gradient-to-t from-black via-transparent to-transparent">
-                    <div className="text-4xl font-black text-lime-400 leading-tight">Instant Builder</div>
-                    <p className="mt-2 text-sm text-white/70">Transform your brand with AI-first design.</p>
-                  </div>
-                </div>
-              </div>
-              {/* Floating elements for depth */}
-              <div className="absolute -right-8 -top-8 h-24 w-24 rounded-2xl bg-lime-400/10 blur-2xl" />
-              <div className="absolute -left-12 bottom-12 h-32 w-32 rounded-full bg-lime-400/10 blur-3xl" />
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      {/* Footer */}
-      <footer className="border-t border-white/5 pb-12 mt-12">
-        <div className="container mx-auto px-4 py-16">
+        <div className="py-16">
           <div className="grid gap-12 md:grid-cols-[2fr_1fr_1fr]">
-            {/* Brand */}
             <div className="space-y-6">
               <div className="flex items-center gap-2">
-                <div className="h-10 w-10 bg-lime-400 rounded-xl p-2 flex items-center justify-center">
-                  <Image src="/icons/skitbit-white.svg" alt="Mashroi logo" width={24} height={24} className="invert" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 p-1.5">
+                  <Image src="/icons/mtc-logo.svg" alt={`${brand.shortName} logo`} width={24} height={24} />
                 </div>
-                <span className="text-2xl font-bold text-white tracking-tight">Mashroi</span>
+                <span className="text-2xl font-bold tracking-tight text-white">{brand.shortName}</span>
               </div>
-              <p className="max-w-sm text-lg text-neutral-400 leading-relaxed">{content.tagline}</p>
+              <p className="max-w-sm text-lg leading-relaxed text-neutral-400">{safeContent.tagline}</p>
             </div>
 
-            {/* Navigation */}
             <div>
               <h5 className="mb-6 text-sm font-bold uppercase tracking-widest text-white">Company</h5>
               <ul className="space-y-4 text-neutral-400">
                 {[
-                  { label: "Products", href: "/products" },
-                  { label: "Pricing", href: "/#pricing" },
-                  { label: "About Us", href: "/About" },
+                  { label: "Engine", href: "/#engine" },
+                  { label: "Superpowers", href: "/#superpowers" },
+                  { label: "Pricing", href: "/pricing" },
+                  { label: "About", href: "/About" },
+                  { label: "Docs", href: "/docs" },
+                  { label: "FAQ", href: "/faq" },
                   { label: "Terms", href: "/t&c" },
-                  { label: "Privacy", href: "/PRIVACY_POLICY.md" },
                 ].map((item) => (
                   <li key={item.label}>
-                    <Link href={item.href} className="hover:text-lime-300 transition-colors">
+                    <Link href={item.href} className="transition-colors hover:text-[#CBB57A]">
                       {item.label}
                     </Link>
                   </li>
@@ -122,32 +85,33 @@ export function AppverseFooter({ content = defaultContent }: { content?: FooterC
               </ul>
             </div>
 
-            {/* Support */}
             <div>
               <h5 className="mb-6 text-sm font-bold uppercase tracking-widest text-white">Support</h5>
               <ul className="space-y-4 text-neutral-400">
+                <li>{brand.location}</li>
                 <li>
-                  <Link href="/faq" className="hover:text-lime-300 transition-colors">Documentation</Link>
+                  <a href={`mailto:${brand.email}`} className="transition-colors hover:text-[#CBB57A]">
+                    {brand.email}
+                  </a>
                 </li>
                 <li>
-                  <Link href="/faq" className="hover:text-lime-300 transition-colors">Help Center</Link>
+                  <a href={brand.url} target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-[#CBB57A]">
+                    {brand.domain}
+                  </a>
                 </li>
                 <li>
-                  <a href="mailto:hello@mashroi.com" className="hover:text-lime-300 transition-colors">Contact Support</a>
-                </li>
-                <li className="flex gap-4 pt-4">
-                  <a href="#" className="hover:text-lime-300 transition-colors"><Twitter className="h-5 w-5" /></a>
-                  <a href="#" className="hover:text-lime-300 transition-colors"><Instagram className="h-5 w-5" /></a>
-                  <a href="#" className="hover:text-lime-300 transition-colors"><Youtube className="h-5 w-5" /></a>
+                  <a href={brand.ctaHref} target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-[#CBB57A]">
+                    {brand.ctaLabel}
+                  </a>
                 </li>
               </ul>
             </div>
           </div>
-          <div className="mt-16 pt-8 border-t border-white/5 text-center text-sm text-neutral-500">
-            {content.copyright}
+          <div className="mt-16 border-t border-white/5 pt-8 text-center text-sm text-neutral-500">
+            {safeContent.copyright}
           </div>
         </div>
-      </footer>
-    </section>
+      </div>
+    </footer>
   )
 }

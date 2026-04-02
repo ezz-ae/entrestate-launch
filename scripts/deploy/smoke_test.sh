@@ -100,9 +100,9 @@ fi
 # Public lead capture (optional)
 if [ -n "$PUBLIC_SITE_ID" ] || [ -n "$PUBLIC_PAGE_SLUG" ]; then
   if [ -n "$PUBLIC_SITE_ID" ]; then
-    LEAD_PAYLOAD="{\"name\":\"Smoke Test\",\"email\":\"smoke@entrestate.com\",\"message\":\"Smoke test lead\",\"siteId\":\"$PUBLIC_SITE_ID\",\"metadata\":{\"elapsedMs\":1200}}"
+    LEAD_PAYLOAD="{\"name\":\"Smoke Test\",\"email\":\"smoke@mtcmartech.com\",\"message\":\"Smoke test lead\",\"siteId\":\"$PUBLIC_SITE_ID\",\"metadata\":{\"elapsedMs\":1200}}"
   else
-    LEAD_PAYLOAD="{\"name\":\"Smoke Test\",\"email\":\"smoke@entrestate.com\",\"message\":\"Smoke test lead\",\"pageSlug\":\"$PUBLIC_PAGE_SLUG\",\"metadata\":{\"elapsedMs\":1200}}"
+    LEAD_PAYLOAD="{\"name\":\"Smoke Test\",\"email\":\"smoke@mtcmartech.com\",\"message\":\"Smoke test lead\",\"pageSlug\":\"$PUBLIC_PAGE_SLUG\",\"metadata\":{\"elapsedMs\":1200}}"
   fi
   request_public "POST" "$BASE_URL/api/leads" "$LEAD_PAYLOAD"
 else

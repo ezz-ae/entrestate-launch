@@ -1,4 +1,4 @@
-# Entrestate Deployment Runbook
+# MTC Deployment Runbook
 
 ## Vercel baseline
 1. Link the repo to a new Vercel project that uses `npm install` (or `npm ci`) and `npm run build` as the build command. The `vercel.json` already pins the `npm` lifecycle hooks and expects Node 20.x—match that runtime in the project settings.
@@ -6,7 +6,7 @@
 3. Use `ENV_FILE=<path> ts-node --esm scripts/deploy/verify_env.ts` (e.g. `.env.production` or `.env.preview`) before deployments to ensure the minimal set plus any gated integrations are configured.
 
 ## First Launch (Vercel + Firestore)
-1. Copy the six `NEXT_PUBLIC_FIREBASE_*` values and `NEXT_PUBLIC_APP_URL` from the Firebase console (Project Settings → General → Web App). Set `NEXT_PUBLIC_APP_URL` to the canonical Vercel hostname (`https://app.entrestate.com` or similar) so callbacks resolve.
+1. Copy the six `NEXT_PUBLIC_FIREBASE_*` values and `NEXT_PUBLIC_APP_URL` from the Firebase console (Project Settings → General → Web App). Set `NEXT_PUBLIC_APP_URL` to the canonical Vercel hostname (`https://mtcmartech.com` or similar) so callbacks resolve.
 2. Store your Firebase service account in `FIREBASE_ADMIN_CREDENTIALS` (preferred) by pasting the full JSON and escaping newlines as `\n`. If you prefer the split vars, set `FIREBASE_ADMIN_PROJECT_ID`, `FIREBASE_ADMIN_CLIENT_EMAIL`, and `FIREBASE_ADMIN_PRIVATE_KEY` instead—`verify_env.ts` enforces that one of the two credential paths exists.
 3. Keep feature flags off while you focus on the first deploy: `ENABLE_PAYMENTS=false`, `ENABLE_GOOGLE_ADS=false`, `ENABLE_SMS=false`, `ENABLE_EMAIL=false`, `ENABLE_SUPABASE=false`, and `ENABLE_CRON=false`. Set `RATE_LIMIT_DISABLED=true` temporarily until Upstash is ready so the server does not block for caching.
 4. Run `ENV_FILE=.env.<env> ts-node --esm scripts/deploy/verify_env.ts` (matching the environment you are deploying) to validate the core vars and gating flags before triggering Vercel.
@@ -51,7 +51,7 @@ Set the following for every environment (production, preview, staging):
 ## Common failures & fixes
 - **Missing Firebase admin creds:** If the build logs `Missing Firebase admin credentials`, either add `FIREBASE_ADMIN_CREDENTIALS` or set all three `FIREBASE_ADMIN_*` variables. Use `scripts/deploy/verify_env.ts` to catch it early.
 - **Private key newline issues:** Replace literal line breaks in `FIREBASE_ADMIN_PRIVATE_KEY` with `\n` or wrap the value in quotes so Vercel preserves the PEM formatting.
-- **Missing `NEXT_PUBLIC_APP_URL`:** This variable powers PayPal, Ziina, and Google Ads callbacks—set it to your deployment hostname (e.g., `https://app.entrestate.com`).
+- **Missing `NEXT_PUBLIC_APP_URL`:** This variable powers PayPal, Ziina, and Google Ads callbacks—set it to your deployment hostname (e.g., `https://mtcmartech.com`).
 - **Upstash rate limit errors:** When `RATE_LIMIT_DISABLED=false`, the server requires `UPSTASH_REDIS_REST_URL`/`TOKEN`. The deployment script warns if they are missing.
 - **AI endpoint failures:** Without `GEMINI_API_KEY`, calls to `/api/ai/generate-image`, `/api/email/*`, `/api/sms/*`, and chat bots return `500`. Provide the key whenever those flows are active.
 - **Firestore composite indexes:** Firebase will raise index errors for `jobs` queries (e.g., `ownerUid+createdAt` or `type+status+createdAt`). Keep `firestore.indexes.json` updated and redeploy after adding new queries.

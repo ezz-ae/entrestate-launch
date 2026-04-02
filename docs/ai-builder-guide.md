@@ -1,40 +1,33 @@
 ---
-title: 'AI Builder Guide'
+title: 'MTC Builder Guide'
 date: '2026-03-12'
 ---
 
-## Mastering the AI Builder
+## Mastering the MTC Builder
 
-The Mashroi AI Builder is a powerful tool that gives you full control over your site's design and content without writing a single line of code.
+The MTC Builder gives you control over how your brokerage intelligence layer looks, behaves, and routes serious buyer intent.
 
 ### The AI Assistant
 
-The core of the builder is the **AI Chat**. You can use natural language to make changes to your site. The more specific your request, the better the result.
+The core of the builder is the `AI Chat`. Use natural language to shape messaging, module behavior, and presentation layers.
 
-**Examples of effective prompts:**
+Examples of effective prompts:
 
-- *"Rewrite the hero section to target first-time homebuyers in Dubai Marina."*
-- *"Add a new section showcasing testimonials from my clients."*
-- *"Change all buttons to a brighter shade of green."*
+- `Rewrite the hero section to target investors focused on metro-adjacent ROI.`
+- `Add a new section for developer scorecards and escrow confidence.`
+- `Shift the visual direction toward a dark luxury brokerage aesthetic.`
 
 ### The Block Library
 
-The **"Blocks"** tab contains a library of pre-designed sections that you can add to any page. This is the fastest way to add new functionality to your site.
+The `Blocks` tab contains pre-designed sections that you can add to any page.
 
-**Available Blocks include:**
+Available blocks include:
 
-- **Property Grid**: Showcase your listings with advanced filters.
-- **Market Stats**: Display key real estate data to build authority.
-- **Agent Profiles**: Introduce your team with photos and contact info.
-- **VIP Lead Form**: A high-converting form for serious inquiries.
-
-Simply click on a block to add it to your page. You can then use the AI Assistant to customize its content.
+- **Inventory Grid**
+- **Market Stats**
+- **Developer Scorecards**
+- **Lead Capture Forms**
 
 ### The Data Tab
 
-The **"Data"** tab is where you provide the core information for your business. The AI uses this data to automatically populate your site with relevant content, saving you hours of manual work.
-
-This includes:
-- Brokerage Name & Logo
-- Service Areas & Specialties
-- Contact Information (WhatsApp, Email)
+The `Data` tab is where you provide the core information for your brokerage. The assistant uses this information to populate the experience with relevant content and operational context.

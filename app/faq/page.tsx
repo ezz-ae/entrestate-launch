@@ -1,33 +1,40 @@
-import { SiteHeader } from "@/components/site-header"
-import { AppverseFooter } from "@/components/appverse-footer"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { AppverseFooter } from "@/components/appverse-footer"
+import { SiteHeader } from "@/components/site-header"
+import { brand } from "@/lib/brand"
 import { getMarketingFooter } from "@/lib/marketing"
 
 const faqs = [
   {
-    question: "What do I get with a template purchase?",
-    answer: "A ready-to-use website, a live subdomain, and instant access to the AI builder to customize content, layout, and branding."
+    question: "Can MTC plug into our current brokerage website?",
+    answer:
+      "Yes. MTC is modular by design. We can integrate AI chat, inventory intelligence, scorecards, and map experiences into your current site without forcing a full rebuild.",
   },
   {
-    question: "How fast is the launch?",
-    answer: "You get a live site immediately after payment. The AI builder lets you finish customization in minutes."
+    question: "What data powers the platform?",
+    answer:
+      "The core system is built around a structured 2,500+ UAE project inventory, buyer-behavior tracking, and zone-level market signals that help qualify intent faster.",
   },
   {
-    question: "Can I start from scratch?",
-    answer: "Yes. The builder subscription is $20/month and starts with a blank canvas for complete creative control."
+    question: "What is the difference between the two launch paths?",
+    answer:
+      "Path 1 upgrades your current site with selected intelligence modules. Path 2 delivers the full exclusive turnkey platform with the complete MTC stack already wired in.",
   },
   {
-    question: "How is pricing calculated?",
-    answer: "Templates are priced individually. The Gold Century template is AED 2,399 (one-time). Builder subscription is $20/month."
+    question: "How does the AI help my sales team?",
+    answer:
+      "MTC captures engagement signals, identifies likely buyer intent, recommends next actions, and helps route higher-value conversations toward booking, follow-up, and lead ownership.",
   },
   {
-    question: "Can I customize after purchase?",
-    answer: "Absolutely. Every template opens in the AI builder immediately after purchase, allowing you to tweak everything."
+    question: "Do you offer exclusivity?",
+    answer:
+      "Yes. The turnkey platform is sold one time so the full experience remains exclusive to a single buyer rather than becoming a commodity template in the market.",
   },
   {
-    question: "How do I get started?",
-    answer: "Choose a template from our catalog or start the builder subscription, then publish your first site in clicks."
-  }
+    question: "How do we get started?",
+    answer:
+      `Start with a discovery call, then choose whether to upgrade your existing site or claim the exclusive platform. From there, we map the modules, rollout, and launch timeline around your brokerage goals.`,
+  },
 ]
 
 export const revalidate = 60
@@ -36,54 +43,50 @@ export default async function FAQPage() {
   const footer = await getMarketingFooter()
 
   return (
-    <main className="min-h-screen bg-black text-white">
+    <main className="min-h-screen bg-[#081225] text-white">
       <SiteHeader />
-      
+
       <section className="relative overflow-hidden py-24 sm:py-32">
-        <div className="pointer-events-none absolute inset-0 opacity-50">
-          <div className="absolute left-1/2 top-0 h-[400px] w-[400px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(132,204,22,0.1),rgba(0,0,0,0))]" />
+        <div className="pointer-events-none absolute inset-0 opacity-40">
+          <div className="absolute left-1/2 top-0 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(203,181,122,0.12),rgba(0,0,0,0))]" />
         </div>
-        
-        <div className="container relative mx-auto px-4 max-w-4xl">
-          <div className="text-center mb-16 animate-fade-up">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-lime-300/80 mb-4">Support</p>
-            <h1 className="text-4xl md:text-6xl font-black tracking-tight mb-6">Frequently Asked Questions</h1>
-            <p className="text-neutral-400 text-lg max-w-2xl mx-auto leading-relaxed">
-              Everything you need to know about Mashroi templates, the AI builder, and our launch process.
+
+        <div className="container relative mx-auto max-w-4xl px-4">
+          <div className="mb-16 text-center">
+            <p className="mb-4 text-xs font-semibold uppercase tracking-[0.3em] text-[#CBB57A]">FAQ</p>
+            <h1 className="text-4xl font-black tracking-tight md:text-6xl">Questions brokerages ask before they upgrade.</h1>
+            <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/72">
+              Everything you need to know about the MTC intelligence engine, integration path, and exclusive platform rollout.
             </p>
           </div>
 
-          <div className="animate-fade-up" style={{ animationDelay: '100ms' }}>
-            <Accordion type="single" collapsible className="space-y-4">
-              {faqs.map((faq, index) => (
-                <AccordionItem 
-                  key={index} 
-                  value={`item-${index}`}
-                  className="rounded-[24px] border border-white/5 bg-neutral-900/40 px-6 py-2 backdrop-blur-xl transition-all hover:border-white/10"
-                >
-                  <AccordionTrigger className="text-left text-lg font-semibold hover:text-lime-300 transition-colors py-4">
-                    {faq.question}
-                  </AccordionTrigger>
-                  <AccordionContent className="text-neutral-400 text-base leading-relaxed pb-6">
-                    {faq.answer}
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          </div>
-          
-          <div className="mt-20 text-center animate-fade-up" style={{ animationDelay: '200ms' }}>
-            <p className="text-neutral-500 mb-6">Still have questions?</p>
-            <a 
-              href="mailto:hello@mashroi.com" 
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all font-medium"
+          <Accordion type="single" collapsible className="space-y-4">
+            {faqs.map((faq, index) => (
+              <AccordionItem
+                key={faq.question}
+                value={`item-${index}`}
+                className="rounded-[24px] border border-white/10 bg-white/5 px-6 py-2 backdrop-blur-xl"
+              >
+                <AccordionTrigger className="py-4 text-left text-lg font-semibold transition-colors hover:text-[#CBB57A]">
+                  {faq.question}
+                </AccordionTrigger>
+                <AccordionContent className="pb-6 text-base leading-relaxed text-white/72">{faq.answer}</AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+
+          <div className="mt-20 text-center">
+            <p className="mb-6 text-neutral-400">Need answers tailored to your brokerage?</p>
+            <a
+              href={`mailto:${brand.email}`}
+              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-6 py-3 font-medium text-white transition-all hover:bg-white/10"
             >
-              Contact Support
+              {brand.email}
             </a>
           </div>
         </div>
       </section>
-      
+
       <AppverseFooter content={footer} />
     </main>
   )

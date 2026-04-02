@@ -2,7 +2,7 @@
 
 Effective Date: 22 January 2026
 
-Welcome to Entrestate. By using our services, you agree to these terms.
+Welcome to MTC. By using our services, you agree to these terms.
 
 ## Use of Service
 - You must be at least 18 years old
@@ -14,19 +14,17 @@ Welcome to Entrestate. By using our services, you agree to these terms.
 
 ## Content
 - You retain rights to your content
-- You grant us a license to use content for service delivery
+- You grant us a limited license to use submitted content for service delivery
 
 ## Payments
-- All payments are processed securely
-- Refunds and cancellations are subject to our policies
+- Payments are processed using approved providers
+- Refunds and cancellations are subject to the agreed commercial terms
 
 ## Limitation of Liability
 - Service is provided "as is"
-- Entrestate is not liable for indirect or consequential damages
+- MTC is not liable for indirect or consequential damages
 
 ## Changes
-- Terms may be updated. Changes will be posted here.
+- Terms may be updated from time to time. Changes will be posted here.
 
----
-
-For questions, contact support@entrestate.com.
+For questions, contact `hello@mtcmartech.com`.

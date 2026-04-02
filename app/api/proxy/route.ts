@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
   try {
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'MashroiBuilder/1.0',
+        'User-Agent': 'MTCIntelligence/1.0',
       },
     });
 

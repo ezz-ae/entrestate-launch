@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { AlertCircle } from "lucide-react"
+import { brand } from "@/lib/brand"
 
 export default function AdminLogin() {
   const [email, setEmail] = useState("")
@@ -26,8 +27,8 @@ export default function AdminLogin() {
     setTimeout(() => {
       // Default credentials
     if (
-      (email === "admin@mashroi.com" && password === "Mashroi123!") ||
-      (email === "addy@mashroi.com" && password === "Mashroi123!")
+      (email === "admin@mtcmartech.com" && password === "MTC123!") ||
+      (email === "addy@mtcmartech.com" && password === "MTC123!")
     ) {
         // Set a cookie that expires in 24 hours
         const expiryDate = new Date()
@@ -44,17 +45,17 @@ export default function AdminLogin() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] flex flex-col md:flex-row">
       {/* Left side - only visible on desktop */}
-      <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-lime-600 to-emerald-900 p-12 flex-col justify-between">
+      <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-[#102347] via-[#183468] to-[#8FA686] p-12 flex-col justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-lime-400 rounded-lg flex items-center justify-center">
-              <span className="text-black font-bold text-lg">M</span>
+            <div className="w-10 h-10 bg-[#CBB57A] rounded-full flex items-center justify-center">
+              <span className="text-[#102347] font-bold text-xs uppercase">mtc</span>
             </div>
-            <span className="text-2xl font-semibold text-white">Mashroi</span>
+            <span className="text-2xl font-semibold text-white">{brand.shortName}</span>
           </div>
-          <h1 className="text-4xl font-bold text-white mt-12">Welcome to Mashroi Admin</h1>
-          <p className="text-lime-100 mt-4 max-w-md">
-            Manage your real estate templates, site settings, and leads from one central dashboard.
+          <h1 className="text-4xl font-bold text-white mt-12">Welcome to the MTC Admin</h1>
+          <p className="text-white/80 mt-4 max-w-md">
+            Manage platform messaging, launch paths, and brokerage intelligence operations from one dashboard.
           </p>
         </div>
         <div className="mt-auto">
@@ -72,10 +73,10 @@ export default function AdminLogin() {
       <div className="flex-1 flex flex-col items-center justify-center p-6 md:p-12">
         {/* Mobile header - only visible on mobile */}
         <div className="flex md:hidden items-center gap-3 mb-8 w-full">
-          <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-            <span className="text-black font-bold text-lg">SK</span>
+          <div className="w-10 h-10 bg-[#CBB57A] rounded-full flex items-center justify-center">
+            <span className="text-[#102347] font-bold text-xs uppercase">mtc</span>
           </div>
-          <span className="text-2xl font-semibold text-white">Skitbit</span>
+          <span className="text-2xl font-semibold text-white">{brand.shortName}</span>
         </div>
 
         <div className="w-full max-w-md">
@@ -101,7 +102,7 @@ export default function AdminLogin() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@mashroi.com"
+                placeholder="admin@mtcmartech.com"
                 className="bg-[#1a1a1a] border-neutral-800 text-white"
                 required
               />
@@ -142,8 +143,8 @@ export default function AdminLogin() {
           <div className="mt-8 text-center">
             <p className="text-neutral-400 text-sm">
               Need help? Contact{" "}
-              <a href="mailto:hello@mashroi.com" className="text-[#C6FF3A] hover:underline">
-                hello@mashroi.com
+              <a href={`mailto:${brand.email}`} className="text-[#CBB57A] hover:underline">
+                {brand.email}
               </a>
             </p>
           </div>

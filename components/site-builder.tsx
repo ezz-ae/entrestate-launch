@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { brand } from "@/lib/brand"
 import { cn } from "@/lib/utils"
 import { resolvePreviewSrc } from "@/lib/preview-url"
 
@@ -48,7 +49,7 @@ export function SiteBuilder({ initialUrl, productTitle }: SiteBuilderProps) {
   })
   
   const [messages, setMessages] = useState<{ role: "user" | "ai"; content: string }[]>([
-    { role: "ai", content: `Hi! I'm your Mashroi AI assistant. I'm ready to build your ${productTitle} site. Should we start by collecting your details, or do you want to jump straight into customization?` }
+    { role: "ai", content: `Hi! I'm your ${brand.shortName} AI assistant. I'm ready to build your ${productTitle} experience. Should we start by collecting your details, or do you want to jump straight into customization?` }
   ])
 
   const isBioLink = productTitle.toLowerCase().includes("bio")
@@ -140,7 +141,7 @@ export function SiteBuilder({ initialUrl, productTitle }: SiteBuilderProps) {
             <Sparkles className="h-full w-full text-black" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-white">Mashroi AI Builder</h3>
+            <h3 className="text-sm font-bold text-white">{brand.shortName} AI Builder</h3>
             <div className="flex items-center gap-2">
               <p className="text-[10px] uppercase tracking-widest text-lime-400/80">Editing: {productTitle}</p>
               {isBuilding && (
@@ -226,7 +227,7 @@ export function SiteBuilder({ initialUrl, productTitle }: SiteBuilderProps) {
                 <div className="h-2 w-2 rounded-full bg-yellow-500/50" />
                 <div className="h-2 w-2 rounded-full bg-green-500/50" />
                 <div className="ml-4 flex h-4 flex-1 items-center rounded-md bg-black/30 px-3 text-[9px] text-neutral-500">
-                  {userData.brokerageName ? `${userData.brokerageName.toLowerCase().replace(/ /g, '-')}.mashroi.com` : `preview-${productTitle.toLowerCase().replace(/ /g, '-')}.mashroi.com`}
+                  {userData.brokerageName ? `${userData.brokerageName.toLowerCase().replace(/ /g, '-')}.${brand.domain}` : `preview-${productTitle.toLowerCase().replace(/ /g, '-')}.${brand.domain}`}
                 </div>
               </div>
             )}

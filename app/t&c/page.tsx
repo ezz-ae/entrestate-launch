@@ -1,12 +1,13 @@
-import { SiteHeader } from "@/components/site-header"
-import { AppverseFooter } from "@/components/appverse-footer"
-import Link from "next/link"
 import type { Metadata } from "next"
+
+import { AppverseFooter } from "@/components/appverse-footer"
+import { SiteHeader } from "@/components/site-header"
+import { brand } from "@/lib/brand"
 import { getMarketingFooter } from "@/lib/marketing"
 
 export const metadata: Metadata = {
-  title: "Terms and Conditions — Mashroi",
-  description: "Terms and conditions for Mashroi website templates and AI builder.",
+  title: `Terms and Conditions - ${brand.shortName}`,
+  description: `Terms and conditions for ${brand.name} and the ${brand.productName}.`,
   robots: {
     index: false,
     follow: false,
@@ -17,92 +18,67 @@ export const metadata: Metadata = {
 
 export const revalidate = 60
 
+const sections = [
+  {
+    title: "1. Scope",
+    body: `${brand.name} provides brokerage intelligence services, site integrations, platform modules, and related delivery work. By accessing or using the site, you agree to these terms.`,
+  },
+  {
+    title: "2. Services",
+    body: `Services may include integration into an existing brokerage website, deployment of the exclusive turnkey platform, and ongoing configuration of AI, data, and analytics modules.`,
+  },
+  {
+    title: "3. Intellectual Property",
+    body: `Unless otherwise agreed in writing, all proprietary MTC platform logic, implementation methods, and productized modules remain the property of ${brand.name}. Client-owned source assets and approved deliverables remain the client's property subject to payment and licensing terms.`,
+  },
+  {
+    title: "4. Payments and Delivery",
+    body: "Project scope, pricing, milestones, and rollout timing are confirmed during the engagement. Delivery timing depends on access to assets, feedback speed, and agreed integrations.",
+  },
+  {
+    title: "5. Liability",
+    body: `${brand.name} is not liable for indirect or consequential damages, data loss caused by third-party platforms, or delays caused by missing access, approvals, or external providers.`,
+  },
+  {
+    title: "6. Contact",
+    body: `For legal, commercial, or delivery questions, contact ${brand.email}.`,
+  },
+]
+
 export default async function TermsPage() {
   const footer = await getMarketingFooter()
 
   return (
-    <main className="min-h-screen bg-black text-white">
+    <main className="min-h-screen bg-[#081225] text-white">
       <SiteHeader />
+
       <section className="relative overflow-hidden py-24 sm:py-32">
         <div className="pointer-events-none absolute inset-0 opacity-30">
-          <div className="absolute left-0 top-0 h-[400px] w-[400px] rounded-full bg-[radial-gradient(circle,rgba(132,204,22,0.1),rgba(0,0,0,0))]" />
+          <div className="absolute left-0 top-0 h-[420px] w-[420px] rounded-full bg-[radial-gradient(circle,rgba(203,181,122,0.12),rgba(0,0,0,0))]" />
         </div>
-        
-        <div className="container relative mx-auto px-4 max-w-4xl">
-          <div className="relative overflow-hidden rounded-[32px] border border-white/5 bg-neutral-900/40 p-8 sm:p-12 shadow-2xl backdrop-blur-xl">
-            <div className="relative space-y-12">
-              <header className="space-y-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-lime-300/80">Legal</p>
-                <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white">Terms and Conditions</h1>
-                <p className="text-neutral-400 text-lg leading-relaxed">
-                  Welcome to Mashroi. By accessing our website, you agree to these terms and conditions. Please read
-                  them carefully.
-                </p>
-              </header>
 
-              <section className="space-y-3">
-                <h2 className="text-2xl font-semibold text-white">1. Introduction</h2>
-                <p className="text-neutral-300">
-                  These Terms and Conditions govern your use of the Mashroi website and services. By using our
-                  website, you accept these Terms in full.
-                </p>
-              </section>
+        <div className="container relative mx-auto max-w-4xl px-4">
+          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-xl sm:p-12">
+            <header className="space-y-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#CBB57A]">Legal</p>
+              <h1 className="text-4xl font-black tracking-tight text-white md:text-5xl">Terms and Conditions</h1>
+              <p className="text-lg leading-relaxed text-white/72">
+                These terms govern your use of {brand.name}, our website, and our brokerage intelligence services.
+              </p>
+            </header>
 
-              <section className="space-y-3">
-                <h2 className="text-2xl font-semibold text-white">2. Intellectual Property Rights</h2>
-                <p className="text-neutral-300">
-                  Unless otherwise stated, Mashroi owns all the project files. This includes all electronic files,
-                  drawings, source files, and any materials provided to the client, which remain the sole property of
-                  Mashroi, even if shared.
-                </p>
-                <ul className="list-disc list-inside space-y-2 text-neutral-400">
-                  <li>You must not republish material from this site.</li>
-                  <li>
-                    You must not reproduce, duplicate, or copy material for commercial purposes without permission.
-                  </li>
-                  <li>You must not edit or modify any content without consent.</li>
-                </ul>
-              </section>
-
-              <section className="space-y-3">
-                <h2 className="text-2xl font-semibold text-white">3. Acceptable Use</h2>
-                <p className="text-neutral-300">
-                  You must not use this website in any way that causes, or may cause, damage to the website or
-                  impairment of the availability or accessibility of the website.
-                </p>
-              </section>
-
-              <section className="space-y-3">
-                <h2 className="text-2xl font-semibold text-white">
-                  4. Limitation of Liability
-                </h2>
-                <p className="text-neutral-300">
-                  Mashroi will not be liable for any direct, indirect, or consequential loss or damage arising under
-                  these Terms or in connection with our website or services. The perceived quality, style, or
-                  suitability of content created by us remains subjective and cannot be used as grounds to increase
-                  scope of work. Revisions are strictly governed by our <Link href="/revisions" className="text-lime-300 underline">revision policy</Link>.
-                </p>
-              </section>
-
-              <section className="space-y-3">
-                <h2 className="text-2xl font-semibold text-white">5. Changes to These Terms</h2>
-                <p className="text-neutral-300">
-                  We may revise these Terms from time to time. The revised Terms will apply from the date of
-                  publication on this site.
-                </p>
-              </section>
-
-              <section className="space-y-3 border-t border-white/5 pt-8">
-                <h2 className="text-2xl font-semibold text-white">6. Contact Us</h2>
-                <p className="text-neutral-300">If you have any questions about these Terms, please contact us at:</p>
-                <p className="text-lime-300 font-bold">
-                  Email: <a href="mailto:hello@mashroi.com" className="underline underline-offset-4">hello@mashroi.com</a>
-                </p>
-              </section>
+            <div className="mt-12 space-y-10">
+              {sections.map((section) => (
+                <section key={section.title} className="space-y-3 border-t border-white/5 pt-8 first:border-t-0 first:pt-0">
+                  <h2 className="text-2xl font-bold text-white">{section.title}</h2>
+                  <p className="leading-relaxed text-white/72">{section.body}</p>
+                </section>
+              ))}
             </div>
           </div>
         </div>
       </section>
+
       <AppverseFooter content={footer} />
     </main>
   )

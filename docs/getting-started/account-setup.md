@@ -1,3 +1,3 @@
 # Account Setup
 
-This guide will walk you through the steps to set up your Entrestate account and configure your basic profile information.
+This guide walks you through the basics of setting up your MTC workspace and preparing your brokerage for rollout.

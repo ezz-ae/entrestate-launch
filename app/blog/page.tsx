@@ -4,6 +4,7 @@ import { AppverseFooter } from "@/components/appverse-footer"
 import { BlogCard } from "@/components/blog/blog-card"
 import { Search, Filter, Sparkles } from "lucide-react"
 import { getMarketingBlogPosts, getMarketingFooter } from "@/lib/marketing"
+import { brand } from "@/lib/brand"
 
 export const revalidate = 60
 
@@ -21,10 +22,10 @@ const BlogPage = async () => {
         
         <div className="container relative mx-auto px-4">
           <div className="text-center mb-16 animate-fade-up">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-lime-300/80 mb-6">Insights</p>
-            <h1 className="text-4xl md:text-7xl font-black tracking-tight mb-8">Mashroi Blog.</h1>
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#CBB57A] mb-6">Insights</p>
+            <h1 className="text-4xl md:text-7xl font-black tracking-tight mb-8">MTC Journal.</h1>
             <p className="text-lg md:text-xl max-w-2xl mx-auto text-neutral-400 leading-relaxed">
-              Updates, guides, and insights on real estate technology, AI, and digital growth.
+              Notes on brokerage intelligence, buyer intent, data-driven discovery, and what modern teams need to win online.
             </p>
           </div>
 
@@ -59,14 +60,14 @@ const BlogPage = async () => {
                 <Sparkles className="h-3.5 w-3.5" />
                 Stay Ahead
               </div>
-              <h2 className="text-3xl sm:text-5xl font-black text-white mb-6">Join our newsletter.</h2>
+              <h2 className="text-3xl sm:text-5xl font-black text-white mb-6">Get MTC updates.</h2>
               <p className="text-lg text-neutral-400 mb-10 max-w-xl mx-auto">
-                Get the latest real estate AI strategies delivered to your inbox every week.
+                Get the latest thinking on brokerage intelligence, launch strategy, and data-led buyer journeys.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto">
                 <input 
                   type="email" 
-                  placeholder="Enter your email" 
+                  placeholder={brand.email}
                   className="flex-1 bg-black border border-white/10 rounded-full py-4 px-8 text-white focus:outline-none focus:border-lime-400/50"
                 />
                 <button className="bg-lime-400 text-black font-bold px-8 py-4 rounded-full hover:bg-lime-300 transition-all shadow-[0_0_20px_rgba(132,204,22,0.3)]">

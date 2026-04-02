@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/site-header"
 import { AppverseFooter } from "@/components/appverse-footer"
 import { SiteBuilder } from "@/components/site-builder"
 import { Button } from "@/components/ui/button"
+import { brand } from "@/lib/brand"
 import { getProducts, getProductBySlug } from "@/lib/products"
 import { Sparkles } from "lucide-react"
 import { getMarketingFooter } from "@/lib/marketing"
@@ -30,11 +31,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const related = products.filter((item) => item.slug !== product.slug).slice(0, 3)
 
   return (
-    <main className="min-h-[100dvh] text-white">
+    <main className="min-h-[100dvh] bg-[#081225] text-white">
       <SiteHeader />
       <section className="relative overflow-hidden py-16 sm:py-20">
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute left-0 top-1/2 h-[520px] w-[520px] -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(198,255,58,0.16),rgba(0,0,0,0))]" />
+          <div className="absolute left-0 top-1/2 h-[520px] w-[520px] -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(203,181,122,0.16),rgba(0,0,0,0))]" />
         </div>
         <div className="container relative mx-auto px-4">
           <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center animate-fade-up">
@@ -51,9 +52,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <div className="mt-8 flex flex-wrap items-center gap-3">
                 <Button
                   asChild
-                  className="rounded-full bg-lime-400 px-6 text-sm font-semibold text-black hover:bg-lime-300"
+                  className="rounded-full bg-[#CBB57A] px-6 text-sm font-semibold text-[#102347] hover:bg-[#d8c590]"
                 >
-                  <Link href="/#pricing">Reserve this product</Link>
+                  <a href={brand.ctaHref} target="_blank" rel="noopener noreferrer">Book this rollout</a>
                 </Button>
                 {product.demoUrl && (
                   <Button
@@ -62,8 +63,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                     className="rounded-full border border-white/15 bg-white/5 px-6 text-sm text-white hover:bg-white/10 gap-2"
                   >
                     <a href="#builder">
-                      <Sparkles className="h-4 w-4 text-lime-400" />
-                      Try with AI
+                      <Sparkles className="h-4 w-4 text-[#CBB57A]" />
+                      Preview module
                     </a>
                   </Button>
                 )}
@@ -102,6 +103,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                   {product.deliverables.map((item) => (
                     <li key={item} className="flex items-start gap-2">
                       <span className="mt-2 h-1.5 w-1.5 rounded-full bg-lime-300" />
+                      
                       {item}
                     </li>
                   ))}
@@ -124,11 +126,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <div className="mx-auto max-w-3xl text-center mb-16">
               <div className="inline-flex items-center gap-2 rounded-full bg-lime-400/10 px-4 py-2 text-xs font-bold text-lime-400 mb-6">
                 <Sparkles className="h-3 w-3" />
-                Live Demo & AI Builder
+                Live Preview & MTC Builder
               </div>
               <h2 className="text-4xl font-black text-white sm:text-5xl mb-6">Customize in real-time.</h2>
               <p className="text-neutral-400 text-lg leading-relaxed">
-                Experience the power of our AI builder. Change colors, layouts, and content of the <span className="text-white font-bold">{product.title}</span> template instantly.
+                Explore how the <span className="text-white font-bold">{product.title}</span> module looks in motion and how the MTC builder adapts the experience to your brokerage.
               </p>
             </div>
             
@@ -141,10 +143,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         <div className="container mx-auto px-4">
           <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
             <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-lime-300/80">Execution</p>
+              <p className="text-xs uppercase tracking-[0.3em] text-[#CBB57A]">Execution</p>
               <h2 className="mt-4 text-3xl font-extrabold">How we deliver</h2>
               <p className="mt-3 text-sm text-neutral-300">
-                Every product follows a predictable launch rhythm, so you can align approvals and campaigns.
+                Every module follows a clear rollout rhythm so your team can align approvals, data, and go-live expectations.
               </p>
             </div>
             <div className="grid gap-4">
@@ -168,7 +170,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-neutral-400">More options</p>
-              <h2 className="mt-2 text-3xl font-extrabold">Other products teams love</h2>
+              <h2 className="mt-2 text-3xl font-extrabold">Other modules teams add next</h2>
             </div>
             <Button
               asChild
@@ -195,7 +197,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 </div>
                 <h3 className="mt-4 text-xl font-semibold text-white">{item.title}</h3>
                 <p className="mt-2 text-sm text-neutral-300">{item.tagline}</p>
-                <div className="mt-4 text-sm text-lime-300">View product →</div>
+                <div className="mt-4 text-sm text-[#CBB57A]">View module →</div>
               </Link>
             ))}
           </div>

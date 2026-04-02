@@ -2,7 +2,7 @@ export async function GET(request: Request) {
   const { origin } = new URL(request.url)
 
   const lines = [
-    "# robots.txt for Mashroi — allow AI crawlers and search engines",
+    "# robots.txt for MTC - allow AI crawlers and search engines",
     "User-agent: GPTBot",
     "Allow: /",
     "Disallow: /privacy",

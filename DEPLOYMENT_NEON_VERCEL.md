@@ -3,7 +3,7 @@
 1. **Provision Neon.** Create a Postgres database on Neon (or another serverless-compatible provider) and copy the connection string (`DATABASE_URL`). This repo expects Prisma migrations under `prisma/migrations/00000000000000_init`, so run `npx prisma migrate deploy` after setting `DATABASE_URL`.
 2. **Configure Vercel env vars.** Set the following environment variables in each Vercel scope (Preview/Production):
    - `DATABASE_URL` (Neon connection string).
-   - `NEXTAUTH_URL` (e.g. `https://app.entrestate.com`).
+   - `NEXTAUTH_URL` (e.g. `https://mtcmartech.com`).
    - `NEXTAUTH_SECRET` (32+ character secret for NextAuth tokens).
    - `BLOB_READ_WRITE_TOKEN` (Vercel Blob write token or equivalent if using S3/R2).
    - Existing Firebase variables (`NEXT_PUBLIC_FIREBASE_*`, `FIREBASE_ADMIN_*`) remain for phase 1 compatibility.

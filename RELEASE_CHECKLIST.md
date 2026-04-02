@@ -1,4 +1,4 @@
-# Release Checklist (Entrestate)
+# Release Checklist (MTC)
 
 ## Before Deploy
 - [ ] `ENV_FILE=.env.staging ts-node --esm scripts/deploy/verify_env.ts`

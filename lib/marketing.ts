@@ -89,12 +89,35 @@ const asOutcomes = (value: unknown, fallback: ProductOutcome[]) => {
     .filter(Boolean) as ProductOutcome[]
 }
 
+const hasLegacyProductBranding = (
+  row: {
+    slug: string
+    title: string
+    tagline: string
+    description: string
+    category: string
+  }
+) => {
+  const haystack = [row.slug, row.title, row.tagline, row.description, row.category].join(" ").toLowerCase()
+  return [
+    "gold-century-luxury",
+    "modern-minimalist-broker",
+    "elite-agent-bio",
+    "new-development-reveal",
+    "flash-sale-landing",
+    "influencer-agent-link",
+    "template",
+    "personal brand",
+    "marketing launch",
+  ].some((token) => haystack.includes(token))
+}
+
 export const getMarketingProducts = cache(async (): Promise<Product[]> => {
   try {
     const rows = await prisma.marketingProduct.findMany({
       orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
     })
-    if (!rows.length) {
+    if (!rows.length || rows.some(hasLegacyProductBranding)) {
       return defaultProducts.map((product) => ({
         ...product,
         price: product.priceLabel,

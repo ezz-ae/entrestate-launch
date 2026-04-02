@@ -5,24 +5,24 @@ date: '2026-03-11'
 
 ## Connecting Your Domain
 
-Going live with your Mashroi site on a custom domain is a simple process that takes just a few minutes.
+Going live with your MTC rollout on a custom domain is a simple process that takes just a few minutes.
 
-### Step 1: Add Your Domain in the Builder
+### Step 1: Add Your Domain in the MTC Builder
 
-Navigate to the **"Domain"** tab in the AI Builder. Enter your full domain name (e.g., `my-real-estate-brand.com`) and click "Add."
+Navigate to the `Domain` tab in the builder. Enter your full domain name, for example `my-real-estate-brand.com`, and click `Add`.
 
 ### Step 2: Update DNS Records
 
-The builder will display a set of DNS records that you need to add to your domain registrar. These typically include an `A` record and a `CNAME` record.
+The builder will display the DNS records you need to add to your domain registrar.
 
-1.  Log in to your domain provider (e.g., GoDaddy, Namecheap, Google Domains).
-2.  Navigate to the DNS management section for your domain.
-3.  Add the records exactly as they are displayed in the Mashroi builder.
+1. Log in to your domain provider.
+2. Open the DNS management section.
+3. Add the records exactly as they are displayed in the MTC builder.
 
-*Note: DNS changes can take up to 24 hours to propagate, but it's usually much faster.*
+DNS changes can take up to 24 hours to propagate, though they are often much faster.
 
 ### Step 3: Verify and Publish
 
-Once you've added the DNS records, return to the Mashroi builder and click the "Verify" or "Refresh Status" button. Once the status changes to "Verified," your site is officially live on your custom domain!
+Once you've added the DNS records, return to the MTC builder and click `Verify` or `Refresh Status`. When the status changes to `Verified`, your site is live on your custom domain.
 
-All Mashroi sites come with **free, automatic SSL certificates**, so your site will always be secure.
+All MTC deployments include automatic SSL certificates so your site stays secure.

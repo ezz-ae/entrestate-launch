@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
 import { getProducts } from "@/lib/products"
+import { brand } from "@/lib/brand"
 import { resolvePreviewSrc } from "@/lib/preview-url"
 
 export async function Hero() {
@@ -12,8 +13,8 @@ export async function Hero() {
     previewSrc: resolvePreviewSrc(product.demoUrl),
   }))
   const buttonNew = (
-    <Button asChild className="rounded-full bg-lime-400 px-6 text-black hover:bg-lime-300">
-      <a href="#pricing">Start with a template</a>
+    <Button asChild className="rounded-full bg-[#CBB57A] px-6 text-[#102347] hover:bg-[#d8c590]">
+      <a href={brand.ctaHref} target="_blank" rel="noopener noreferrer">{brand.ctaLabel}</a>
     </Button>
   )
 
@@ -22,17 +23,17 @@ export async function Hero() {
       <div className="container mx-auto px-4">
         <div className="flex flex-col items-center justify-center py-14 sm:py-20">
           <div className="mb-5 flex items-center gap-2">
-            <Image src="/icons/skitbit-white.svg" alt="Mashroi logo" width={32} height={32} className="h-8 w-8" />
-            <p className="text-sm uppercase tracking-[0.25em] text-lime-300/80">mashroi</p>
+            <Image src="/icons/mtc-logo.svg" alt={`${brand.shortName} logo`} width={32} height={32} className="h-8 w-8" />
+            <p className="text-sm uppercase tracking-[0.25em] text-[#CBB57A]">mtc</p>
           </div>
           <h1 className="mt-3 text-center text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
-            <span className="block">Build Real Estate Websites</span>
-            <span className="block text-lime-300 drop-shadow-[0_0_20px_rgba(132,204,22,0.35)]">
-              With AI in Minutes.
+            <span className="block">Equip Your Brokerage</span>
+            <span className="block text-[#CBB57A] drop-shadow-[0_0_20px_rgba(203,181,122,0.3)]">
+              With Superpowers.
             </span>
           </h1>
           <p className="mt-6 max-w-2xl text-center text-lg text-neutral-300 sm:text-xl">
-            Mashroi offers ready-made templates, a powerful AI site builder, and all the pages a real estate professional needs to launch and grow.
+            {brand.description}
           </p>
           <div className="mt-8">{buttonNew}</div>
 
@@ -43,7 +44,7 @@ export async function Hero() {
 
               return (
                 <div key={i} className={visibility}>
-                  <PhoneCard title={p.title} sub={p.sub} imageSrc={p.imageSrc} videoSrc={p.videoSrc} />
+                  <PhoneCard title={p.title} sub={p.sub} imageSrc={p.imageSrc} previewSrc={p.previewSrc} />
                 </div>
               )
             })}
@@ -91,7 +92,7 @@ function PhoneCard({
             <div className="text-3xl font-bold leading-snug text-white/90">{title}</div>
             <p className="text-xs text-white/70">{sub}</p>
             <div className="mt-3 inline-flex items-center rounded-full bg-black/40 px-2 py-0.5 text-[10px] uppercase tracking-wider text-lime-300">
-              mashroi
+              mtc
             </div>
           </div>
         </div>

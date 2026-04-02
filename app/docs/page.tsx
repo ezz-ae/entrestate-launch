@@ -1,9 +1,36 @@
 import Link from "next/link"
-import { getSortedPostsData } from "../../lib/docs"
-import { SiteHeader } from "@/components/site-header"
+import { ArrowRight, BookOpen, Database, MapPinned, ShieldCheck } from "lucide-react"
+
 import { AppverseFooter } from "@/components/appverse-footer"
-import { ChevronRight, FileText, BookOpen, Sparkles } from "lucide-react"
+import { SiteHeader } from "@/components/site-header"
+import { brand } from "@/lib/brand"
 import { getMarketingFooter } from "@/lib/marketing"
+import { getSortedPostsData } from "../../lib/docs"
+
+const guides = [
+  {
+    title: "Upgrade your current site",
+    description: "Layer AI chat, inventory, scorecards, and heatmaps into the brokerage experience you already own.",
+    icon: Database,
+  },
+  {
+    title: "Launch the exclusive platform",
+    description: "Deploy the complete MTC operating layer with discovery, lead routing, and trust signals already wired in.",
+    icon: ShieldCheck,
+  },
+  {
+    title: "Expand intelligently",
+    description: "Roll out the next module when your team is ready, from hyper-local maps to deeper property intelligence.",
+    icon: MapPinned,
+  },
+]
+
+const checklist = [
+  "Define whether you want integration or full-platform rollout.",
+  "Confirm the lead flow, CRM handoff, and response owners.",
+  "Map which intelligence modules launch in phase one.",
+  `Share your goals with ${brand.name} and lock the rollout timeline.`,
+]
 
 export const revalidate = 60
 
@@ -11,85 +38,91 @@ export default async function DocsPage() {
   const [allPostsData, footer] = await Promise.all([getSortedPostsData(), getMarketingFooter()])
 
   return (
-    <main className="min-h-screen bg-black text-white">
+    <main className="min-h-screen bg-[#081225] text-white">
       <SiteHeader />
-      
+
       <section className="relative overflow-hidden py-24 sm:py-32">
         <div className="pointer-events-none absolute inset-0 opacity-40">
-          <div className="absolute left-1/2 top-0 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(132,204,22,0.1),rgba(0,0,0,0))]" />
+          <div className="absolute left-1/2 top-0 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(203,181,122,0.12),rgba(0,0,0,0))]" />
         </div>
-        
+
         <div className="container relative mx-auto px-4">
-          <div className="flex flex-col lg:flex-row gap-12">
-            {/* Sidebar Navigation */}
-            <aside className="w-full lg:w-80 shrink-0">
-              <div className="sticky top-24 space-y-8">
-                <div>
-                  <div className="flex items-center gap-2 mb-6">
-                    <BookOpen className="h-5 w-5 text-lime-400" />
-                    <h2 className="text-sm font-bold uppercase tracking-widest text-white">Documentation</h2>
+          <div className="grid gap-12 lg:grid-cols-[1.05fr_0.95fr]">
+            <div>
+              <div className="mb-8 flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-[#CBB57A]" />
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#CBB57A]">Documentation</p>
+              </div>
+              <h1 className="text-4xl font-black tracking-tight sm:text-6xl">MTC rollout guide.</h1>
+              <p className="mt-6 max-w-2xl text-lg leading-relaxed text-white/72">
+                Use this page to understand how {brand.productName} fits into your brokerage, what launches first, and
+                how the platform grows from fast integration to full operating edge.
+              </p>
+
+              <div className="mt-10 grid gap-5 md:grid-cols-3">
+                {guides.map((guide) => (
+                  <div key={guide.title} className="rounded-[1.75rem] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#102347] text-[#CBB57A]">
+                      <guide.icon className="h-5 w-5" />
+                    </div>
+                    <h2 className="mt-4 text-xl font-bold">{guide.title}</h2>
+                    <p className="mt-3 text-sm leading-relaxed text-white/72">{guide.description}</p>
                   </div>
-                  <nav className="space-y-2">
-                    {allPostsData.map(({ id, title }) => (
-                      <Link
-                        key={id}
-                        href={`/docs/${encodeURIComponent(id)}`}
-                        className="group flex items-center justify-between rounded-2xl border border-white/5 bg-neutral-900/40 px-4 py-3 text-sm text-neutral-400 transition-all hover:bg-white/5 hover:border-lime-400/30 hover:text-white"
-                      >
-                        <div className="flex items-center gap-3">
-                          <FileText className="h-4 w-4 text-neutral-500 group-hover:text-lime-400" />
-                          {title || id}
-                        </div>
-                        <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </Link>
-                    ))}
-                  </nav>
+                ))}
+              </div>
+
+              <div className="mt-10 rounded-[2rem] border border-white/10 bg-[#102347] p-6">
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#CBB57A]">Launch checklist</p>
+                <ul className="mt-5 space-y-3 text-white/80">
+                  {checklist.map((item) => (
+                    <li key={item} className="flex items-start gap-3">
+                      <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-[#CBB57A]" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            <aside className="w-full shrink-0">
+              <div className="space-y-6 rounded-[2rem] border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
+                <div>
+                  <h2 className="text-sm font-bold uppercase tracking-widest text-white">Reference docs</h2>
+                  <p className="mt-2 text-sm leading-relaxed text-white/60">
+                    Existing implementation notes and references in this repo.
+                  </p>
                 </div>
 
-                <div className="rounded-[32px] border border-white/5 bg-gradient-to-br from-lime-400/10 to-transparent p-6">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-lime-400 p-2 mb-4">
-                    <Sparkles className="h-full w-full text-black" />
-                  </div>
-                  <h4 className="text-white font-bold mb-2">Need help?</h4>
-                  <p className="text-xs text-neutral-400 leading-relaxed mb-4">
-                    Our AI builder can help you launch in minutes. Stuck? Contact our support.
+                <nav className="space-y-3">
+                  {allPostsData.map(({ id, title }) => (
+                    <Link
+                      key={id}
+                      href={`/docs/${encodeURIComponent(id)}`}
+                      className="group flex items-center justify-between rounded-2xl border border-white/10 bg-[#081225] px-4 py-3 text-sm text-white/72 transition-all hover:border-[#CBB57A]/30 hover:text-white"
+                    >
+                      <span>{title || id}</span>
+                      <ArrowRight className="h-4 w-4 opacity-60 transition-transform group-hover:translate-x-1" />
+                    </Link>
+                  ))}
+                </nav>
+
+                <div className="rounded-[1.5rem] border border-[#CBB57A]/15 bg-[rgba(203,181,122,0.08)] p-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#CBB57A]">Need a guided rollout?</p>
+                  <p className="mt-3 text-sm leading-relaxed text-white/72">
+                    The fastest way to align the project is to book the integration path or claim the exclusive platform.
                   </p>
-                  <Link href="/faq" className="text-xs font-bold text-lime-300 hover:text-lime-400 underline underline-offset-4">
-                    Visit Support Center
-                  </Link>
+                  <a
+                    href={brand.ctaHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#CBB57A]"
+                  >
+                    {brand.ctaLabel}
+                    <ArrowRight className="h-4 w-4" />
+                  </a>
                 </div>
               </div>
             </aside>
-
-            {/* Main Content */}
-            <div className="flex-1">
-              <div className="relative overflow-hidden rounded-[40px] border border-white/5 bg-neutral-900/40 p-8 sm:p-16 backdrop-blur-xl shadow-2xl">
-                <div className="max-w-3xl">
-                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-lime-300/80 mb-6">Introduction</p>
-                  <h1 className="text-4xl sm:text-6xl font-black tracking-tight mb-8">Mashroi OS Guide.</h1>
-                  <p className="text-lg text-neutral-400 leading-relaxed mb-12">
-                    Welcome to the official documentation for Mashroi. Whether you're a solo agent or a large brokerage, this guide will help you master our AI builder and ready-made templates.
-                  </p>
-
-                  <div className="grid sm:grid-cols-2 gap-8">
-                    <div className="space-y-4">
-                      <div className="h-1 bg-lime-400 w-12" />
-                      <h3 className="text-xl font-bold text-white">Getting Started</h3>
-                      <p className="text-sm text-neutral-500 leading-relaxed">
-                        Learn how to pick a template, customize it with AI, and connect your custom domain in under 10 minutes.
-                      </p>
-                    </div>
-                    <div className="space-y-4">
-                      <div className="h-1 bg-lime-400 w-12 opacity-30" />
-                      <h3 className="text-xl font-bold text-white">AI Customization</h3>
-                      <p className="text-sm text-neutral-500 leading-relaxed">
-                        Deep dive into our AI assistant. Learn how to prompt the builder for specific layouts and design languages.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </section>

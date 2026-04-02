@@ -98,7 +98,7 @@ export function BrochureUpload() {
                   <h3 className="text-2xl font-bold text-white">Analysis Complete!</h3>
                   <p className="text-neutral-300 mt-2 mb-6">Your high-converting landing page is ready to be finalized in the builder.</p>
                   <Button className="rounded-full bg-lime-400 text-black font-bold px-8 py-6 text-lg hover:bg-lime-300">
-                    Finalize in AI Builder
+                    Finalize in MTC Builder
                   </Button>
                 </div>
               )}

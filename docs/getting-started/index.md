@@ -1,3 +1,3 @@
-# Getting Started with Entrestate
+# Getting Started with MTC
 
-Welcome to Entrestate! This section will guide you through the initial setup and provide an overview of how to get the most out of our platform.
+Welcome to MTC. This section covers the fundamentals of launching the intelligence engine, choosing your rollout path, and understanding the core modules.

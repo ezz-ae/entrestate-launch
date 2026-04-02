@@ -1,75 +1,69 @@
-import { SiteHeader } from "@/components/site-header"
 import { AppverseFooter } from "@/components/appverse-footer"
+import { SiteHeader } from "@/components/site-header"
+import { brand } from "@/lib/brand"
 import { getMarketingFooter } from "@/lib/marketing"
 
 export const revalidate = 60
+
+const policyItems = [
+  {
+    title: "Included revisions",
+    body: "Every engagement includes structured refinement rounds tied to the agreed rollout scope. The exact number depends on whether you choose integration work or the exclusive turnkey platform.",
+  },
+  {
+    title: "Scope discipline",
+    body: "Revisions are intended to improve approved modules, content, data presentation, and rollout polish. Net-new modules or materially expanded scope are quoted separately.",
+  },
+  {
+    title: "Turnaround",
+    body: "Most copy, configuration, and data-display refinements are handled quickly once inputs are received. Timeline-sensitive changes are prioritized during active rollout windows.",
+  },
+]
 
 export default async function RevisionPolicyPage() {
   const footer = await getMarketingFooter()
 
   return (
-    <main className="min-h-screen bg-black text-white">
+    <main className="min-h-screen bg-[#081225] text-white">
       <SiteHeader />
+
       <section className="relative overflow-hidden py-24 sm:py-32">
         <div className="pointer-events-none absolute inset-0 opacity-30">
-          <div className="absolute left-0 bottom-0 h-[400px] w-[400px] rounded-full bg-[radial-gradient(circle,rgba(132,204,22,0.1),rgba(0,0,0,0))]" />
+          <div className="absolute left-0 bottom-0 h-[400px] w-[400px] rounded-full bg-[radial-gradient(circle,rgba(203,181,122,0.12),rgba(0,0,0,0))]" />
         </div>
-        
-        <div className="container relative mx-auto px-4 max-w-4xl">
-          <div className="relative overflow-hidden rounded-[32px] border border-white/5 bg-neutral-900/40 p-8 sm:p-12 shadow-2xl backdrop-blur-xl">
-            <div className="relative space-y-12">
-              <header className="space-y-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-lime-300/80">Support</p>
-                <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white">Revision Policy</h1>
-                <p className="text-neutral-400 text-lg leading-relaxed">
-                  Our revision policy ensures transparency and fairness for all clients while maintaining the quality and efficiency of our AI-driven build process.
-                </p>
-              </header>
 
-              <section className="space-y-4">
-                <h2 className="text-2xl font-bold text-white">1. Included Revisions</h2>
-                <p className="text-neutral-400">
-                  Each template purchase includes a set number of AI-assisted revision cycles:
-                </p>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
-                    <h4 className="font-bold text-white mb-1">Standard Templates</h4>
-                    <p className="text-xs text-neutral-500">2 deep revision cycles included.</p>
-                  </div>
-                  <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
-                    <h4 className="font-bold text-white mb-1">Custom Solutions</h4>
-                    <p className="text-xs text-neutral-500">Unlimited iterations until launch.</p>
-                  </div>
-                </div>
-              </section>
+        <div className="container relative mx-auto max-w-4xl px-4">
+          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-xl sm:p-12">
+            <header className="space-y-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#CBB57A]">Policy</p>
+              <h1 className="text-4xl font-black tracking-tight text-white md:text-5xl">Revision Policy</h1>
+              <p className="text-lg leading-relaxed text-white/72">
+                Our revision process keeps delivery focused, transparent, and aligned with the agreed MTC rollout.
+              </p>
+            </header>
 
-              <section className="space-y-3">
-                <h2 className="text-2xl font-bold text-white">2. Scope of Revisions</h2>
-                <p className="text-neutral-400 leading-relaxed">
-                  Revisions are meant to refine and adjust the agreed deliverables (copy, brand colors, imagery), not to expand the original scope or switch templates. Significant layout changes or additional feature requests will be quoted separately.
-                </p>
-              </section>
-
-              <section className="space-y-3">
-                <h2 className="text-2xl font-bold text-white">3. Turnaround Time</h2>
-                <p className="text-neutral-400 leading-relaxed">
-                  AI-assisted revisions are applied in real-time. Human-assisted design tweaks typically take 24-48 business hours.
-                </p>
-              </section>
-
-              <section className="space-y-3 border-t border-white/5 pt-8">
-                <h2 className="text-2xl font-bold text-white">4. Contact Us</h2>
-                <p className="text-neutral-400">
-                  For questions regarding our revision policy, please contact us at:
-                </p>
-                <p className="text-lime-300 font-bold">
-                  Email: <a href="mailto:hello@mashroi.com" className="underline underline-offset-4">hello@mashroi.com</a>
-                </p>
-              </section>
+            <div className="mt-12 space-y-8">
+              {policyItems.map((item) => (
+                <section key={item.title} className="space-y-3 rounded-[1.5rem] border border-white/10 bg-[#0d1831] p-6">
+                  <h2 className="text-2xl font-bold text-white">{item.title}</h2>
+                  <p className="leading-relaxed text-white/72">{item.body}</p>
+                </section>
+              ))}
             </div>
+
+            <section className="mt-10 space-y-3 border-t border-white/5 pt-8">
+              <h2 className="text-2xl font-bold text-white">Contact</h2>
+              <p className="text-white/72">For revision questions, rollout support, or scope clarification, contact us at:</p>
+              <p className="font-bold text-[#CBB57A]">
+                <a href={`mailto:${brand.email}`} className="underline underline-offset-4">
+                  {brand.email}
+                </a>
+              </p>
+            </section>
           </div>
         </div>
       </section>
+
       <AppverseFooter content={footer} />
     </main>
   )

@@ -11,8 +11,8 @@ interface FeaturesContent {
 }
 
 const defaultContent: FeaturesContent = {
-  title: "Why Mashroi closes deals faster.",
-  subtitle: "Real estate websites, launched fast and optimized for leads.",
+  title: "Why MTC wins the lead race.",
+  subtitle: "Brokerage intelligence that qualifies intent and sharpens every next step.",
 }
 
 export function Features() {
@@ -21,10 +21,10 @@ export function Features() {
       <div className="mx-auto max-w-3xl text-center mb-16">
         <p className="text-xs font-semibold uppercase tracking-[0.3em] text-lime-300/80">Features</p>
         <h2 className="mt-4 text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
-          Why Mashroi closes deals faster.
+          Why MTC wins the lead race.
         </h2>
         <p className="mt-4 text-sm text-neutral-300 sm:text-base">
-          Real estate websites, launched fast and optimized for leads. Our platform combines the speed of AI with the polish of high-end templates.
+          Real estate sites do not need more noise. They need live inventory, intent signals, and credible decision support.
         </p>
       </div>
 

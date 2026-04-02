@@ -1,98 +1,65 @@
-# Entrestate OS
+# MTC Intelligence Engine
 
-This workspace contains the Entrestate OS marketing site, dashboard, API routes, and Firebase-powered backend services. The UI is already implemented, so day-to-day work focuses on wiring those surfaces to live data and integrations (Entrestate inventory ingestion, SendGrid, SMS, Google Ads, PayPal, Vercel domains, etc.).
+This repository contains the MTC marketing site, admin surfaces, product catalog, and supporting API routes for the brokerage intelligence platform.
 
-## Repo Map (Next + Mobile)
+## What MTC ships
 
-- **Next.js app (web):** `src/app/**` + `next.config.mjs`
-- **Mobile app (React):** `src/mobile/**` (entry in `src/mobile/App.tsx`)
-- **Shared UI + API client:** `src/shared/**` (no Next-only imports)
-- **Shared API client:** `src/shared/api/client.ts` (used by both frontends)
+- A deck-driven marketing site for the `MTC Intelligence Engine`
+- A module catalog for inventory, lead intelligence, scorecards, heatmaps, and launch paths
+- Admin and builder flows used to preview and operate the experience
+- Supporting integrations for auth, payments, domains, and data-backed experiences
 
-## Getting Started
+## Project structure
 
-1. **Install dependencies**
+- `app/**` - Next.js App Router pages and API routes
+- `components/**` - shared UI, marketing sections, builder panels, and catalog blocks
+- `lib/**` - marketing defaults, brand config, helpers, and server utilities
+- `docs/**` - markdown documentation used by the docs routes
+- `public/**` - static assets and icons
+
+## Local development
+
+1. Install dependencies
 
    ```bash
    npm install
    ```
 
-2. **Create your environment file**
-
-   Copy `.env.example` to `.env` (or `.env.local`) and provide the required credentials:
+2. Create your environment file
 
    ```bash
    cp .env.example .env
    ```
 
-   The template includes every variable referenced in the codebase (Firebase, Gemini, SendGrid, SMS, PayPal, Ziina, Vercel, Meta, cron secret, etc.). Never commit populated env files or provider keys.
-
-3. **Run the dev server**
+3. Start the app
 
    ```bash
    npm run dev
    ```
 
-   The Next.js app will boot on `http://localhost:3000` and talk to Firebase using the credentials you provided.
+The app runs locally on `http://localhost:3000`.
 
-## Data Ingestion (Entrestate)
+## Inventory ingestion note
 
-Run `scripts/ingest-entrestate.ts` with service-account credentials to keep the `inventory_projects` collection fresh:
+Some ingestion flows still rely on a legacy structured inventory source behind the scenes. That compatibility layer is internal and does not affect the public MTC brand.
 
-```bash
-GOOGLE_APPLICATION_CREDENTIALS=./path/to/service-account.json npx ts-node scripts/ingest-entrestate.ts
-```
+## Validation commands
 
-The script loads the curated dataset in `src/data/entrestate-inventory.ts` and stores normalized documents in Firestore. Trigger it manually or via Cloud Scheduler hitting a dedicated cron endpoint. During development the `/api/projects` endpoints automatically fall back to this dataset if Firestore is empty, ensuring the UI always renders a complete catalogue.
+- `npm run lint`
+- `npm run build`
+- `npm run smoke`
+- `npm run test:env-safety`
+- `npm run test:vercel-env-sanity`
+- `npm run test:supabase-chain`
 
-## Launch Readiness Checks
+## Deployment notes
 
-- `npm run lint` &mdash; Next.js + ESLint (`next/core-web-vitals`) with custom React rules disabled only where marketing copy would otherwise fail the build.
-- `npm run smoke` &mdash; Runs a lightweight TypeScript script to validate the Entrestate dataset (queries by city, keyword, and price range) plus pagination safety before you push fresh inventory or depend on fallback data in production.
-- `npm run test:env-safety` — Verifies Firebase/Supabase modules load even when public env vars are absent.
-- `npm run test:vercel-env-sanity` — Reports boolean signals for the Vercel/Firebase/Supabase environment.
-- `npm run test:supabase-chain` — Confirms the mock Supabase client honors `.ilike().order().range().limit()` chains.
+- Set `NEXT_PUBLIC_APP_URL` to your canonical deployment URL
+- Provide the auth, Firebase, Supabase, and payment variables referenced in `.env.example`
+- Run `npm run build` before shipping changes
 
-## Secrets & Security Checklist
+## Brand references
 
-- Secrets must stay out of git. The repository ignores `.env*` and provider dumps such as `sendgrid.env` (rotated/removed).
-- Firebase config is now read from environment variables—no more hardcoded keys in `src/firebase/config.ts`.
-- The Facebook SDK bootstrap reads `NEXT_PUBLIC_FACEBOOK_APP_ID` before loading the script; omit this env var if you don’t want the SDK on a given deployment.
-- Before shipping, update `firestore.rules` to the tenant-aware ruleset and deploy through the Firebase CLI.
-- Dashboard-only API routes (e.g., `/api/leads/list`, `/api/sms/send`, `/api/email/send`, `/api/payments/*`, `/api/domains`) require a Firebase ID token via `Authorization: Bearer <idToken>`; fetch the token with `getIdToken()` on the client before calling these endpoints, and include the tenant ID when applicable.
-
-## Production minimum env
-
-Every production or preview deployment must expose the booleans reported by `/api/health/runtime`. At a minimum, make sure the following variables exist or evaluate to the expected truthy values before you ship:
-
-- `ENABLE_FIREBASE_AUTH` (server) **and** `NEXT_PUBLIC_ENABLE_FIREBASE_AUTH` (public) are always defined as `true`/`false`.
-- `FIREBASE_ADMIN_CREDENTIALS` **or** the trio `FIREBASE_ADMIN_PROJECT_ID`, `FIREBASE_ADMIN_CLIENT_EMAIL`, `FIREBASE_ADMIN_PRIVATE_KEY` so Firebase Admin can bootstrap.
-- Public Firebase config: `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID`, `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`, `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`, and `NEXT_PUBLIC_FIREBASE_APP_ID`.
-- `NEXT_PUBLIC_SUPABASE_URL` plus either `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` or `NEXT_PUBLIC_SUPABASE_ANON_KEY` when any Supabase-backed API is enabled.
-- `NEXT_PUBLIC_APP_URL` (the canonical hostname your deployment uses, e.g., `https://app.entrestate.com`).
-
-## Next Steps
-
-The immediate roadmap is captured in the planning notes (locking Firestore rules, wiring data ingestion, replacing client-side secret storage, making every dashboard module call a real backend). Use this README as a quick reference for environment setup while implementing those stages.
-
-## Vercel Env Checklist
-
-- `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID`, `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`, `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`, `NEXT_PUBLIC_FIREBASE_APP_ID` &mdash; must all exist when `NEXT_PUBLIC_ENABLE_FIREBASE_AUTH` is `true`.
-- `NEXT_PUBLIC_ENABLE_FIREBASE_AUTH` — flip to `false` to treat Firebase auth as disabled in public builds; the server still enforces `ENABLE_FIREBASE_AUTH` when running with admin creds.
-- `FIREBASE_ADMIN_CREDENTIALS` **or** the trio `FIREBASE_ADMIN_PROJECT_ID`, `FIREBASE_ADMIN_CLIENT_EMAIL`, `FIREBASE_ADMIN_PRIVATE_KEY` &mdash; required for every production/preview deployment so Firebase Admin can initialize.
-- `NEXT_PUBLIC_SUPABASE_URL` plus either `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` or `NEXT_PUBLIC_SUPABASE_ANON_KEY` when Supabase-backed APIs are enabled; otherwise the mock client is used.
-- `NEXT_PUBLIC_APP_URL` — keep site metadata and webhooks aligned between Preview and Production (this repo reads it when submitting forms or generating metadata).
-- Dashboard access is enforced in `app/dashboard/layout.tsx`, so unauthorized visitors are redirected to `/login` via layout guards instead of extra runtime lambdas.
-
-## Deployment via Git
-
-1. Configure the Production and Preview environment variables listed above inside the Vercel dashboard and confirm the Firebase admin credentials are visible for both targets.
-2. Push to `main` (or the linked production branch) and allow Vercel to build the release; verify `/api/health/env` after the rollout to confirm runtime flags.
-3. After the deployment completes, curl the health endpoints (see below) to confirm the runtime flags and Firebase connectivity.
-4. For local sanity before pushing, run `npm run test:vercel-env-sanity` and `npm run test:supabase-chain` so the environment booleans update and the Supabase chain still resolves without the public keys.
-
-## Health Endpoints
-
-- `curl https://<your-deploy>/api/health` &mdash; verifies the admin SDK and Firestore connectivity.
-- `curl https://<your-deploy>/api/health/env` &mdash; returns boolean flags for `NEXT_PUBLIC_ENABLE_FIREBASE_AUTH`, public Firebase config readiness, server auth availability, Supabase configuration, and the Node/Vercel env.
-- `curl https://<your-deploy>/api/auth/me` &mdash; confirms guest/dev/anonymous modes remain stable; authenticated clients should check `user?.uid`.
+- Public brand: `MTC` / `MTC Martech`
+- Canonical marketing domain: `mtcmartech.com`
+- Primary CTA: `DM "INTELLIGENCE"`

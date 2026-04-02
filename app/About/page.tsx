@@ -1,125 +1,136 @@
-// app/about/page.tsx
-import React from "react"
 import Link from "next/link"
-import { SiteHeader } from "@/components/site-header"
+import { Bot, Database, MapPinned, ShieldCheck } from "lucide-react"
+
 import { AppverseFooter } from "@/components/appverse-footer"
+import { SiteHeader } from "@/components/site-header"
 import { Button } from "@/components/ui/button"
+import { brand } from "@/lib/brand"
 import { getMarketingFooter } from "@/lib/marketing"
 
 export const revalidate = 60
 
+const pillars = [
+  {
+    title: "Structured inventory",
+    description: "A live, organized project database that lets brokerages look bigger than the portals.",
+    icon: Database,
+  },
+  {
+    title: "AI market veteran",
+    description: "Intent qualification, guided discovery, and recommendation flows powered by real market context.",
+    icon: Bot,
+  },
+  {
+    title: "Developer trust layer",
+    description: "Scorecards, delivery history, and buyer-facing confidence signals built directly into discovery.",
+    icon: ShieldCheck,
+  },
+  {
+    title: "Hyper-local context",
+    description: "Map-based ROI intelligence and zone-level visibility that makes decisions faster for serious buyers.",
+    icon: MapPinned,
+  },
+]
+
 export default async function AboutPage() {
   const footer = await getMarketingFooter()
+
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "Mashroi",
-    url: "https://mashroi.com",
-    logo: "https://mashroi.com/logo.png",
-    description:
-      "Mashroi sells ready-to-use real estate websites with AI customization and instant launch.",
-    sameAs: [
-      "https://www.instagram.com",
-      "https://www.linkedin.com",
-    ],
+    name: brand.name,
+    url: brand.url,
+    logo: `${brand.url}/icons/mtc-logo.svg`,
+    description: brand.description,
     address: {
       "@type": "PostalAddress",
       addressLocality: "Dubai",
-      addressRegion: "DU",
       addressCountry: "AE",
     },
     contactPoint: [
       {
         "@type": "ContactPoint",
-        email: "hello@mashroi.com",
-        contactType: "customer service",
+        email: brand.email,
+        contactType: "customer support",
       },
     ],
-    areaServed: [{ "@type": "Place", name: "Global" }],
-  };
+    areaServed: [{ "@type": "Place", name: "UAE" }],
+  }
 
   return (
-    <main className="min-h-screen bg-black text-white">
+    <main className="min-h-screen bg-[#081225] text-white">
       <SiteHeader />
-      
-      {/* SEO Schema for Google + LLMs */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(schemaData),
-        }}
-      />
 
-      {/* Hero Section */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }} />
+
       <section className="relative overflow-hidden py-24 sm:py-32">
-        <div className="pointer-events-none absolute inset-0 opacity-50">
-          <div className="absolute left-1/2 top-0 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(132,204,22,0.15),rgba(0,0,0,0))]" />
+        <div className="pointer-events-none absolute inset-0 opacity-40">
+          <div className="absolute left-1/2 top-0 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(203,181,122,0.16),rgba(0,0,0,0))]" />
         </div>
-        <div className="container relative mx-auto px-4 text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-lime-300/80 mb-6 animate-fade-up">Our Mission</p>
-          <h1 className="text-5xl md:text-7xl font-black tracking-tight mb-8 animate-fade-up">
-            Launch your <span className="text-lime-300">vision</span><br />in minutes.
-          </h1>
-          <p className="text-lg md:text-xl max-w-2xl mx-auto text-neutral-400 leading-relaxed animate-fade-up">
-            Mashroi was built to bridge the gap between high-end design and instant deployment. We provide real estate professionals with the tools to dominate their digital market without the technical overhead.
-          </p>
-        </div>
-      </section>
 
-      {/* Feature Grid */}
-      <section className="py-24 relative overflow-hidden">
-        <div className="container mx-auto px-4">
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {[
-              {
-                title: "Ready Templates",
-                desc: "Polished, conversion-optimized layouts for luxury brokerage, personal brands, and new developments.",
-              },
-              {
-                title: "AI Builder",
-                desc: "An intuitive engine that adapts copy, imagery, and layout to your unique brand voice instantly.",
-              },
-              {
-                title: "Conversion First",
-                desc: "Wired with lead capture, WhatsApp routing, and tracking pixels out of the box.",
-              },
-              {
-                title: "Brochure to Landing",
-                desc: "Upload a PDF brochure and watch our AI transform it into a high-converting landing page.",
-              },
-              {
-                title: "Instagram DM Agent",
-                desc: "Automate your lead funnel with AI agents that handle property inquiries directly in your DMs.",
-              },
-              {
-                title: "Instant Hosting",
-                desc: "Every template includes managed hosting and a live subdomain so you can go live immediately.",
-              },
-            ].map((feature, index) => (
-              <div
-                key={index}
-                className="group relative overflow-hidden rounded-[32px] border border-white/5 bg-neutral-900/40 p-8 shadow-2xl backdrop-blur-xl transition-all duration-300 hover:border-lime-400/30 hover:-translate-y-1"
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-lime-400/5 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
-                <h3 className="text-2xl font-bold mb-4 text-white group-hover:text-lime-300 transition-colors">{feature.title}</h3>
-                <p className="text-neutral-400 leading-relaxed">{feature.desc}</p>
+        <div className="container relative mx-auto px-4">
+          <div className="mx-auto max-w-4xl text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#CBB57A]">About {brand.shortName}</p>
+            <h1 className="mt-6 text-5xl font-black tracking-tight sm:text-7xl">Built for brokerages that need more than a brochure site.</h1>
+            <p className="mx-auto mt-6 max-w-3xl text-lg leading-relaxed text-white/72 sm:text-xl">
+              {brand.description} We help brokerages modernize the buyer journey with a system that qualifies intent,
+              exposes real market data, and keeps momentum moving toward booked conversations.
+            </p>
+          </div>
+
+          <div className="mt-14 grid gap-6 lg:grid-cols-2">
+            <div className="rounded-[2rem] border border-white/10 bg-white/5 p-8 backdrop-blur-xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#CBB57A]">Mission</p>
+              <h2 className="mt-4 text-3xl font-bold">Turn passive traffic into qualified opportunity.</h2>
+              <p className="mt-4 text-base leading-relaxed text-white/72">
+                MTC exists to help real estate teams stop relying on static pages, manual spreadsheets, and delayed follow-up.
+                We design intelligent brokerage experiences that respond instantly, show their work, and earn buyer confidence.
+              </p>
+            </div>
+            <div className="rounded-[2rem] border border-[#CBB57A]/20 bg-[#102347] p-8 shadow-2xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#CBB57A]">Operating model</p>
+              <h2 className="mt-4 text-3xl font-bold">Modular when you need speed. Exclusive when you need edge.</h2>
+              <p className="mt-4 text-base leading-relaxed text-white/72">
+                Some teams want to upgrade the site they already have. Others want the full exclusive platform. MTC is built
+                for both paths so you can deploy what matters now and expand later.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-16 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+            {pillars.map((pillar) => (
+              <div key={pillar.title} className="rounded-[2rem] border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#102347] text-[#CBB57A]">
+                  <pillar.icon className="h-6 w-6" />
+                </div>
+                <h3 className="mt-5 text-2xl font-bold">{pillar.title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-white/72">{pillar.description}</p>
               </div>
             ))}
           </div>
-        </div>
-      </section>
 
-      {/* CTA Section */}
-      <section className="py-32 relative overflow-hidden border-t border-white/5">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(132,204,22,0.1),transparent)] pointer-events-none" />
-        <div className="container relative mx-auto px-4 text-center">
-          <h2 className="text-4xl md:text-5xl font-black mb-8">Ready to transform your brand?</h2>
-          <p className="text-xl text-neutral-400 mb-10 max-w-xl mx-auto">
-            Join the elite real estate teams using Mashroi to close more deals.
-          </p>
-          <Button asChild className="rounded-full bg-lime-400 text-black font-bold px-10 py-7 text-lg hover:bg-lime-300 hover:scale-105 transition-all shadow-[0_0_30px_rgba(132,204,22,0.3)]">
-            <Link href="/#pricing">Get Started Now</Link>
-          </Button>
+          <div className="mt-16 rounded-[2rem] border border-white/10 bg-[radial-gradient(circle_at_top,rgba(203,181,122,0.16),transparent_40%),#0d1831] p-8 sm:p-10">
+            <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#CBB57A]">What makes MTC different</p>
+                <h2 className="mt-4 text-3xl font-bold sm:text-4xl">A brokerage growth system, not a design template.</h2>
+                <p className="mt-4 text-base leading-relaxed text-white/72">
+                  We combine real estate data, AI qualification, developer proof points, and hyper-local visibility into a
+                  single operating layer that can sit inside your current presence or power an entirely new platform.
+                </p>
+              </div>
+              <div className="flex flex-col gap-4">
+                <Button asChild className="rounded-full bg-[#CBB57A] px-8 py-6 text-base font-semibold text-[#102347] hover:bg-[#d8c590]">
+                  <Link href="/pricing">View launch paths</Link>
+                </Button>
+                <Button asChild variant="outline" className="rounded-full border-white/15 bg-white/5 px-8 py-6 text-base text-white hover:bg-white/10">
+                  <a href={brand.ctaHref} target="_blank" rel="noopener noreferrer">
+                    {brand.ctaLabel}
+                  </a>
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

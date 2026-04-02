@@ -8,15 +8,19 @@ import Script from "next/script"
 import { ColorSchemeScript, MantineProvider } from '@mantine/core';
 import Providers from './providers';
 import { theme } from '../lib/mantine-theme';
+import { brand } from "@/lib/brand"
 
 const manrope = Manrope({ subsets: ["latin"], display: "swap", variable: "--font-sans" })
 const sora = Sora({ subsets: ["latin"], display: "swap", variable: "--font-display" })
 
 export const metadata: Metadata = {
-  title: "Mashroi | Real Estate Website Templates + AI Builder",
-  description:
-    "Mashroi sells ready real estate websites with instant AI customization, brochure-to-landing pages, and DM agents.",
-  generator: "v0.app",
+  metadataBase: new URL(brand.url),
+  title: `${brand.shortName} | AI Brokerage Intelligence Engine`,
+  description: brand.description,
+  generator: brand.name,
+  icons: {
+    icon: "/icons/mtc-logo.svg",
+  },
 }
 
 export default function RootLayout({
@@ -32,26 +36,6 @@ export default function RootLayout({
           name="viewport"
           content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
         />
-
-        {/* Dynamic Favicon Script */}
-        <Script id="dynamic-favicon" strategy="beforeInteractive">
-          {`
-            function updateFavicon() {
-              const darkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-              const faviconHref = darkMode ? '/icons/skitbit-white.svg' : '/icons/favicon-dark.svg';
-              let link = document.querySelector("link[rel~='icon']");
-              if (!link) {
-                link = document.createElement('link');
-                link.rel = 'icon';
-                document.getElementsByTagName('head')[0].appendChild(link);
-              }
-              link.href = faviconHref;
-            }
-            updateFavicon();
-            // Listen for changes in theme
-            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateFavicon);
-          `}
-        </Script>
 
         {/* Google Tag Manager (deferred) */}
         <Script id="gtm-script" strategy="lazyOnload">

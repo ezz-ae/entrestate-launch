@@ -205,7 +205,7 @@ export interface BlockInstance {
   props: Record<string, unknown> // Configuration overrides
   dataSource?: {
     // Where to fetch data for this block
-    type: "neon" | "entrestate" | "manual"
+    type: "neon" | "inventory" | "manual"
     query?: string // e.g., "active_listings", "featured_properties"
     filters?: Record<string, unknown>
     limit?: number
@@ -315,7 +315,7 @@ export interface WebsiteTemplate {
 }
 
 /**
- * Real Estate Data Types (from Neon + Entrestate)
+ * Real Estate Data Types (from Neon + the legacy inventory source)
  */
 export interface Listing {
   id: string
@@ -332,7 +332,7 @@ export interface Listing {
   agentId?: string
   featured?: boolean
   listedDate: string
-  analysis?: ListingAnalysis // From Entrestate
+  analysis?: ListingAnalysis // From legacy inventory source
   createdAt: string
   updatedAt: string
 }

@@ -1468,7 +1468,7 @@ export default function AdminDashboard() {
               <CardContent className="space-y-4">
                 <div>
                   <p className="text-white font-medium">Email Support</p>
-                  <p className="text-neutral-400 text-sm">hello@mashroi.com</p>
+                  <p className="text-neutral-400 text-sm">hello@mtcmartech.com</p>
                 </div>
                 <div>
                   <p className="text-white font-medium">Response Time</p>
@@ -1535,9 +1535,9 @@ export default function AdminDashboard() {
             <div className="p-6 border-b border-neutral-800 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-                  <span className="text-black font-bold text-sm">SK</span>
+                  <span className="text-black font-bold text-xs uppercase">mtc</span>
                 </div>
-                <span className="text-xl font-semibold">Skitbit</span>
+                <span className="text-xl font-semibold">MTC</span>
               </div>
               <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(false)}>
                 <X className="h-5 w-5" />
@@ -1584,9 +1584,9 @@ export default function AdminDashboard() {
         <div className="p-6 border-b border-neutral-800">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-              <span className="text-black font-bold text-sm">SK</span>
+              <span className="text-black font-bold text-xs uppercase">mtc</span>
             </div>
-            <span className="text-xl font-semibold">Skitbit</span>
+            <span className="text-xl font-semibold">MTC</span>
           </div>
         </div>
 
