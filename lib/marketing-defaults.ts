@@ -43,6 +43,7 @@ export type MarketingPricingPlan = {
   tagline: string
   features: string[]
   cta: string
+  href?: string
   featured?: boolean
   badge?: string
 }
@@ -131,8 +132,8 @@ export const defaultProducts: MarketingProductSeed[] = [
       "Instantly plug into a structured, auto-updating database of 2,500+ UAE projects with discovery-ready presentation layers.",
     category: "Intelligence Module",
     badge: "Core Module",
-    priceLabel: "Custom",
-    priceNote: "scoped per rollout",
+    priceLabel: "AED 2,399",
+    priceNote: "pilot launch for one live module",
     demoUrl: "/templates/luxury-boutique",
     highlights: [
       "2,500+ UAE project database",
@@ -166,8 +167,8 @@ export const defaultProducts: MarketingProductSeed[] = [
       "Qualify buyer behavior, recommend next actions, and route high-intent opportunities automatically.",
     category: "Intelligence Module",
     badge: "High Impact",
-    priceLabel: "Custom",
-    priceNote: "scoped per rollout",
+    priceLabel: "AED 2,399",
+    priceNote: "pilot launch for one live module",
     demoUrl: "/templates/modern-minimalist",
     highlights: [
       "Intent scoring and behavior capture",
@@ -199,8 +200,8 @@ export const defaultProducts: MarketingProductSeed[] = [
       "Showcase delivery reliability, escrow verification, and past performance inside the property journey.",
     category: "Trust Module",
     badge: "Buyer Confidence",
-    priceLabel: "Custom",
-    priceNote: "scoped per rollout",
+    priceLabel: "AED 2,399",
+    priceNote: "pilot launch for one live module",
     demoUrl: "/templates/community-focused",
     highlights: [
       "Delivery history snapshots",
@@ -232,8 +233,8 @@ export const defaultProducts: MarketingProductSeed[] = [
       "Display live under-construction density, prominent developers, and zone-level ROI context inside an interactive map experience.",
     category: "Market Module",
     badge: "Local Edge",
-    priceLabel: "Custom",
-    priceNote: "scoped per rollout",
+    priceLabel: "AED 2,399",
+    priceNote: "pilot launch for one live module",
     demoUrl: "/templates/template-product-launch",
     highlights: [
       "Zone-by-zone ROI visibility",
@@ -380,8 +381,24 @@ export const defaultLogos: MarketingLogoSeed[] = [
 export const defaultPricing: MarketingPricingContent = {
   title: "Choose the MTC launch path that fits your brokerage.",
   subtitle:
-    "Integrate the intelligence layer into your current site, or claim the exclusive turnkey platform built around live data and lead qualification.",
+    "Start with a paid pilot, integrate the intelligence layer into your current site, or claim the exclusive turnkey platform.",
   plans: [
+    {
+      id: "pilot",
+      name: "Pilot Module",
+      price: "AED 2,399",
+      currency: "AED",
+      tagline: "Best for teams that want to launch one live module fast and validate demand.",
+      features: [
+        "One production-ready module",
+        "Live builder preview and content customization",
+        "Checkout handoff and domain connection flow",
+        "Launch guidance for the first rollout",
+      ],
+      cta: "Start pilot",
+      href: brand.builderHref,
+      badge: "Fastest path",
+    },
     {
       id: "integration",
       name: "Upgrade Your Current Site",
@@ -394,7 +411,8 @@ export const defaultPricing: MarketingPricingContent = {
         "Hyper-local Dubai map module",
         "Developer scorecards and ROI insights",
       ],
-      cta: "Book integration",
+      cta: "View integration path",
+      href: "/products/current-site-upgrade",
     },
     {
       id: "turnkey",
@@ -408,7 +426,8 @@ export const defaultPricing: MarketingPricingContent = {
         "Lead routing, CRM handoff, and discovery flows",
         "Expandable roadmap from transactions to property history",
       ],
-      cta: "Claim exclusivity",
+      cta: "See flagship platform",
+      href: "/products/exclusive-turnkey-platform",
       featured: true,
       badge: "Flagship",
     },

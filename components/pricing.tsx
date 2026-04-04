@@ -18,7 +18,8 @@ function FeatureItem({ text, muted = false }: Feature) {
 
 export async function Pricing() {
   const pricing = await getMarketingPricing()
-  const safePricing = pricing.plans.some((plan) => ["builder", "templates", "custom"].includes(plan.id))
+  const safePricing = pricing.plans.some((plan) => ["builder", "templates", "custom"].includes(plan.id)) ||
+    (!pricing.plans.some((plan) => plan.id === "pilot") && pricing.plans.every((plan) => plan.price.trim().toLowerCase() === "custom"))
     ? defaultPricing
     : pricing
 
@@ -51,6 +52,12 @@ export async function Pricing() {
               itemScope
               itemType="https://schema.org/Offer"
             >
+              {(() => {
+                const planHref = plan.href ?? brand.ctaHref
+                const isExternal = planHref.startsWith("http")
+
+                return (
+                  <>
               {plan.badge && (
                 <div className="absolute right-4 top-4 rounded-full bg-[#CBB57A] px-3 py-1 text-[10px] font-bold uppercase tracking-tighter text-[#102347]">
                   {plan.badge}
@@ -90,11 +97,24 @@ export async function Pricing() {
                       : "mt-8 w-full rounded-full bg-white/10 border border-white/10 text-white hover:bg-white/20 py-6"
                   }
                 >
-                  <a href={brand.ctaHref} target="_blank" rel="noopener noreferrer">
+                  <a href={planHref} target={isExternal ? "_blank" : undefined} rel={isExternal ? "noopener noreferrer" : undefined}>
                     {plan.cta}
                   </a>
                 </Button>
+                {!isExternal && (
+                  <a
+                    href={brand.ctaHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 block text-center text-xs font-medium uppercase tracking-[0.24em] text-neutral-500 transition-colors hover:text-[#CBB57A]"
+                  >
+                    Prefer WhatsApp? Talk to MTC
+                  </a>
+                )}
               </CardContent>
+                  </>
+                )
+              })()}
             </Card>
           ))}
         </div>

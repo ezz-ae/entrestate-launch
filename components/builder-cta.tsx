@@ -1,80 +1,87 @@
-import { Button } from "@/components/ui/button"
 import Image from "next/image"
-import { Sparkles, ArrowRight, Zap, Shield, Globe, CheckCircle2 } from "lucide-react"
 import Link from "next/link"
+import { ArrowRight, CheckCircle2, CreditCard, Globe, Sparkles } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
+import { brand } from "@/lib/brand"
 import { getProducts } from "@/lib/products"
 import { resolvePreviewSrc } from "@/lib/preview-url"
 
 export async function BuilderCta() {
   const products = await getProducts()
-  const builderTarget =
-    products.find((product) => product.demoUrl)?.slug ?? products[0]?.slug ?? "products"
-  const previewProduct = products.find((product) => product.demoUrl) ?? products[0]
+  const previewProduct = products.find((product) => product.slug === "lead-intelligence") ?? products.find((product) => product.demoUrl) ?? products[0]
+  const builderTarget = previewProduct?.slug ? `/products/${previewProduct.slug}#builder` : brand.builderHref
   const previewSrc = resolvePreviewSrc(previewProduct?.demoUrl)
 
   return (
-    <section className="py-24 relative overflow-hidden bg-black">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_50%,rgba(132,204,22,0.1),transparent)] pointer-events-none" />
-      
-      <div className="container mx-auto px-4">
-        <div className="relative rounded-[48px] border border-white/5 bg-neutral-900/30 p-8 sm:p-16 overflow-hidden backdrop-blur-3xl shadow-2xl">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="relative z-10">
-              <div className="inline-flex items-center gap-2 rounded-full bg-lime-400/10 px-4 py-2 text-xs font-bold text-lime-400 mb-8 uppercase tracking-widest border border-lime-400/20">
+    <section id="builder" className="relative overflow-hidden py-24">
+      <div className="pointer-events-none absolute inset-0 opacity-70">
+        <div className="absolute right-0 top-1/2 h-[420px] w-[420px] -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(203,181,122,0.14),rgba(0,0,0,0))]" />
+      </div>
+
+      <div className="container relative mx-auto px-4">
+        <div className="overflow-hidden rounded-[40px] border border-white/10 bg-[radial-gradient(circle_at_top,rgba(203,181,122,0.12),transparent_35%),rgba(13,24,49,0.85)] p-8 shadow-2xl backdrop-blur-3xl sm:p-12">
+          <div className="grid gap-12 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+            <div>
+              <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-[#CBB57A]/20 bg-[#CBB57A]/10 px-4 py-2 text-xs font-bold uppercase tracking-widest text-[#CBB57A]">
                 <Sparkles className="h-3.5 w-3.5" />
-                Zero Experience Required
+                Live builder demo
               </div>
-              <h2 className="text-4xl sm:text-6xl font-black text-white leading-[1.1] mb-8">
-                Build your empire.<br />
-                <span className="text-lime-300">AI does the heavy lifting.</span>
+              <h2 className="text-4xl font-black leading-[1.1] text-white sm:text-6xl">
+                Let buyers try the product before they contact you.
               </h2>
-              <p className="text-lg text-neutral-400 mb-10 leading-relaxed max-w-xl">
-                Don't worry about hosting, SEO, or design. Tell our AI what you need, or pick a template and watch it adapt to your brand in seconds.
+              <p className="mt-6 max-w-xl text-lg leading-relaxed text-neutral-300">
+                This is where the site becomes useful: visitors can preview a live module, open the AI builder, test the
+                domain and checkout flow, and understand the offer before booking a rollout.
               </p>
-              
-              <div className="grid sm:grid-cols-2 gap-6 mb-12">
-                <div className="flex items-start gap-4">
-                  <div className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/10 shrink-0">
-                    <Zap className="h-5 w-5 text-lime-400" />
+
+              <div className="mt-8 grid gap-4 sm:grid-cols-3">
+                {[
+                  {
+                    title: "AI chat edits",
+                    description: "Simulate real content and layout updates.",
+                    icon: Sparkles,
+                  },
+                  {
+                    title: "Domain handoff",
+                    description: "Connect a real domain inside the builder flow.",
+                    icon: Globe,
+                  },
+                  {
+                    title: "Checkout ready",
+                    description: "Move from demo into a paid pilot path.",
+                    icon: CreditCard,
+                  },
+                ].map((item) => (
+                  <div key={item.title} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <item.icon className="h-5 w-5 text-[#CBB57A]" />
+                    <h3 className="mt-4 text-sm font-bold text-white">{item.title}</h3>
+                    <p className="mt-2 text-xs leading-relaxed text-neutral-400">{item.description}</p>
                   </div>
-                  <div>
-                    <h4 className="text-white font-bold mb-1">Instant Build</h4>
-                    <p className="text-xs text-neutral-500">Go from idea to live site in under 10 minutes.</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <div className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/10 shrink-0">
-                    <Globe className="h-5 w-5 text-lime-400" />
-                  </div>
-                  <div>
-                    <h4 className="text-white font-bold mb-1">Custom Domain</h4>
-                    <p className="text-xs text-neutral-500">Launch on your own .com or .ae domain instantly.</p>
-                  </div>
-                </div>
+                ))}
               </div>
 
-              <div className="flex flex-wrap gap-4">
-                <Button asChild className="rounded-full bg-lime-400 text-black font-black px-10 py-7 text-lg hover:bg-lime-300 hover:scale-105 transition-all shadow-[0_0_30px_rgba(132,204,22,0.3)]">
-                  <Link href={builderTarget === "products" ? "/products" : `/products/${builderTarget}#builder`}>
-                    Try the Builder
+              <div className="mt-10 flex flex-wrap gap-4">
+                <Button asChild className="rounded-full bg-[#CBB57A] px-8 py-6 text-base font-bold text-[#102347] hover:bg-[#d8c590]">
+                  <Link href={builderTarget}>
+                    Open live builder
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
-                <Button variant="outline" asChild className="rounded-full border-white/10 bg-white/5 text-white px-8 py-7 text-lg hover:bg-white/10">
-                  <Link href="/pricing">View Pricing</Link>
+                <Button asChild variant="outline" className="rounded-full border-white/15 bg-white/5 px-8 py-6 text-base text-white hover:bg-white/10">
+                  <Link href={brand.productsHref}>See all modules</Link>
                 </Button>
               </div>
             </div>
 
-            <div className="relative group lg:h-[600px] flex items-center justify-center">
-              <div className="absolute inset-0 bg-lime-400/20 blur-[120px] rounded-full transition-all group-hover:bg-lime-400/30" />
-              <div className="relative w-full max-w-[440px] aspect-[9/16] rounded-[48px] border-8 border-neutral-800 bg-black overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.8)] transition-transform duration-700 group-hover:rotate-1">
-                {/* Live Template Preview */}
-                <div className="relative h-full w-full bg-neutral-900">
+            <div className="relative flex items-center justify-center lg:h-[620px]">
+              <div className="absolute inset-0 rounded-full bg-[#CBB57A]/15 blur-[120px]" />
+              <div className="relative w-full max-w-[440px] overflow-hidden rounded-[42px] border-8 border-[#102347] bg-black shadow-[0_40px_100px_rgba(0,0,0,0.8)]">
+                <div className="relative aspect-[9/16] bg-neutral-900">
                   {previewProduct?.heroImage && (
                     <Image
                       src={previewProduct.heroImage}
-                      alt={`${previewProduct.title} template`}
+                      alt={`${previewProduct.title} preview`}
                       fill
                       className="object-cover"
                       sizes="(min-width: 1024px) 22rem, 100vw"
@@ -84,37 +91,37 @@ export async function BuilderCta() {
                     <iframe
                       src={previewSrc}
                       title={`${previewProduct?.title ?? "Template"} preview`}
-                      className="absolute inset-0 h-full w-full border-none pointer-events-none"
+                      className="absolute inset-0 h-full w-full border-none"
                       loading="lazy"
                     />
                   )}
-                  <div className="absolute inset-x-0 top-0 z-10 h-6 bg-black/50 flex items-center justify-center">
-                    <div className="h-1 w-12 rounded-full bg-white/20" />
+                  <div className="absolute inset-x-0 top-0 z-10 flex h-7 items-center justify-center bg-black/55">
+                    <div className="h-1.5 w-14 rounded-full bg-white/20" />
                   </div>
-                  <div className="absolute inset-x-0 bottom-0 z-10 p-4 bg-black/70 backdrop-blur-md border-t border-white/5">
+                  <div className="absolute inset-x-0 bottom-0 z-10 border-t border-white/10 bg-black/70 p-4 backdrop-blur-md">
                     <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-lg bg-lime-400/20 border border-lime-400/30 flex items-center justify-center">
-                        <Sparkles className="h-4 w-4 text-lime-400" />
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#CBB57A]/20 text-[#CBB57A]">
+                        <Sparkles className="h-4 w-4" />
                       </div>
-                      <div className="text-[10px] uppercase tracking-[0.3em] text-white/70">
-                        {previewProduct?.title ?? "Live Template"}
+                      <div>
+                        <div className="text-[10px] uppercase tracking-[0.3em] text-white/60">Flagship demo</div>
+                        <div className="text-sm font-semibold text-white">{previewProduct?.title ?? "Live module"}</div>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-              
-              {/* Floating elements */}
-              <div className="absolute -right-4 top-20 bg-neutral-900/80 backdrop-blur-xl border border-white/10 p-4 rounded-2xl shadow-2xl animate-bounce duration-[3000ms]">
+
+              <div className="absolute -right-3 top-20 rounded-2xl border border-white/10 bg-[#0d1831]/90 p-4 shadow-2xl backdrop-blur-xl">
                 <div className="flex items-center gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-lime-400" />
-                  <span className="text-sm font-bold text-white">SEO Optimized</span>
+                  <CheckCircle2 className="h-5 w-5 text-[#8FA686]" />
+                  <span className="text-sm font-semibold text-white">Preview active</span>
                 </div>
               </div>
-              <div className="absolute -left-8 bottom-24 bg-neutral-900/80 backdrop-blur-xl border border-white/10 p-4 rounded-2xl shadow-2xl animate-pulse">
+              <div className="absolute -left-5 bottom-24 rounded-2xl border border-white/10 bg-[#0d1831]/90 p-4 shadow-2xl backdrop-blur-xl">
                 <div className="flex items-center gap-3">
-                  <Shield className="h-5 w-5 text-lime-400" />
-                  <span className="text-sm font-bold text-white">SSL Encrypted</span>
+                  <CreditCard className="h-5 w-5 text-[#CBB57A]" />
+                  <span className="text-sm font-semibold text-white">Pilot checkout ready</span>
                 </div>
               </div>
             </div>

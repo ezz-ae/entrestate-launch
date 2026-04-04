@@ -114,6 +114,7 @@ const hasLegacyProductBranding = (
 
 export const getMarketingProducts = cache(async (): Promise<Product[]> => {
   try {
+    const defaultProductsBySlug = new Map(defaultProducts.map((product) => [product.slug, product]))
     const rows = await prisma.marketingProduct.findMany({
       orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
     })
@@ -125,22 +126,32 @@ export const getMarketingProducts = cache(async (): Promise<Product[]> => {
       }))
     }
 
-    return rows.map((row) => ({
-      slug: row.slug,
-      title: row.title,
-      tagline: row.tagline,
-      description: row.description,
-      category: row.category,
-      badge: row.badge ?? undefined,
-      price: row.priceLabel,
-      priceNote: row.priceNote ?? "",
-      highlights: asStringArray(row.highlights),
-      deliverables: asStringArray(row.deliverables),
-      timeline: asTimeline(row.timeline, []),
-      outcomes: asOutcomes(row.outcomes, []),
-      heroImage: row.heroImage,
-      demoUrl: row.demoUrl ?? undefined,
-    }))
+    return rows.map((row) => {
+      const fallbackProduct = defaultProductsBySlug.get(row.slug)
+      const shouldUseFallbackPrice =
+        row.category !== "Launch Path" &&
+        !!row.demoUrl &&
+        row.priceLabel.trim().toLowerCase() === "custom" &&
+        !!fallbackProduct?.priceLabel &&
+        fallbackProduct.priceLabel.trim().toLowerCase() !== "custom"
+
+      return {
+        slug: row.slug,
+        title: row.title,
+        tagline: row.tagline,
+        description: row.description,
+        category: row.category,
+        badge: row.badge ?? undefined,
+        price: shouldUseFallbackPrice ? fallbackProduct?.priceLabel ?? row.priceLabel : row.priceLabel,
+        priceNote: shouldUseFallbackPrice ? fallbackProduct?.priceNote ?? row.priceNote ?? "" : row.priceNote ?? "",
+        highlights: asStringArray(row.highlights),
+        deliverables: asStringArray(row.deliverables),
+        timeline: asTimeline(row.timeline, []),
+        outcomes: asOutcomes(row.outcomes, []),
+        heroImage: row.heroImage,
+        demoUrl: row.demoUrl ?? undefined,
+      }
+    })
   } catch {
     return defaultProducts.map((product) => ({
       ...product,

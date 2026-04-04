@@ -68,8 +68,8 @@ export function AppverseFooter({ content = defaultContent }: { content?: FooterC
               <h5 className="mb-6 text-sm font-bold uppercase tracking-widest text-white">Company</h5>
               <ul className="space-y-4 text-neutral-400">
                 {[
-                  { label: "Engine", href: "/#engine" },
-                  { label: "Superpowers", href: "/#superpowers" },
+                  { label: "Products", href: brand.productsHref },
+                  { label: "Builder", href: brand.builderHref },
                   { label: "Pricing", href: "/pricing" },
                   { label: "About", href: "/About" },
                   { label: "Docs", href: "/docs" },

@@ -26,6 +26,7 @@ export function SiteBuilder({ initialUrl, productTitle }: SiteBuilderProps) {
   const [domain, setDomain] = useState("")
   const [domainStatus, setDomainStatus] = useState<any>(null)
   const [isCheckingDomain, setIsCheckingDomain] = useState(false)
+  const [domainError, setDomainError] = useState("")
   const previewSrc = resolvePreviewSrc(initialUrl)
 
   const realEstateBlocks = [
@@ -129,6 +130,75 @@ export function SiteBuilder({ initialUrl, productTitle }: SiteBuilderProps) {
     } catch (error) {
       console.error('Payment initiation failed:', error);
       setIsProcessingPayment(false)
+    }
+  }
+
+  const handleAddDomain = async () => {
+    const normalizedDomain = domain.trim().toLowerCase()
+    if (!normalizedDomain) return
+
+    setIsCheckingDomain(true)
+    setDomainError("")
+
+    try {
+      const response = await fetch("/api/domains", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ domain: normalizedDomain }),
+      })
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error ?? "Failed to add domain")
+      }
+
+      setDomain(normalizedDomain)
+      setDomainStatus(data)
+      setMessages((previous) => [
+        ...previous,
+        {
+          role: "ai",
+          content: data.verified
+            ? `Your domain ${normalizedDomain} is verified and ready for launch.`
+            : `Your domain ${normalizedDomain} has been added. Review the DNS records and refresh the status once they propagate.`,
+        },
+      ])
+    } catch (error) {
+      setDomainError(error instanceof Error ? error.message : "Failed to add domain")
+    } finally {
+      setIsCheckingDomain(false)
+    }
+  }
+
+  const handleRefreshDomainStatus = async () => {
+    const normalizedDomain = domain.trim().toLowerCase()
+    if (!normalizedDomain) return
+
+    setIsCheckingDomain(true)
+    setDomainError("")
+
+    try {
+      const response = await fetch(`/api/domains/status?name=${encodeURIComponent(normalizedDomain)}`)
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error ?? "Failed to check domain status")
+      }
+
+      setDomainStatus(data)
+      if (data.verified) {
+        setMessages((previous) => [
+          ...previous,
+          {
+            role: "ai",
+            content: `Great news — ${normalizedDomain} is verified and ready to point to your live MTC experience.`,
+          },
+        ])
+      }
+    } catch (error) {
+      setDomainError(error instanceof Error ? error.message : "Failed to check domain status")
+    } finally {
+      setIsCheckingDomain(false)
     }
   }
 
@@ -466,14 +536,21 @@ export function SiteBuilder({ initialUrl, productTitle }: SiteBuilderProps) {
                           className="bg-white/5 border-white/10 text-white rounded-xl focus:ring-purple-400/50"
                         />
                         <Button
-                          onClick={() => {}}
+                          onClick={handleAddDomain}
+                          disabled={!domain.trim() || isCheckingDomain}
                           className="bg-purple-600 hover:bg-purple-700 text-white rounded-xl"
                         >
-                          Add
+                          {isCheckingDomain ? "Adding..." : "Add"}
                         </Button>
                       </div>
                     </div>
                   </div>
+
+                  {domainError && (
+                    <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
+                      {domainError}
+                    </div>
+                  )}
 
                   {domainStatus && (
                      <div className="rounded-2xl bg-white/5 border border-white/10 p-4 space-y-4">
@@ -487,15 +564,15 @@ export function SiteBuilder({ initialUrl, productTitle }: SiteBuilderProps) {
                         {!domainStatus.verified && (
                           <div className="space-y-3 text-xs">
                             <p className="text-neutral-400">Please add the following DNS records to your domain provider:</p>
-                            {domainStatus.verification.map((rec: any) => (
+                            {(domainStatus.verification ?? []).map((rec: any) => (
                               <div key={rec.type} className="p-3 bg-black/30 rounded-lg border border-neutral-700">
                                 <p><strong className="text-neutral-300">Type:</strong> {rec.type}</p>
                                 <p><strong className="text-neutral-300">Name:</strong> {rec.domain.endsWith(rec.value) ? '@' : rec.domain.replace(`.${domainStatus.name}`, '')}</p>
                                 <p><strong className="text-neutral-300">Value:</strong> <code className="text-purple-300 break-all">{rec.value}</code></p>
                               </div>
                             ))}
-                            <Button onClick={() => {}} size="sm" className="w-full mt-2 bg-purple-500/20 text-purple-300 hover:bg-purple-500/30">
-                              Refresh Status
+                            <Button onClick={handleRefreshDomainStatus} disabled={isCheckingDomain} size="sm" className="w-full mt-2 bg-purple-500/20 text-purple-300 hover:bg-purple-500/30">
+                              {isCheckingDomain ? "Checking..." : "Refresh Status"}
                             </Button>
                           </div>
                         )}

@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
+import Link from "next/link"
 import { getProducts } from "@/lib/products"
 import { brand } from "@/lib/brand"
 import { resolvePreviewSrc } from "@/lib/preview-url"
@@ -12,12 +13,6 @@ export async function Hero() {
     imageSrc: product.heroImage,
     previewSrc: resolvePreviewSrc(product.demoUrl),
   }))
-  const buttonNew = (
-    <Button asChild className="rounded-full bg-[#CBB57A] px-6 text-[#102347] hover:bg-[#d8c590]">
-      <a href={brand.ctaHref} target="_blank" rel="noopener noreferrer">{brand.ctaLabel}</a>
-    </Button>
-  )
-
   return (
     <section id="home" className="relative isolate overflow-hidden">
       <div className="container mx-auto px-4">
@@ -35,7 +30,24 @@ export async function Hero() {
           <p className="mt-6 max-w-2xl text-center text-lg text-neutral-300 sm:text-xl">
             {brand.description}
           </p>
-          <div className="mt-8">{buttonNew}</div>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <Button asChild className="rounded-full bg-[#CBB57A] px-6 text-[#102347] hover:bg-[#d8c590]">
+              <a href={brand.ctaHref} target="_blank" rel="noopener noreferrer">
+                {brand.ctaLabel}
+              </a>
+            </Button>
+            <Button asChild variant="outline" className="rounded-full border-white/15 bg-white/5 px-6 text-white hover:bg-white/10">
+              <Link href={brand.builderHref}>Try the builder</Link>
+            </Button>
+            <Button asChild variant="outline" className="rounded-full border-white/15 bg-transparent px-6 text-white hover:bg-white/10">
+              <Link href={brand.productsHref}>Explore modules</Link>
+            </Button>
+          </div>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3 text-center text-xs uppercase tracking-[0.25em] text-white/50">
+            <span className="rounded-full border border-white/10 px-4 py-2">Interactive demo</span>
+            <span className="rounded-full border border-white/10 px-4 py-2">Module catalog</span>
+            <span className="rounded-full border border-white/10 px-4 py-2">Pricing + rollout paths</span>
+          </div>
 
           {/* Phone grid mimic */}
           <div className="mt-10 grid w-full gap-4 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
@@ -91,7 +103,7 @@ function PhoneCard({
           <div className="space-y-1 px-1">
             <div className="text-3xl font-bold leading-snug text-white/90">{title}</div>
             <p className="text-xs text-white/70">{sub}</p>
-            <div className="mt-3 inline-flex items-center rounded-full bg-black/40 px-2 py-0.5 text-[10px] uppercase tracking-wider text-lime-300">
+            <div className="mt-3 inline-flex items-center rounded-full bg-black/40 px-2 py-0.5 text-[10px] uppercase tracking-wider text-[#CBB57A]">
               mtc
             </div>
           </div>

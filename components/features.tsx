@@ -1,123 +1,70 @@
-"use client"
+import { Bot, CreditCard, Database, MapPinned } from "lucide-react"
 
-import { useEffect, useState } from "react"
-import Image from "next/image"
-import { Star } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
-interface FeaturesContent {
-  title: string
-  subtitle: string
-}
-
-const defaultContent: FeaturesContent = {
-  title: "Why MTC wins the lead race.",
-  subtitle: "Brokerage intelligence that qualifies intent and sharpens every next step.",
-}
+const features = [
+  {
+    title: "Live intelligence modules",
+    eyebrow: "Real product value",
+    description:
+      "Show inventory, developer scorecards, ROI context, and hyper-local insights in experiences buyers can actually use.",
+    icon: Database,
+  },
+  {
+    title: "Interactive builder flow",
+    eyebrow: "Hands-on demo",
+    description:
+      "Visitors can preview a live module, chat with the AI builder, change content, and see how the experience adapts.",
+    icon: Bot,
+  },
+  {
+    title: "Commercial launch paths",
+    eyebrow: "Monetizable offers",
+    description:
+      "Sell a fast pilot, integrate into an existing brokerage site, or close the exclusive turnkey platform engagement.",
+    icon: CreditCard,
+  },
+  {
+    title: "Brokerage-specific rollout",
+    eyebrow: "Implementation clarity",
+    description:
+      "Guide buyers from discovery into docs, pricing, FAQs, and module pages so they understand exactly what they are buying.",
+    icon: MapPinned,
+  },
+]
 
 export function Features() {
   return (
     <section id="features" className="container mx-auto px-4 py-16 sm:py-20">
-      <div className="mx-auto max-w-3xl text-center mb-16">
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-lime-300/80">Features</p>
+      <div className="mx-auto mb-16 max-w-3xl text-center">
+        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#CBB57A]">Why this site works</p>
         <h2 className="mt-4 text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
-          Why MTC wins the lead race.
+          Built to explain, demonstrate, and convert.
         </h2>
         <p className="mt-4 text-sm text-neutral-300 sm:text-base">
-          Real estate sites do not need more noise. They need live inventory, intent signals, and credible decision support.
+          The site now points visitors toward real actions: explore modules, try the builder, understand rollout paths,
+          and move into a paid engagement.
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {/* Launch Speed */}
-        <Card className="liquid-glass border border-white/10 group hover:border-lime-300/30 transition-all duration-300">
-          <CardHeader>
-            <p className="text-[11px] tracking-widest text-lime-300/80 font-semibold uppercase">Launch Speed</p>
-            <CardTitle className="mt-1 text-xl text-white">Ready templates + AI builder</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="relative aspect-[3/4] overflow-hidden rounded-xl border border-white/10">
-                <Image
-                  src="/images/intuitive-1.png"
-                  alt="Intuitive UI 1"
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-500"
-                  sizes="(min-width: 768px) 240px, 45vw"
-                  priority={false}
-                />
+      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+        {features.map((feature) => (
+          <Card
+            key={feature.title}
+            className="border border-white/10 bg-white/5 backdrop-blur-xl transition-all duration-300 hover:border-[#CBB57A]/30"
+          >
+            <CardHeader>
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#102347] text-[#CBB57A]">
+                <feature.icon className="h-6 w-6" />
               </div>
-              <div className="relative aspect-[3/4] overflow-hidden rounded-xl border border-white/10">
-                <Image
-                  src="/images/intuitive-2.png"
-                  alt="Intuitive UI 2"
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-500"
-                  sizes="(min-width: 768px) 240px, 45vw"
-                  priority={false}
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Lead Capture */}
-        <Card className="liquid-glass border border-white/10 group hover:border-lime-300/30 transition-all duration-300">
-          <CardHeader>
-            <p className="text-[11px] tracking-widest text-lime-300/80 font-semibold uppercase">Lead Gen</p>
-            <CardTitle className="mt-1 text-xl text-white">Conversion-first architecture</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                <div className="h-2 w-2/3 bg-lime-300/20 rounded-full mb-2" />
-                <div className="h-2 w-full bg-white/10 rounded-full mb-2" />
-                <div className="h-8 w-1/3 bg-lime-400 rounded-lg mt-4" />
-              </div>
-              <p className="text-sm text-neutral-400">
-                Every page is wired with lead capture forms, WhatsApp routing, and tracking pixels.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Client Love Card */}
-        <Card className="liquid-glass border border-white/10 group hover:border-lime-300/30 transition-all duration-300">
-          <CardHeader>
-            <p className="text-[11px] tracking-widest text-lime-300/80 font-semibold uppercase">Reliability</p>
-            <CardTitle className="mt-1 text-xl text-white">
-              Trusted by top brokers.
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="mb-6 flex items-end gap-4">
-              <div className="text-5xl font-bold text-lime-300">4.9</div>
-              <div className="flex items-center gap-1">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star key={i} className="h-5 w-5 fill-lime-300 text-lime-300 shadow-[0_0_10px_rgba(132,204,22,0.4)]" />
-                ))}
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="relative aspect-[16/9] overflow-hidden rounded-xl border border-white/10">
-                <Image
-                  src="/images/top-rated-1.png"
-                  fill
-                  alt="Top rated product"
-                  className="object-cover"
-                />
-              </div>
-              <div className="relative aspect-[16/9] overflow-hidden rounded-xl border border-white/10">
-                <Image
-                  src="/images/top-rated-2.png"
-                  fill
-                  alt="Top rated project"
-                  className="object-cover"
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+              <p className="pt-5 text-[11px] font-semibold uppercase tracking-widest text-[#CBB57A]">{feature.eyebrow}</p>
+              <CardTitle className="mt-1 text-xl text-white">{feature.title}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm leading-relaxed text-neutral-300">{feature.description}</p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </section>
   )

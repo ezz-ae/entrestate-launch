@@ -6,8 +6,10 @@ export const brand = {
   domain: "mtcmartech.com",
   email: "hello@mtcmartech.com",
   location: "Dubai, UAE",
-  ctaLabel: 'DM "INTELLIGENCE"',
+  ctaLabel: "Book launch strategy",
   ctaHref: "https://wa.link/rc25na",
+  builderHref: "/products/lead-intelligence#builder",
+  productsHref: "/products",
   description:
     "MTC equips brokerages with a 24/7 intelligence engine: live inventory, AI lead qualification, developer scorecards, and hyper-local heatmaps.",
   tagline:
