@@ -192,7 +192,7 @@ export const defaultProducts: MarketingProductSeed[] = [
       { label: "Update Mode", value: "Live" },
       { label: "Workflow", value: "Automated" },
     ],
-    heroImage: "/images/intuitive-1.png",
+    heroImage: "/images/products/inventory-module.png",
     sortOrder: 1,
   },
   {
@@ -225,7 +225,7 @@ export const defaultProducts: MarketingProductSeed[] = [
       { label: "Signals", value: "Intent" },
       { label: "Outcome", value: "Qualified" },
     ],
-    heroImage: "/images/top-rated-1.png",
+    heroImage: "/images/products/lead-intelligence-module.png",
     sortOrder: 2,
   },
   {
@@ -258,7 +258,7 @@ export const defaultProducts: MarketingProductSeed[] = [
       { label: "Proof", value: "Structured" },
       { label: "Buyer Mood", value: "Confident" },
     ],
-    heroImage: "/images/intuitive-2.png",
+    heroImage: "/images/products/developer-scorecards-module.png",
     sortOrder: 3,
   },
   {
@@ -291,7 +291,7 @@ export const defaultProducts: MarketingProductSeed[] = [
       { label: "Insight", value: "ROI" },
       { label: "Discovery", value: "Guided" },
     ],
-    heroImage: "/images/top-rated-2.png",
+    heroImage: "/images/products/heatmaps-module.png",
     sortOrder: 4,
   },
   {
@@ -324,7 +324,7 @@ export const defaultProducts: MarketingProductSeed[] = [
       { label: "Speed", value: "Fast" },
       { label: "Risk", value: "Low" },
     ],
-    heroImage: "/images/top-rated-1.png",
+    heroImage: "/images/products/site-upgrade-path.png",
     sortOrder: 5,
   },
   {
@@ -357,7 +357,7 @@ export const defaultProducts: MarketingProductSeed[] = [
       { label: "Ownership", value: "Exclusive" },
       { label: "Edge", value: "Defensible" },
     ],
-    heroImage: "/images/intuitive-2.png",
+    heroImage: "/images/products/turnkey-platform.png",
     sortOrder: 6,
   },
 ]
