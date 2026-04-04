@@ -1,16 +1,22 @@
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
 import Link from "next/link"
+import { ArrowRight } from "lucide-react"
 import { MarketingMediaFrame } from "@/components/marketing-media-frame"
 import { getProducts } from "@/lib/products"
 import { brand } from "@/lib/brand"
+import { cn } from "@/lib/utils"
 
 export async function Hero() {
   const products = await getProducts()
-  const phoneData = products.slice(0, 5).map((product) => ({
+  const showcaseProducts = products.slice(0, 5).map((product) => ({
+    slug: product.slug,
     title: product.title,
     sub: product.tagline,
     imageSrc: product.heroImage,
+    category: product.category,
+    badge: product.badge,
+    hasDemo: !!product.demoUrl,
   }))
   return (
     <section id="home" className="relative isolate overflow-hidden">
@@ -48,17 +54,20 @@ export async function Hero() {
             <span className="rounded-full border border-white/10 px-4 py-2">Pricing + rollout paths</span>
           </div>
 
-          {/* Phone grid mimic */}
-          <div className="mt-10 grid w-full gap-4 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
-            {phoneData.map((p, i) => {
-              const visibility = i <= 2 ? "block" : i === 3 ? "hidden md:block" : i === 4 ? "hidden xl:block" : "hidden"
-
-              return (
-                <div key={i} className={visibility}>
-                  <PhoneCard title={p.title} sub={p.sub} imageSrc={p.imageSrc} />
-                </div>
-              )
-            })}
+          <div className="mt-12 grid w-full gap-5 md:grid-cols-2 xl:grid-cols-4">
+            {showcaseProducts.map((product, index) => (
+              <ShowcaseCard
+                key={product.slug}
+                slug={product.slug}
+                title={product.title}
+                sub={product.sub}
+                imageSrc={product.imageSrc}
+                category={product.category}
+                badge={product.badge}
+                hasDemo={product.hasDemo}
+                featured={index === 0}
+              />
+            ))}
           </div>
         </div>
       </div>
@@ -66,47 +75,66 @@ export async function Hero() {
   )
 }
 
-function PhoneCard({
-  title = "8°",
-  sub = "Clear night. Great for render farm runs.",
+function ShowcaseCard({
+  slug,
+  title,
+  sub,
   imageSrc,
+  category,
+  badge,
+  hasDemo,
+  featured = false,
 }: {
-  title?: string
-  sub?: string
-  imageSrc?: string
+  slug: string
+  title: string
+  sub: string
+  imageSrc: string
+  category: string
+  badge?: string
+  hasDemo: boolean
+  featured?: boolean
 }) {
   return (
-    <div className="relative rounded-[28px] glass-border bg-neutral-900 p-2">
-      <div className="relative aspect-[9/19] w-full overflow-hidden rounded-2xl bg-black">
-        {imageSrc && (
-          <MarketingMediaFrame
-            src={imageSrc}
-            alt={title}
-            chrome={false}
-            fit="contain"
-            className="h-full w-full"
-            contentClassName="p-3 pt-14"
-            imageClassName="object-top drop-shadow-[0_30px_60px_rgba(0,0,0,0.45)]"
-            sizes="(min-width: 1280px) 18rem, (min-width: 768px) 22rem, 100vw"
-          />
-        )}
+    <Link
+      href={`/products/${slug}`}
+      className={cn(
+        "group relative overflow-hidden rounded-[32px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(3,10,24,0.96))] p-3 shadow-[0_30px_80px_rgba(0,0,0,0.35)] transition-all duration-300 hover:-translate-y-1 hover:border-[#CBB57A]/30 hover:shadow-[0_40px_100px_rgba(0,0,0,0.45)]",
+        featured && "md:col-span-2 xl:col-span-2",
+      )}
+    >
+      <div className={cn("relative overflow-hidden rounded-[26px] border border-white/10", featured ? "h-72 sm:h-80" : "h-56 sm:h-60")}>
+        <MarketingMediaFrame
+          src={imageSrc}
+          alt={title}
+          chrome
+          fit="contain"
+          priority={featured}
+          className="h-full w-full"
+          contentClassName={featured ? "p-5 pt-14" : "p-4 pt-12"}
+          imageClassName="object-top transition-transform duration-500 group-hover:scale-[1.02]"
+          sizes={featured ? "(min-width: 1280px) 44rem, 100vw" : "(min-width: 1280px) 22rem, (min-width: 768px) 28rem, 100vw"}
+        />
+      </div>
 
-        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/70" />
-
-        <div className="absolute inset-x-0 top-0 z-10 p-3">
-          <div className="mx-auto mb-3 h-1.5 w-16 rounded-full bg-white/20" />
+      <div className="px-3 pb-3 pt-5 sm:px-4">
+        <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-[0.24em]">
+          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-white/60">{category}</span>
+          {badge && <span className="rounded-full bg-[#CBB57A]/15 px-3 py-1 text-[#CBB57A]">{badge}</span>}
+          {hasDemo && <span className="rounded-full border border-[#CBB57A]/20 bg-[#CBB57A]/10 px-3 py-1 text-[#CBB57A]">Live demo</span>}
         </div>
 
-        <div className="absolute inset-x-0 bottom-0 z-10 p-3">
-          <div className="space-y-1 px-1">
-            <div className="text-2xl font-bold leading-snug text-white/95">{title}</div>
-            <p className="line-clamp-3 text-xs leading-relaxed text-white/70">{sub}</p>
-            <div className="mt-3 inline-flex items-center rounded-full bg-black/40 px-2 py-0.5 text-[10px] uppercase tracking-wider text-[#CBB57A]">
-              mtc
-            </div>
-          </div>
+        <h3 className={cn("mt-4 font-bold tracking-tight text-white", featured ? "max-w-2xl text-3xl sm:text-4xl" : "text-2xl")}>
+          {title}
+        </h3>
+        <p className={cn("mt-3 text-white/72", featured ? "max-w-xl text-base leading-relaxed" : "line-clamp-3 text-sm leading-relaxed")}>
+          {sub}
+        </p>
+
+        <div className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[#CBB57A]">
+          Open product
+          <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
         </div>
       </div>
-    </div>
+    </Link>
   )
 }
