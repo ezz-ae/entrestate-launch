@@ -107,6 +107,26 @@ export function AppverseFooter({ content = defaultContent }: { content?: FooterC
               </ul>
             </div>
           </div>
+          <div className="mt-12 grid gap-6 rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#CBB57A]">Featured offer</p>
+              <h3 className="mt-3 text-2xl font-bold text-white sm:text-3xl">ORE investor intelligence site is live and for sale.</h3>
+              <p className="mt-3 max-w-2xl text-sm leading-relaxed text-neutral-400 sm:text-base">
+                Sell a fully designed real-estate experience with live market storytelling, investor positioning, and a
+                ready-made acquisition flow instead of sending buyers to a dead brochure.
+              </p>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
+              <Button asChild className="rounded-full bg-[#CBB57A] px-6 text-sm font-semibold text-[#102347] hover:bg-[#d8c590]">
+                <Link href="/products/ore-investor-intelligence-site">View sale page</Link>
+              </Button>
+              <Button asChild variant="outline" className="rounded-full border-white/15 bg-white/5 px-6 text-sm text-white hover:bg-white/10">
+                <a href="https://ore-mu.vercel.app/" target="_blank" rel="noopener noreferrer">
+                  Open live site
+                </a>
+              </Button>
+            </div>
+          </div>
           <div className="mt-16 border-t border-white/5 pt-8 text-center text-sm text-neutral-500">
             {safeContent.copyright}
           </div>

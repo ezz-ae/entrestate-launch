@@ -126,7 +126,7 @@ export const getMarketingProducts = cache(async (): Promise<Product[]> => {
       }))
     }
 
-    return rows.map((row) => {
+    const dbProducts = rows.map((row) => {
       const fallbackProduct = defaultProductsBySlug.get(row.slug)
       const shouldUseFallbackPrice =
         row.category !== "Launch Path" &&
@@ -152,6 +152,16 @@ export const getMarketingProducts = cache(async (): Promise<Product[]> => {
         demoUrl: row.demoUrl ?? undefined,
       }
     })
+
+    const missingDefaultProducts = defaultProducts
+      .filter((product) => !dbProducts.some((existingProduct) => existingProduct.slug === product.slug))
+      .map((product) => ({
+        ...product,
+        price: product.priceLabel,
+        priceNote: product.priceNote ?? "",
+      }))
+
+    return [...dbProducts, ...missingDefaultProducts]
   } catch {
     return defaultProducts.map((product) => ({
       ...product,

@@ -19,7 +19,7 @@ interface BlogCardProps {
 export function BlogCard({ post }: BlogCardProps) {
   return (
     <Link href={`/blog/${post.slug}`} className="group block">
-      <div className="relative overflow-hidden rounded-[32px] border border-white/5 bg-neutral-900/40 backdrop-blur-xl transition-all duration-500 hover:border-lime-400/30 hover:-translate-y-2 hover:shadow-[0_40px_80px_rgba(0,0,0,0.4)]">
+      <div className="relative overflow-hidden rounded-[32px] border border-white/5 bg-neutral-900/40 backdrop-blur-xl transition-all duration-500 hover:-translate-y-2 hover:border-[#CBB57A]/30 hover:shadow-[0_40px_80px_rgba(0,0,0,0.4)]">
         <div className="relative h-56 w-full overflow-hidden">
           <Image
             src={post.frontMatter.image}
@@ -32,11 +32,11 @@ export function BlogCard({ post }: BlogCardProps) {
         
         <div className="p-8">
           <div className="flex items-center gap-2 text-xs font-bold text-neutral-500 uppercase tracking-widest mb-4">
-            <Calendar className="h-3 w-3 text-lime-400" />
+            <Calendar className="h-3 w-3 text-[#CBB57A]" />
             {new Date(post.frontMatter.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
           </div>
           
-          <h3 className="text-2xl font-bold text-white mb-4 group-hover:text-lime-300 transition-colors leading-tight">
+          <h3 className="mb-4 text-2xl font-bold leading-tight text-white transition-colors group-hover:text-[#CBB57A]">
             {post.frontMatter.title}
           </h3>
           
@@ -44,7 +44,7 @@ export function BlogCard({ post }: BlogCardProps) {
             {post.frontMatter.description}
           </p>
           
-          <div className="flex items-center gap-2 text-xs font-black text-lime-400 uppercase tracking-tighter">
+          <div className="flex items-center gap-2 text-xs font-black uppercase tracking-tighter text-[#CBB57A]">
             Read Article
             <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
           </div>

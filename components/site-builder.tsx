@@ -14,9 +14,18 @@ import { resolvePreviewSrc } from "@/lib/preview-url"
 interface SiteBuilderProps {
   initialUrl: string
   productTitle: string
+  checkoutAmount?: string
+  checkoutDisplayTotal?: string
+  checkoutActionLabel?: string
 }
 
-export function SiteBuilder({ initialUrl, productTitle }: SiteBuilderProps) {
+export function SiteBuilder({
+  initialUrl,
+  productTitle,
+  checkoutAmount,
+  checkoutDisplayTotal,
+  checkoutActionLabel,
+}: SiteBuilderProps) {
   const [viewMode, setViewMode] = useState<"desktop" | "tablet" | "mobile">("desktop")
   const [isAiPanelOpen, setIsAiPanelOpen] = useState(true)
   const [activeTab, setActiveTab] = useState<"chat" | "data" | "blocks" | "domain" | "checkout">("chat")
@@ -54,6 +63,9 @@ export function SiteBuilder({ initialUrl, productTitle }: SiteBuilderProps) {
   ])
 
   const isBioLink = productTitle.toLowerCase().includes("bio")
+  const hasDirectCheckout = !!checkoutAmount
+  const totalLabel = checkoutDisplayTotal ?? (isBioLink ? "AED 699" : "AED 2,399")
+  const actionLabel = checkoutActionLabel ?? (hasDirectCheckout ? "Purchase & Go Live" : brand.ctaLabel)
 
   // Simulate build progress
   useEffect(() => {
@@ -86,7 +98,7 @@ export function SiteBuilder({ initialUrl, productTitle }: SiteBuilderProps) {
     setTimeout(() => {
       setMessages(prev => [...prev, { 
         role: "ai", 
-        content: `Done! I've updated the ${productTitle} ${isBioLink ? "Personal Hub" : "template"} based on your request. I've also optimized the ${isBioLink ? "social links and bio section" : "lead capture and listings"} for conversion.` 
+        content: `Done! I've updated the ${productTitle} ${isBioLink ? "Personal Hub" : "site experience"} based on your request. I've also optimized the ${isBioLink ? "social links and bio section" : "lead capture and listings"} for conversion.` 
       }])
     }, 2000)
   }
@@ -113,13 +125,15 @@ export function SiteBuilder({ initialUrl, productTitle }: SiteBuilderProps) {
   const [isProcessingPayment, setIsProcessingPayment] = useState(false)
 
   const handlePurchase = async () => {
+    if (!checkoutAmount) return
+
     setIsProcessingPayment(true)
     try {
       const response = await fetch('/api/payments/paypal/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          amount: productTitle.toLowerCase().includes("bio") ? "699" : "2399",
+          amount: checkoutAmount,
           productTitle 
         }),
       });
@@ -207,19 +221,19 @@ export function SiteBuilder({ initialUrl, productTitle }: SiteBuilderProps) {
       {/* Builder Header */}
       <div className="flex h-16 items-center justify-between border-b border-white/5 bg-neutral-900/50 px-6 backdrop-blur-xl">
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-lime-400 p-1.5 transition-transform hover:rotate-12">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#CBB57A] p-1.5 transition-transform hover:rotate-12">
             <Sparkles className="h-full w-full text-black" />
           </div>
           <div>
             <h3 className="text-sm font-bold text-white">{brand.shortName} AI Builder</h3>
             <div className="flex items-center gap-2">
-              <p className="text-[10px] uppercase tracking-widest text-lime-400/80">Editing: {productTitle}</p>
+              <p className="text-[10px] uppercase tracking-widest text-[#CBB57A]/80">Editing: {productTitle}</p>
               {isBuilding && (
                 <div className="flex items-center gap-1.5 ml-2">
                   <div className="h-1 w-12 bg-white/10 rounded-full overflow-hidden">
-                    <div className="h-full bg-lime-400 transition-all duration-300" style={{ width: `${buildProgress}%` }} />
+                    <div className="h-full bg-[#CBB57A] transition-all duration-300" style={{ width: `${buildProgress}%` }} />
                   </div>
-                  <span className="text-[9px] text-lime-400 font-bold animate-pulse">BUILDING...</span>
+                  <span className="text-[9px] text-[#CBB57A] font-bold animate-pulse">BUILDING...</span>
                 </div>
               )}
             </div>
@@ -248,14 +262,14 @@ export function SiteBuilder({ initialUrl, productTitle }: SiteBuilderProps) {
 
         <div className="flex items-center gap-3">
           <div className="hidden md:flex items-center gap-1 mr-4 px-3 py-1 rounded-full bg-white/5 border border-white/10">
-            <div className="h-1.5 w-1.5 rounded-full bg-lime-400 animate-pulse" />
+            <div className="h-1.5 w-1.5 rounded-full bg-[#CBB57A] animate-pulse" />
             <span className="text-[10px] text-neutral-400 font-medium uppercase tracking-tight">AI Active</span>
           </div>
           <Button 
             onClick={handleFinalize}
-            className="rounded-full bg-lime-400 px-6 text-xs font-black text-black hover:bg-lime-300 transition-all hover:scale-105 active:scale-95"
+            className="rounded-full bg-[#CBB57A] px-6 text-xs font-black text-black transition-all hover:scale-105 hover:bg-[#d8c590] active:scale-95"
           >
-            Finalize & Launch
+            Review Offer
           </Button>
         </div>
       </div>
@@ -276,15 +290,15 @@ export function SiteBuilder({ initialUrl, productTitle }: SiteBuilderProps) {
               <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity">
                 <div className="flex flex-col items-center gap-4 text-center">
                   <div className="relative h-20 w-20">
-                    <Loader2 className="h-full w-full text-lime-400 animate-spin opacity-20" />
-                    <Sparkles className="absolute inset-0 m-auto h-8 w-8 text-lime-400 animate-pulse" />
+                    <Loader2 className="h-full w-full animate-spin text-[#CBB57A] opacity-20" />
+                    <Sparkles className="absolute inset-0 m-auto h-8 w-8 animate-pulse text-[#CBB57A]" />
                   </div>
                   <div>
                     <h4 className="text-xl font-bold text-white">AI is optimizing your site...</h4>
                     <p className="text-sm text-neutral-400 mt-1 italic">Generating SEO metadata and responsive layouts</p>
                   </div>
                   <div className="w-64 h-1.5 bg-white/5 rounded-full mt-2 overflow-hidden border border-white/5">
-                    <div className="h-full bg-lime-400 transition-all duration-500 ease-out" style={{ width: `${buildProgress}%` }} />
+                    <div className="h-full bg-[#CBB57A] transition-all duration-500 ease-out" style={{ width: `${buildProgress}%` }} />
                   </div>
                 </div>
               </div>
@@ -313,9 +327,9 @@ export function SiteBuilder({ initialUrl, productTitle }: SiteBuilderProps) {
           </div>
           
           <div className="mt-6 flex items-center gap-6 text-[10px] font-bold text-neutral-500 uppercase tracking-widest">
-            <span className="flex items-center gap-1.5"><CheckCircle2 className="h-3 w-3 text-lime-400" /> Auto-Saving</span>
-            <span className="flex items-center gap-1.5"><CheckCircle2 className="h-3 w-3 text-lime-400" /> SSL Active</span>
-            <span className="flex items-center gap-1.5"><CheckCircle2 className="h-3 w-3 text-lime-400" /> SEO Optimized</span>
+            <span className="flex items-center gap-1.5"><CheckCircle2 className="h-3 w-3 text-[#CBB57A]" /> Auto-Saving</span>
+            <span className="flex items-center gap-1.5"><CheckCircle2 className="h-3 w-3 text-[#CBB57A]" /> SSL Active</span>
+            <span className="flex items-center gap-1.5"><CheckCircle2 className="h-3 w-3 text-[#CBB57A]" /> SEO Optimized</span>
           </div>
         </div>
 
@@ -342,11 +356,11 @@ export function SiteBuilder({ initialUrl, productTitle }: SiteBuilderProps) {
                   className={cn(
                     "flex flex-col items-center gap-1.5 py-4 transition-all border-b-2",
                     activeTab === tab.id 
-                      ? "border-lime-400 bg-lime-400/5 text-white" 
+                      ? "border-[#CBB57A] bg-[#CBB57A]/5 text-white" 
                       : "border-transparent text-neutral-500 hover:text-neutral-300"
                   )}
                 >
-                  <tab.icon className={cn("h-4 w-4", activeTab === tab.id && "text-lime-400")} />
+                  <tab.icon className={cn("h-4 w-4", activeTab === tab.id && "text-[#CBB57A]")} />
                   <span className="text-[10px] font-bold uppercase tracking-widest">{tab.label}</span>
                 </button>
               ))}
@@ -363,7 +377,7 @@ export function SiteBuilder({ initialUrl, productTitle }: SiteBuilderProps) {
                           className={cn(
                             "max-w-[90%] rounded-2xl p-4 text-sm leading-relaxed",
                             msg.role === "user" 
-                              ? "bg-lime-400 text-black font-bold rounded-tr-none shadow-lg" 
+                              ? "bg-[#CBB57A] text-black font-bold rounded-tr-none shadow-lg" 
                               : "bg-white/5 text-neutral-200 border border-white/10 rounded-tl-none"
                           )}
                         >
@@ -381,13 +395,13 @@ export function SiteBuilder({ initialUrl, productTitle }: SiteBuilderProps) {
                         onChange={(e) => setChatInput(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSendMessage())}
                         placeholder="e.g. 'Change primary color to gold'"
-                        className="w-full resize-none rounded-2xl border border-white/10 bg-black/50 p-4 pr-12 text-sm text-white placeholder:text-neutral-700 focus:border-lime-400/50 focus:outline-none transition-all"
+                        className="w-full resize-none rounded-2xl border border-white/10 bg-black/50 p-4 pr-12 text-sm text-white placeholder:text-neutral-700 focus:border-[#CBB57A]/50 focus:outline-none transition-all"
                         rows={3}
                       />
                       <button 
                         onClick={handleSendMessage}
                         disabled={!chatInput.trim() || isBuilding}
-                        className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-full bg-lime-400 text-black transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+                        className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-full bg-[#CBB57A] text-black transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
                       >
                         <Send className="h-4 w-4" />
                       </button>
@@ -398,8 +412,8 @@ export function SiteBuilder({ initialUrl, productTitle }: SiteBuilderProps) {
 
               {activeTab === "data" && (
                 <div className="p-6 space-y-6 animate-fade-up">
-                  <div className="rounded-2xl bg-lime-400/10 p-4 border border-lime-400/20">
-                    <p className="text-xs text-lime-300 font-medium flex items-center gap-2">
+                  <div className="rounded-2xl border border-[#CBB57A]/20 bg-[#CBB57A]/10 p-4">
+                    <p className="flex items-center gap-2 text-xs font-medium text-[#CBB57A]">
                       <Info className="h-3 w-3" />
                       AI uses this data to customize your site content and SEO automatically.
                     </p>
@@ -414,7 +428,7 @@ export function SiteBuilder({ initialUrl, productTitle }: SiteBuilderProps) {
                             value={userData.fullName}
                             onChange={(e) => handleDataUpdate("fullName", e.target.value)}
                             placeholder="e.g. John Doe"
-                            className="bg-white/5 border-white/10 text-white rounded-xl focus:ring-lime-400/50"
+                            className="bg-white/5 border-white/10 text-white rounded-xl focus:ring-[#CBB57A]/50"
                           />
                         </div>
                         <div className="space-y-2">
@@ -423,7 +437,7 @@ export function SiteBuilder({ initialUrl, productTitle }: SiteBuilderProps) {
                             value={userData.bio}
                             onChange={(e) => handleDataUpdate("bio", e.target.value)}
                             placeholder="e.g. Expert in Dubai Marina luxury villas..."
-                            className="w-full h-24 bg-white/5 border border-white/10 text-white rounded-xl p-3 text-sm focus:ring-1 focus:ring-lime-400/50 outline-none resize-none"
+                            className="w-full h-24 bg-white/5 border border-white/10 text-white rounded-xl p-3 text-sm focus:ring-1 focus:ring-[#CBB57A]/50 outline-none resize-none"
                           />
                         </div>
                         <div className="space-y-2">
@@ -432,7 +446,7 @@ export function SiteBuilder({ initialUrl, productTitle }: SiteBuilderProps) {
                             value={userData.whatsApp}
                             onChange={(e) => handleDataUpdate("whatsApp", e.target.value)}
                             placeholder="e.g. +971 50 123 4567"
-                            className="bg-white/5 border-white/10 text-white rounded-xl focus:ring-lime-400/50"
+                            className="bg-white/5 border-white/10 text-white rounded-xl focus:ring-[#CBB57A]/50"
                           />
                         </div>
                       </>
@@ -444,7 +458,7 @@ export function SiteBuilder({ initialUrl, productTitle }: SiteBuilderProps) {
                             value={userData.brokerageName}
                             onChange={(e) => handleDataUpdate("brokerageName", e.target.value)}
                             placeholder="e.g. Skyline Properties"
-                            className="bg-white/5 border-white/10 text-white rounded-xl focus:ring-lime-400/50"
+                            className="bg-white/5 border-white/10 text-white rounded-xl focus:ring-[#CBB57A]/50"
                           />
                         </div>
                         <div className="space-y-2">
@@ -453,7 +467,7 @@ export function SiteBuilder({ initialUrl, productTitle }: SiteBuilderProps) {
                             value={userData.location}
                             onChange={(e) => handleDataUpdate("location", e.target.value)}
                             placeholder="e.g. Dubai Marina, Business Bay"
-                            className="bg-white/5 border-white/10 text-white rounded-xl focus:ring-lime-400/50"
+                            className="bg-white/5 border-white/10 text-white rounded-xl focus:ring-[#CBB57A]/50"
                           />
                         </div>
                         <div className="space-y-2">
@@ -462,7 +476,7 @@ export function SiteBuilder({ initialUrl, productTitle }: SiteBuilderProps) {
                             value={userData.specialty}
                             onChange={(e) => handleDataUpdate("specialty", e.target.value)}
                             placeholder="e.g. Off-plan Luxury Villas"
-                            className="bg-white/5 border-white/10 text-white rounded-xl focus:ring-lime-400/50"
+                            className="bg-white/5 border-white/10 text-white rounded-xl focus:ring-[#CBB57A]/50"
                           />
                         </div>
                         <div className="space-y-2">
@@ -471,7 +485,7 @@ export function SiteBuilder({ initialUrl, productTitle }: SiteBuilderProps) {
                             value={userData.whatsApp}
                             onChange={(e) => handleDataUpdate("whatsApp", e.target.value)}
                             placeholder="e.g. +971 50 123 4567"
-                            className="bg-white/5 border-white/10 text-white rounded-xl focus:ring-lime-400/50"
+                            className="bg-white/5 border-white/10 text-white rounded-xl focus:ring-[#CBB57A]/50"
                           />
                         </div>
                       </>
@@ -489,8 +503,8 @@ export function SiteBuilder({ initialUrl, productTitle }: SiteBuilderProps) {
 
               {activeTab === "blocks" && (
                 <div className="p-6 space-y-6 animate-fade-up">
-                  <div className="rounded-2xl bg-blue-500/10 p-4 border border-blue-500/20">
-                    <p className="text-xs text-blue-400 font-medium flex items-center gap-2">
+                  <div className="rounded-2xl border border-[#CBB57A]/20 bg-[#CBB57A]/10 p-4">
+                    <p className="flex items-center gap-2 text-xs font-medium text-[#CBB57A]">
                       <Layout className="h-3 w-3" />
                       Select blocks to add to your site structure instantly.
                     </p>
@@ -501,13 +515,13 @@ export function SiteBuilder({ initialUrl, productTitle }: SiteBuilderProps) {
                       <button
                         key={block.id}
                         onClick={() => { setIsBuilding(true); setBuildProgress(0); }}
-                        className="group flex items-start gap-4 rounded-2xl border border-white/5 bg-white/5 p-4 text-left transition-all hover:border-lime-400/30 hover:bg-white/10"
+                        className="group flex items-start gap-4 rounded-2xl border border-white/5 bg-white/5 p-4 text-left transition-all hover:border-[#CBB57A]/30 hover:bg-white/10"
                       >
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-neutral-900 group-hover:bg-lime-400/20">
-                          <block.icon className="h-5 w-5 text-neutral-400 group-hover:text-lime-400" />
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-neutral-900 group-hover:bg-[#CBB57A]/20">
+                          <block.icon className="h-5 w-5 text-neutral-400 group-hover:text-[#CBB57A]" />
                         </div>
                         <div>
-                          <h5 className="text-sm font-bold text-white group-hover:text-lime-300">{block.name}</h5>
+                          <h5 className="text-sm font-bold text-white group-hover:text-[#CBB57A]">{block.name}</h5>
                           <p className="text-[11px] text-neutral-500 leading-tight mt-0.5">{block.desc}</p>
                         </div>
                       </button>
@@ -518,8 +532,8 @@ export function SiteBuilder({ initialUrl, productTitle }: SiteBuilderProps) {
 
               {activeTab === "domain" && (
                 <div className="p-6 space-y-6 animate-fade-up">
-                  <div className="rounded-2xl bg-purple-500/10 p-4 border border-purple-500/20">
-                    <p className="text-xs text-purple-300 font-medium flex items-center gap-2">
+                  <div className="rounded-2xl border border-[#CBB57A]/20 bg-[#CBB57A]/10 p-4">
+                    <p className="flex items-center gap-2 text-xs font-medium text-[#CBB57A]">
                       <Globe className="h-3 w-3" />
                       Connect your custom domain to go live.
                     </p>
@@ -533,12 +547,12 @@ export function SiteBuilder({ initialUrl, productTitle }: SiteBuilderProps) {
                           value={domain}
                           onChange={(e) => setDomain(e.target.value)}
                           placeholder="e.g. mybrokerage.com"
-                          className="bg-white/5 border-white/10 text-white rounded-xl focus:ring-purple-400/50"
+                          className="rounded-xl border-white/10 bg-white/5 text-white focus:ring-[#CBB57A]/40"
                         />
                         <Button
                           onClick={handleAddDomain}
                           disabled={!domain.trim() || isCheckingDomain}
-                          className="bg-purple-600 hover:bg-purple-700 text-white rounded-xl"
+                          className="rounded-xl bg-[#CBB57A] text-[#102347] hover:bg-[#d8c590]"
                         >
                           {isCheckingDomain ? "Adding..." : "Add"}
                         </Button>
@@ -568,10 +582,10 @@ export function SiteBuilder({ initialUrl, productTitle }: SiteBuilderProps) {
                               <div key={rec.type} className="p-3 bg-black/30 rounded-lg border border-neutral-700">
                                 <p><strong className="text-neutral-300">Type:</strong> {rec.type}</p>
                                 <p><strong className="text-neutral-300">Name:</strong> {rec.domain.endsWith(rec.value) ? '@' : rec.domain.replace(`.${domainStatus.name}`, '')}</p>
-                                <p><strong className="text-neutral-300">Value:</strong> <code className="text-purple-300 break-all">{rec.value}</code></p>
+                                <p><strong className="text-neutral-300">Value:</strong> <code className="break-all text-[#CBB57A]">{rec.value}</code></p>
                               </div>
                             ))}
-                            <Button onClick={handleRefreshDomainStatus} disabled={isCheckingDomain} size="sm" className="w-full mt-2 bg-purple-500/20 text-purple-300 hover:bg-purple-500/30">
+                            <Button onClick={handleRefreshDomainStatus} disabled={isCheckingDomain} size="sm" className="mt-2 w-full bg-[#CBB57A]/15 text-[#CBB57A] hover:bg-[#CBB57A]/25">
                               {isCheckingDomain ? "Checking..." : "Refresh Status"}
                             </Button>
                           </div>
@@ -584,42 +598,56 @@ export function SiteBuilder({ initialUrl, productTitle }: SiteBuilderProps) {
               {activeTab === "checkout" && (
                 <div className="p-6 space-y-8 animate-fade-up">
                   <div className="text-center">
-                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-lime-400/20 mb-4">
-                      <CheckCircle2 className="h-8 w-8 text-lime-400" />
+                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#CBB57A]/20">
+                      <CheckCircle2 className="h-8 w-8 text-[#CBB57A]" />
                     </div>
-                    <h4 className="text-xl font-bold text-white">Your site is ready!</h4>
-                    <p className="text-sm text-neutral-400 mt-2">Just one step away from launching on your custom domain.</p>
+                    <h4 className="text-xl font-bold text-white">Your offer is ready.</h4>
+                    <p className="mt-2 text-sm text-neutral-400">
+                      {hasDirectCheckout
+                        ? "You can move straight into checkout and launch handoff from here."
+                        : "This offer moves through a strategy briefing before scope and delivery are locked."}
+                    </p>
                   </div>
 
                   <div className="rounded-3xl bg-white/5 border border-white/10 p-6 space-y-4">
                     <div className="flex justify-between items-center pb-4 border-b border-white/5">
-                      <span className="text-sm text-neutral-400">Template</span>
+                      <span className="text-sm text-neutral-400">Offer</span>
                       <span className="text-sm font-bold text-white">{productTitle}</span>
                     </div>
                     <div className="flex justify-between items-center pb-4 border-b border-white/5">
                       <span className="text-sm text-neutral-400">Hosting & SSL</span>
-                      <span className="text-sm font-bold text-lime-400">Included</span>
+                      <span className="text-sm font-bold text-[#8FA686]">Included</span>
                     </div>
                     <div className="flex justify-between items-center pt-2">
                       <span className="text-base font-bold text-white">Total</span>
-                      <span className="text-2xl font-black text-white">AED 2,399</span>
+                      <span className="text-2xl font-black text-white">{totalLabel}</span>
                     </div>
                   </div>
 
-                  <Button 
-                    onClick={handlePurchase}
-                    disabled={isProcessingPayment}
-                    className="w-full rounded-full bg-lime-400 py-8 text-lg font-black text-black hover:bg-lime-300 shadow-[0_0_40px_rgba(132,204,22,0.3)] transition-all hover:scale-[1.02]"
-                  >
-                    {isProcessingPayment ? (
-                      <>
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                        Processing...
-                      </>
-                    ) : "Purchase & Go Live"}
-                  </Button>
-                  
-                  <p className="text-[10px] text-center text-neutral-500 uppercase tracking-widest">Secure Checkout via PayPal / Stripe</p>
+                  {hasDirectCheckout ? (
+                    <>
+                      <Button 
+                        onClick={handlePurchase}
+                        disabled={isProcessingPayment}
+                        className="w-full rounded-full bg-[#CBB57A] py-8 text-lg font-black text-black shadow-[0_0_40px_rgba(203,181,122,0.3)] transition-all hover:scale-[1.02] hover:bg-[#d8c590]"
+                      >
+                        {isProcessingPayment ? (
+                          <>
+                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                            Processing...
+                          </>
+                        ) : actionLabel}
+                      </Button>
+                      <p className="text-[10px] text-center text-neutral-500 uppercase tracking-widest">Secure Checkout via PayPal / Stripe</p>
+                    </>
+                  ) : (
+                    <>
+                      <Button asChild className="w-full rounded-full bg-[#CBB57A] py-8 text-lg font-black text-black transition-all hover:scale-[1.02] hover:bg-[#d8c590]">
+                        <a href={brand.ctaHref} target="_blank" rel="noopener noreferrer">{actionLabel}</a>
+                      </Button>
+                      <p className="text-center text-sm text-neutral-400">Strategy, scoping, and rollout timing are confirmed directly with the MTC team.</p>
+                    </>
+                  )}
                 </div>
               )}
             </div>

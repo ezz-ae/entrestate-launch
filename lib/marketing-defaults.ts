@@ -125,6 +125,42 @@ export type MarketingAdminContent = {
 
 export const defaultProducts: MarketingProductSeed[] = [
   {
+    slug: "ore-investor-intelligence-site",
+    title: "ORE Investor Intelligence Site",
+    tagline: "A premium Dubai brokerage site with AI assistant, live inventory, market reports, and investor briefing capture.",
+    description:
+      "A ready-made luxury brokerage experience designed for investor-led discovery: searchable property inventory, AI-guided Q&A, market intelligence dashboards, area profiles, and high-intent lead capture built into one polished site.",
+    category: "Ready-Made Site",
+    badge: "For Sale",
+    priceLabel: "AED 24,900",
+    priceNote: "one-time white-label site acquisition",
+    demoUrl: "https://ore-mu.vercel.app/",
+    highlights: [
+      "Premium investor-facing homepage and navigation",
+      "AI assistant with shortlist and Golden Visa prompts",
+      "Live inventory browse flow with filters and ROI cues",
+      "Market trends, reports, and consultation capture",
+    ],
+    deliverables: [
+      "White-label premium brokerage site",
+      "AI assistant and inquiry journey",
+      "Inventory, market, and report pages",
+      "WhatsApp, consultation, and briefing capture flows",
+      "Deployment handoff with branded content updates",
+    ],
+    timeline: [
+      { title: "Week 1", description: "Branding, content, and lead routing alignment" },
+      { title: "Week 2", description: "Delivery polish, QA, and launch handoff" },
+    ],
+    outcomes: [
+      { label: "Offer Type", value: "Ready-Made Site" },
+      { label: "Buyer Flow", value: "AI + Inventory" },
+      { label: "Market Focus", value: "Dubai Investors" },
+    ],
+    heroImage: "/images/ore-site.png",
+    sortOrder: 0,
+  },
+  {
     slug: "ultimate-inventory",
     title: "Ultimate Inventory",
     tagline: "Live project intelligence for brokerages that need to look bigger than the portals.",

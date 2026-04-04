@@ -11,13 +11,19 @@ type ProductFeaturesProps = {
 }
 
 export async function ProductFeatures({
-  title = "Modules engineered for sharper brokerage performance",
-  subtitle = "Choose the intelligence layer your team needs now, then expand into the full MTC stack over time.",
+  title = "Offers engineered for sharper brokerage performance",
+  subtitle = "Browse ready-made sites, intelligence modules, and rollout paths that help brokerages qualify demand and close faster.",
   limit,
   showCta = true,
 }: ProductFeaturesProps) {
   const products = await getProducts()
-  const featuredProducts = typeof limit === "number" ? products.slice(0, limit) : products
+  const featuredProducts = [...products]
+    .sort((left, right) => {
+      const leftPriority = left.category === "Ready-Made Site" ? 0 : left.category === "Intelligence Module" ? 1 : 2
+      const rightPriority = right.category === "Ready-Made Site" ? 0 : right.category === "Intelligence Module" ? 1 : 2
+      return leftPriority - rightPriority
+    })
+    .slice(0, typeof limit === "number" ? limit : products.length)
 
   return (
     <section className="relative py-20" id="products">
@@ -26,7 +32,7 @@ export async function ProductFeatures({
       </div>
       <div className="container relative mx-auto px-4">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#CBB57A]">Modules</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#CBB57A]">Catalog</p>
           <h2 className="mt-4 text-4xl font-extrabold tracking-tight text-white sm:text-5xl">{title}</h2>
           <p className="mt-4 text-sm text-neutral-300 sm:text-base">{subtitle}</p>
         </div>
@@ -78,7 +84,13 @@ export async function ProductFeatures({
                       asChild
                       className="rounded-full bg-white px-6 py-5 font-bold text-black transition-colors hover:bg-[#CBB57A]"
                     >
-                      <Link href={`/products/${product.slug}`}>View module</Link>
+                      <Link href={`/products/${product.slug}`}>
+                        {product.category === "Ready-Made Site"
+                          ? "View site"
+                          : product.category === "Launch Path"
+                            ? "View path"
+                            : "View module"}
+                      </Link>
                     </Button>
                   </div>
                 </div>
@@ -93,7 +105,7 @@ export async function ProductFeatures({
               asChild
               className="rounded-full border border-white/15 bg-white/5 px-6 text-sm text-white hover:bg-white/10"
             >
-              <Link href="/products">Browse full module catalog</Link>
+              <Link href="/products">Browse full catalog</Link>
             </Button>
           </div>
         )}
