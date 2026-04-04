@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { Calendar, ChevronRight } from 'lucide-react';
+
+import { MarketingMediaFrame } from '@/components/marketing-media-frame';
 
 interface BlogCardProps {
   post: {
@@ -21,13 +22,15 @@ export function BlogCard({ post }: BlogCardProps) {
     <Link href={`/blog/${post.slug}`} className="group block">
       <div className="relative overflow-hidden rounded-[32px] border border-white/5 bg-neutral-900/40 backdrop-blur-xl transition-all duration-500 hover:-translate-y-2 hover:border-[#CBB57A]/30 hover:shadow-[0_40px_80px_rgba(0,0,0,0.4)]">
         <div className="relative h-56 w-full overflow-hidden">
-          <Image
+          <MarketingMediaFrame
             src={post.frontMatter.image}
             alt={post.frontMatter.title}
-            fill
-            className="object-cover transition-transform duration-700 group-hover:scale-110"
+            chrome
+            fit="contain"
+            className="h-full w-full"
+            contentClassName="p-4 pt-12"
+            imageClassName="transition-transform duration-700 group-hover:scale-[1.03]"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-transparent to-transparent opacity-60" />
         </div>
         
         <div className="p-8">

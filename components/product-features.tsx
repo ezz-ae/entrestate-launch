@@ -1,5 +1,5 @@
 import Link from "next/link"
-import Image from "next/image"
+import { MarketingMediaFrame } from "@/components/marketing-media-frame"
 import { Button } from "@/components/ui/button"
 import { getProducts } from "@/lib/products"
 
@@ -46,14 +46,16 @@ export async function ProductFeatures({
             >
               <div className="relative flex flex-col gap-8 p-6 sm:flex-row sm:p-8">
                 <div className="relative h-48 w-full shrink-0 overflow-hidden rounded-2xl border border-white/10 sm:h-56 sm:w-56">
-                  <Image
+                  <MarketingMediaFrame
                     src={product.heroImage}
                     alt={product.title}
-                    fill
-                    className="object-cover transition-transform duration-700 group-hover:scale-110"
+                    chrome
+                    fit="contain"
+                    className="h-full w-full"
+                    contentClassName="p-4 pt-11"
+                    imageClassName="transition-transform duration-700 group-hover:scale-[1.03]"
                     sizes="(min-width: 640px) 14rem, 100vw"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
                 </div>
                 <div className="flex flex-1 flex-col">
                   <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em]">
@@ -62,7 +64,7 @@ export async function ProductFeatures({
                       <span className="rounded-full bg-[#CBB57A]/20 px-3 py-1 text-[#CBB57A]">{product.badge}</span>
                     )}
                     {product.demoUrl && (
-                      <span className="rounded-full bg-blue-500/20 px-3 py-1 text-blue-400 border border-blue-500/30">Live Demo</span>
+                      <span className="rounded-full border border-[#CBB57A]/20 bg-[#CBB57A]/10 px-3 py-1 text-[#CBB57A]">Live Demo</span>
                     )}
                   </div>
                   <h3 className="mt-4 text-2xl font-bold text-white transition-colors group-hover:text-[#CBB57A]">{product.title}</h3>

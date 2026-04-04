@@ -1,9 +1,9 @@
-import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { ArrowUpRight, Sparkles } from "lucide-react"
 
 import { AppverseFooter } from "@/components/appverse-footer"
+import { MarketingMediaFrame } from "@/components/marketing-media-frame"
 import { SiteBuilder } from "@/components/site-builder"
 import { SiteHeader } from "@/components/site-header"
 import { Button } from "@/components/ui/button"
@@ -115,11 +115,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
             <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-neutral-900/70 p-6 shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
               <div className="relative h-64 w-full overflow-hidden rounded-2xl border border-white/10">
-                <Image
+                <MarketingMediaFrame
                   src={product.heroImage}
                   alt={product.title}
-                  fill
-                  className="object-cover"
+                  chrome
+                  fit="contain"
+                  className="h-full w-full"
+                  contentClassName="p-4 pt-12"
                   sizes="(min-width: 1024px) 28rem, 100vw"
                 />
               </div>
@@ -215,11 +217,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 className="group rounded-3xl border border-white/10 bg-neutral-900/70 p-6 transition duration-300 hover:-translate-y-1 hover:border-[#CBB57A]/30"
               >
                 <div className="relative h-40 w-full overflow-hidden rounded-2xl border border-white/10">
-                  <Image
+                  <MarketingMediaFrame
                     src={item.heroImage}
                     alt={item.title}
-                    fill
-                    className="object-cover"
+                    chrome
+                    fit="contain"
+                    className="h-full w-full"
+                    contentClassName="p-3 pt-11"
                     sizes="(min-width: 1024px) 20rem, 100vw"
                   />
                 </div>

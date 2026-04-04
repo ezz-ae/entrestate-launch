@@ -3,8 +3,6 @@
 import { useEffect, useRef, useState } from "react"
 import { Play, Pause } from "lucide-react"
 
-const ACCENT = "#C6FF3A"
-
 type YouTubeGridProps = {
   videoIds: string[]
 }
@@ -124,8 +122,14 @@ export default function YouTubeGrid({ videoIds }: YouTubeGridProps) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {containerIds.current.map((cid, idx) => (
-        <div key={cid} className="group relative overflow-hidden rounded-2xl liquid-glass">
-          <div className="relative z-0 aspect-video">
+        <div key={cid} className="group relative overflow-hidden rounded-[28px] border border-white/10 bg-[#0d1831]/90 shadow-[0_30px_80px_rgba(0,0,0,0.3)]">
+          <div className="absolute inset-x-4 top-4 z-20 flex h-7 items-center gap-2 rounded-full border border-white/10 bg-[#081225]/70 px-3 backdrop-blur-md">
+            <span className="h-2 w-2 rounded-full bg-white/35" />
+            <span className="h-2 w-2 rounded-full bg-white/20" />
+            <span className="h-2 w-2 rounded-full bg-white/10" />
+            <div className="ml-2 h-2 flex-1 rounded-full bg-white/10" />
+          </div>
+          <div className="relative z-0 aspect-video overflow-hidden rounded-[24px] bg-[#081225] p-4 pt-12">
             <div id={cid} className="h-full w-full" />
           </div>
 
@@ -137,8 +141,7 @@ export default function YouTubeGrid({ videoIds }: YouTubeGridProps) {
             {playingIndex === idx ? (
               <button
                 onClick={() => handlePause(idx)}
-                className="pointer-events-auto rounded-full liquid-glass-header px-3 py-1 text-xs transition-colors"
-                style={{ color: ACCENT }}
+                className="pointer-events-auto rounded-full border border-white/10 bg-[#081225]/80 px-3 py-1 text-xs text-white transition-colors hover:border-[#CBB57A]/30 hover:text-[#CBB57A]"
               >
                 <span className="inline-flex items-center gap-1">
                   <Pause className="h-3.5 w-3.5" /> Pause
@@ -147,8 +150,7 @@ export default function YouTubeGrid({ videoIds }: YouTubeGridProps) {
             ) : (
               <button
                 onClick={() => handlePlay(idx)}
-                className="pointer-events-auto rounded-full px-3 py-1 text-xs font-medium text-black transition-colors"
-                style={{ backgroundColor: ACCENT }}
+                className="pointer-events-auto rounded-full bg-[#CBB57A] px-3 py-1 text-xs font-medium text-[#102347] transition-colors hover:bg-[#d8c590]"
               >
                 <span className="inline-flex items-center gap-1">
                   <Play className="h-3.5 w-3.5" /> Play

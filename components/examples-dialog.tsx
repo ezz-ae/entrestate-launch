@@ -3,7 +3,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import YouTubeGrid from "./youtube-grid"
 
-const ACCENT = "#C6FF3A"
+const ACCENT = "#CBB57A"
 
 type ExamplesDialogProps = {
   open: boolean
@@ -16,8 +16,8 @@ type ExamplesDialogProps = {
 export function ExamplesDialog({ open, onOpenChange, planName, price, videoIds }: ExamplesDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] xl:max-w-[1280px] border-neutral-800 bg-[#0b0b0b] p-0 text-white sm:rounded-2xl">
-        <div className="border-b border-neutral-900 bg-neutral-900/50 px-5 py-4">
+      <DialogContent className="max-w-[95vw] border-white/10 bg-[#081225] p-0 text-white sm:rounded-2xl xl:max-w-[1280px]">
+        <div className="border-b border-white/10 bg-[#0d1831]/80 px-5 py-4">
           <DialogHeader className="space-y-1">
             <DialogTitle className="text-base font-semibold" style={{ color: ACCENT }}>
               {planName}

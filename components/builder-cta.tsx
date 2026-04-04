@@ -1,17 +1,15 @@
-import Image from "next/image"
 import Link from "next/link"
 import { ArrowRight, CheckCircle2, CreditCard, Globe, Sparkles } from "lucide-react"
 
+import { MarketingMediaFrame } from "@/components/marketing-media-frame"
 import { Button } from "@/components/ui/button"
 import { brand } from "@/lib/brand"
 import { getProducts } from "@/lib/products"
-import { resolvePreviewSrc } from "@/lib/preview-url"
 
 export async function BuilderCta() {
   const products = await getProducts()
   const previewProduct = products.find((product) => product.slug === "lead-intelligence") ?? products.find((product) => product.demoUrl) ?? products[0]
   const builderTarget = previewProduct?.slug ? `/products/${previewProduct.slug}#builder` : brand.builderHref
-  const previewSrc = resolvePreviewSrc(previewProduct?.demoUrl)
 
   return (
     <section id="builder" className="relative overflow-hidden py-24">
@@ -79,22 +77,18 @@ export async function BuilderCta() {
               <div className="relative w-full max-w-[440px] overflow-hidden rounded-[42px] border-8 border-[#102347] bg-black shadow-[0_40px_100px_rgba(0,0,0,0.8)]">
                 <div className="relative aspect-[9/16] bg-neutral-900">
                   {previewProduct?.heroImage && (
-                    <Image
+                    <MarketingMediaFrame
                       src={previewProduct.heroImage}
                       alt={`${previewProduct.title} preview`}
-                      fill
-                      className="object-cover"
+                      chrome={false}
+                      fit="contain"
+                      className="h-full w-full"
+                      contentClassName="p-4 pt-14"
+                      imageClassName="object-top drop-shadow-[0_30px_60px_rgba(0,0,0,0.45)]"
                       sizes="(min-width: 1024px) 22rem, 100vw"
                     />
                   )}
-                  {previewSrc && (
-                    <iframe
-                      src={previewSrc}
-                      title={`${previewProduct?.title ?? "Template"} preview`}
-                      className="absolute inset-0 h-full w-full border-none"
-                      loading="lazy"
-                    />
-                  )}
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/70" />
                   <div className="absolute inset-x-0 top-0 z-10 flex h-7 items-center justify-center bg-black/55">
                     <div className="h-1.5 w-14 rounded-full bg-white/20" />
                   </div>
@@ -115,7 +109,7 @@ export async function BuilderCta() {
               <div className="absolute -right-3 top-20 rounded-2xl border border-white/10 bg-[#0d1831]/90 p-4 shadow-2xl backdrop-blur-xl">
                 <div className="flex items-center gap-3">
                   <CheckCircle2 className="h-5 w-5 text-[#8FA686]" />
-                  <span className="text-sm font-semibold text-white">Preview active</span>
+                  <span className="text-sm font-semibold text-white">Media refreshed</span>
                 </div>
               </div>
               <div className="absolute -left-5 bottom-24 rounded-2xl border border-white/10 bg-[#0d1831]/90 p-4 shadow-2xl backdrop-blur-xl">

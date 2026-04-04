@@ -1,8 +1,8 @@
-import Image from "next/image"
 import Link from "next/link"
 
 import { AppverseFooter } from "@/components/appverse-footer"
 import { ExecutionSteps } from "@/components/execution-steps"
+import { MarketingMediaFrame } from "@/components/marketing-media-frame"
 import { Pricing } from "@/components/pricing"
 import { ProductFeatures } from "@/components/product-features"
 import { SiteHeader } from "@/components/site-header"
@@ -82,11 +82,13 @@ export default async function ProductsPage() {
 
                 <div className="relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#0d1831] p-3 shadow-[0_30px_80px_rgba(0,0,0,0.35)]">
                   <div className="relative aspect-[16/10] overflow-hidden rounded-[1.25rem] border border-white/10">
-                    <Image
+                    <MarketingMediaFrame
                       src={featuredSite.heroImage}
                       alt={featuredSite.title}
-                      fill
-                      className="object-cover"
+                      chrome
+                      fit="contain"
+                      className="h-full w-full"
+                      contentClassName="p-4 pt-12"
                       sizes="(min-width: 1024px) 40rem, 100vw"
                     />
                   </div>

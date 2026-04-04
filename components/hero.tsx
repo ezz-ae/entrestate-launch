@@ -1,9 +1,9 @@
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
 import Link from "next/link"
+import { MarketingMediaFrame } from "@/components/marketing-media-frame"
 import { getProducts } from "@/lib/products"
 import { brand } from "@/lib/brand"
-import { resolvePreviewSrc } from "@/lib/preview-url"
 
 export async function Hero() {
   const products = await getProducts()
@@ -11,7 +11,6 @@ export async function Hero() {
     title: product.title,
     sub: product.tagline,
     imageSrc: product.heroImage,
-    previewSrc: resolvePreviewSrc(product.demoUrl),
   }))
   return (
     <section id="home" className="relative isolate overflow-hidden">
@@ -56,7 +55,7 @@ export async function Hero() {
 
               return (
                 <div key={i} className={visibility}>
-                  <PhoneCard title={p.title} sub={p.sub} imageSrc={p.imageSrc} previewSrc={p.previewSrc} />
+                  <PhoneCard title={p.title} sub={p.sub} imageSrc={p.imageSrc} />
                 </div>
               )
             })}
@@ -71,38 +70,37 @@ function PhoneCard({
   title = "8°",
   sub = "Clear night. Great for render farm runs.",
   imageSrc,
-  previewSrc,
 }: {
   title?: string
   sub?: string
   imageSrc?: string
-  previewSrc?: string
 }) {
   return (
     <div className="relative rounded-[28px] glass-border bg-neutral-900 p-2">
       <div className="relative aspect-[9/19] w-full overflow-hidden rounded-2xl bg-black">
         {imageSrc && (
-          <Image
+          <MarketingMediaFrame
             src={imageSrc}
             alt={title}
-            fill
-            className="object-cover"
-          />
-        )}
-        {previewSrc && (
-          <iframe
-            src={previewSrc}
-            title={`${title} template preview`}
-            className="absolute inset-0 h-full w-full border-none pointer-events-none"
-            loading="lazy"
+            chrome={false}
+            fit="contain"
+            className="h-full w-full"
+            contentClassName="p-3 pt-14"
+            imageClassName="object-top drop-shadow-[0_30px_60px_rgba(0,0,0,0.45)]"
+            sizes="(min-width: 1280px) 18rem, (min-width: 768px) 22rem, 100vw"
           />
         )}
 
-        <div className="relative z-10 p-3">
+        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/70" />
+
+        <div className="absolute inset-x-0 top-0 z-10 p-3">
           <div className="mx-auto mb-3 h-1.5 w-16 rounded-full bg-white/20" />
+        </div>
+
+        <div className="absolute inset-x-0 bottom-0 z-10 p-3">
           <div className="space-y-1 px-1">
-            <div className="text-3xl font-bold leading-snug text-white/90">{title}</div>
-            <p className="text-xs text-white/70">{sub}</p>
+            <div className="text-2xl font-bold leading-snug text-white/95">{title}</div>
+            <p className="line-clamp-3 text-xs leading-relaxed text-white/70">{sub}</p>
             <div className="mt-3 inline-flex items-center rounded-full bg-black/40 px-2 py-0.5 text-[10px] uppercase tracking-wider text-[#CBB57A]">
               mtc
             </div>

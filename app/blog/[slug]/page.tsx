@@ -1,11 +1,11 @@
 import React from "react"
-import Image from "next/image"
 import Link from "next/link"
 import { Container } from "@mantine/core"
 import { ArrowLeft, BookOpen } from "lucide-react"
 import { notFound } from "next/navigation"
 
 import { AppverseFooter } from "@/components/appverse-footer"
+import { MarketingMediaFrame } from "@/components/marketing-media-frame"
 import { SiteHeader } from "@/components/site-header"
 import { Button } from "@/components/ui/button"
 import { brand } from "@/lib/brand"
@@ -44,11 +44,13 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           </Link>
 
           <div className="relative mb-12 h-[400px] w-full overflow-hidden rounded-[40px] border border-white/10 shadow-2xl">
-            <Image
+            <MarketingMediaFrame
               src={post.frontMatter.image}
               alt={post.frontMatter.title}
-              fill
-              className="object-cover"
+              chrome
+              fit="contain"
+              className="h-full w-full"
+              contentClassName="p-6 pt-14"
             />
           </div>
 
